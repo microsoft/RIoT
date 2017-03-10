@@ -1624,19 +1624,15 @@ BigIntToBigVal(bigval_t *tgt, void const *in, size_t inSize)
 void
 BigValToBigInt(void *out, const bigval_t *src)
 {
-    int         i;
+    int i;
     // Start with the most significant word and work down.
     // Initialize i with the number of bytes to move - 1.
-    for (i = ((BIGLEN - 1) * 4) - 1; i >= 0; i--) {
-#ifndef _MSC_VER
-#pragma push
-#pragma diag_suppress 1441 // #1441-D: nonstandard cast on lvalue
-#endif
-        *((uint8_t *)out)++ = src->data[i / 4] >> (8 * (i % 4));
-#ifndef _MSC_VER
-#pragma pop
-#endif
-	
+
+    uint8_t* intermediate = (uint8_t*)out;
+    for (i = ((BIGLEN - 1) * 4) - 1; i >= 0; i--) 
+    {
+        *intermediate = (uint8_t)(src->data[i / 4] >> (8 * (i % 4)));
+        *(intermediate)++;
     }
 }
 

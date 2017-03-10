@@ -7,10 +7,6 @@ Confidential Information
 #include <stdint.h>
 #include <stdbool.h>
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <WinSock2.h> // TODO: REMOVE THIS
-
 #include "RiotDerEnc.h"
 #include "RiotX509Bldr.h"
 
@@ -114,7 +110,7 @@ X509AddExtensions(
     CHK(        DERPopNesting(Tbs));
     CHK(        DERStartSequenceOrSet(Tbs, true));
     CHK(            DERAddOID(Tbs, subjectAltNameOID));
-    CHK(            DERAddBoolean(Tbs, TRUE));
+    CHK(            DERAddBoolean(Tbs, true));
     CHK(            DERStartEnvelopingOctetString(Tbs));
     CHK(                DERStartSequenceOrSet(Tbs, true));
     CHK(                    DERStartExplicit(Tbs, 0));
@@ -158,14 +154,14 @@ X509MakeAliasCert(
 
     ASRT(AliasCert->Length >= (TbsLen + 32));
 
-    CHK(DERStartSequenceOrSet(AliasCert, TRUE));
+    CHK(DERStartSequenceOrSet(AliasCert, true));
         memcpy(AliasCert->Buffer + AliasCert->Position, Tbs, TbsLen);
         AliasCert->Position += TbsLen;
-    CHK(    DERStartSequenceOrSet(AliasCert, TRUE));
+    CHK(    DERStartSequenceOrSet(AliasCert, true));
     CHK(        DERAddOID(AliasCert, ecdsaWithSHA256OID));
     CHK(    DERPopNesting(AliasCert));
     CHK(    DERStartEnvelopingBitString(AliasCert));
-    CHK(        DERStartSequenceOrSet(AliasCert, TRUE));
+    CHK(        DERStartSequenceOrSet(AliasCert, true));
                     BigValToBigInt(encBuffer, &TbsSig->r);
     CHK(            DERAddIntegerFromArray(AliasCert, encBuffer, encBufferLen));
                     BigValToBigInt(encBuffer, &TbsSig->s);

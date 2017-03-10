@@ -8,7 +8,13 @@ Confidential Information
 
 #ifdef __cplusplus
 extern "C" {
+#include <cstdio>
+#include <cstring>
+#else
+#include <stdio.h>
+#include <string.h>
 #endif
+
 
 #define DER_MAX_PEM     0x400
 #define DER_MAX_TBS     0x300

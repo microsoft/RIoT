@@ -289,7 +289,7 @@ RiotCrypt_EccEncrypt(
 
     status = RiotCrypt_Kdf(exchKey, sizeof(exchKey),
                            (uint8_t *)&secret, sizeof(secret),
-                           NULL, 0, RIOT_LABEL_EXCHANGE_KEY,
+                           NULL, 0, (const uint8_t*)RIOT_LABEL_EXCHANGE_KEY,
                            (sizeof(RIOT_LABEL_EXCHANGE_KEY) - 1),
                            sizeof(exchKey));
 
@@ -324,7 +324,7 @@ RiotCrypt_EccDecrypt(
 
     status = RiotCrypt_Kdf(exchKey, sizeof(exchKey),
                            (uint8_t *)&secret, sizeof(secret),
-                           NULL, 0, RIOT_LABEL_EXCHANGE_KEY,
+                           NULL, 0, (const uint8_t*)RIOT_LABEL_EXCHANGE_KEY,
                            (sizeof(RIOT_LABEL_EXCHANGE_KEY) - 1),
                            sizeof(exchKey));
 

@@ -24,8 +24,6 @@
 #include <stddef.h>
 #include <string.h>
 
-#define ALL_SYMBOLS
-
 // TODO: Fix this so we actually get asserts on non-MSFT platforms
 #ifndef _MSC_VER
 #define assert(expr)    ((void)0)

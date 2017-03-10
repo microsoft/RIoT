@@ -7,9 +7,13 @@ Confidential Information
 #include <stdint.h>
 #include <stdbool.h>
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <WinSock2.h> // TODO: REMOVE THIS
+#ifdef WIN32
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+    #include <winsock2.h> // TODO: REMOVE THIS*/
+#else
+    #include <arpa/inet.h>
+#endif
 
 #include "RiotDerEnc.h"
 #include "RiotBase64.h"
@@ -73,16 +77,16 @@ EncodeInt(
 {
     ASRT(Val < 166536);
     if (Val <128) {
-        Buffer[0] = Val;
+        Buffer[0] = (uint8_t)Val;
         return 0;
     }
     if (Val < 256) {
         Buffer[0] = 0x81;
-        Buffer[1] = Val;
+        Buffer[1] = (uint8_t)Val;
         return 0;
     }
     Buffer[0] = 0x82;
-    Buffer[1] = Val / 256;
+    Buffer[1] = (uint8_t)(Val / 256);
     Buffer[2] = Val % 256;
     return 0;
 Error:
@@ -156,7 +160,7 @@ DERAddOID(
 
     // DER-encode the OID, first octet is special 
     val = numValues == 1 ? 0 : Values[1];
-    Context->Buffer[Context->Position++] = Values[0] * 40 + val;
+    Context->Buffer[Context->Position++] = (uint8_t)(Values[0] * 40 + val);
 
     // Others are base-128 encoded with the most significant bit of each byte,
     // apart from the least significant byte, set to 1.
@@ -168,7 +172,7 @@ DERAddOID(
             // Convert to B128
             while (true) {
                 digit = val % 128;
-                digits[digitPos++] = digit;
+                digits[digitPos++] = (uint8_t)digit;
                 val = val / 128;
                 if (val == 0) {
                     break;
@@ -181,13 +185,13 @@ DERAddOID(
                 if (k != 0) {
                     val += 128;
                 }
-                Context->Buffer[Context->Position++] = val;
+                Context->Buffer[Context->Position++] = (uint8_t)val;
             }
             CHECK_SPACE(Context);
         }
     }
 
-    Context->Buffer[lenPos] = Context->Position - 1 - lenPos;
+    Context->Buffer[lenPos] = (uint8_t)(Context->Position - 1 - lenPos);
     return 0;
 
 Error:
@@ -206,7 +210,7 @@ DERAddUTF8String(
     CHECK_SPACE2(Context, numChar);
 
     Context->Buffer[Context->Position++] = 0x0c;
-    Context->Buffer[Context->Position++] = numChar;
+    Context->Buffer[Context->Position++] = (uint8_t)numChar;
 
     for (j = 0; j < numChar; j++) {
         Context->Buffer[Context->Position++] = Str[j];
@@ -228,7 +232,7 @@ DERAddPrintableString(
     CHECK_SPACE2(Context, numChar);
 
     Context->Buffer[Context->Position++] = 0x13;
-    Context->Buffer[Context->Position++] = numChar;
+    Context->Buffer[Context->Position++] = (uint8_t)numChar;
 
     for (j = 0; j < numChar; j++) {
         Context->Buffer[Context->Position++] = Str[j];
@@ -251,7 +255,7 @@ DERAddUTCTime(
     CHECK_SPACE(Context);
 
     Context->Buffer[Context->Position++] = 0x17;
-    Context->Buffer[Context->Position++] = numChar;
+    Context->Buffer[Context->Position++] = (uint8_t)numChar;
 
     for (j = 0; j < numChar; j++) {
         Context->Buffer[Context->Position++] = Str[j];
@@ -288,10 +292,10 @@ DERAddIntegerFromArray(
     Context->Buffer[Context->Position++] = 0x02;
 
     if (negative) {
-        Context->Buffer[Context->Position++] = NumBytes - numLeadingZeros + 1;
+        Context->Buffer[Context->Position++] = (uint8_t)(NumBytes - numLeadingZeros + 1);
         Context->Buffer[Context->Position++] = 0;
     } else {
-        Context->Buffer[Context->Position++] = NumBytes - numLeadingZeros;
+        Context->Buffer[Context->Position++] = (uint8_t)(NumBytes - numLeadingZeros);
     }
 
     for (j = numLeadingZeros; j < NumBytes; j++) {
@@ -420,7 +424,7 @@ DERStartExplicit(
     CHECK_SPACE(Context);
     ASRT(Context->CollectionPos < DER_MAX_NESTED);
 
-    Context->Buffer[Context->Position++] = 0xA0 + Num;
+    Context->Buffer[Context->Position++] = 0xA0 + (uint8_t)Num;
     Context->CollectionStart[Context->CollectionPos++] = Context->Position;
     return 0;
 Error:
@@ -549,7 +553,7 @@ DERtoPEM(
     PEM += PEMhf[Type].hLen;
     
     // Encode bytes
-    Base64Encode(Context->Buffer, Context->Position, PEM, NULL);
+    Base64Encode(Context->Buffer, Context->Position, (unsigned char*)PEM, NULL);
     PEM += b64Len;
 
     // Place footer

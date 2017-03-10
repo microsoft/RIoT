@@ -224,7 +224,7 @@ int
 Base64Encode(
     const unsigned char *Input,
     uint32_t             Length,
-    unsigned char       *Output,
+    char                *Output,
     uint32_t            *OutLen
 )
 // The data in Input is processed 3 characters at a time to produce 4 base64

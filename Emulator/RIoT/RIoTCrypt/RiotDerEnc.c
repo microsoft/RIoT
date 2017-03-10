@@ -553,7 +553,7 @@ DERtoPEM(
     PEM += PEMhf[Type].hLen;
     
     // Encode bytes
-    Base64Encode(Context->Buffer, Context->Position, (unsigned char*)PEM, NULL);
+    Base64Encode(Context->Buffer, Context->Position, PEM, NULL);
     PEM += b64Len;
 
     // Place footer

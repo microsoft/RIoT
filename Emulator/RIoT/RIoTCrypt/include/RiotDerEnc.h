@@ -37,6 +37,7 @@ enum CertType {
     CERT_TYPE = 0,
     PUBLICKEY_TYPE,
     ECC_PRIVATEKEY_TYPE,
+    CERT_REQ_TYPE,
     LAST_CERT_TYPE
 };
 
@@ -147,6 +148,11 @@ DERPopNesting(
 
 int
 DERGetNestingDepth(
+    DERBuilderContext   *Context
+);
+
+int
+DERTbsToCert(
     DERBuilderContext   *Context
 );
 

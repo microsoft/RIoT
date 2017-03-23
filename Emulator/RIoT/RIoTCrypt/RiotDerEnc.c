@@ -10,7 +10,7 @@ Confidential Information
 #ifdef WIN32
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
-    #include <winsock2.h> // TODO: REMOVE THIS*/
+    #include <winsock2.h> // TODO: REMOVE THIS
 #else
     #include <arpa/inet.h>
 #endif
@@ -499,6 +499,39 @@ Error:
 }
 
 int
+DERTbsToCert(
+    DERBuilderContext   *Context
+)
+// This function assumes that Context contains a fully-formed "to be signed"
+// region of a certificate. DERTbsToCert copies the existing TBS region into
+// an enclosing SEQUENCE. This prepares the context to receive the signature
+// block to make a fully-formed certificate.
+{
+    ASRT(Context->CollectionPos == 0);
+    CHECK_SPACE(Context);
+
+    // Move up one byte to leave room for the SEQUENCE tag.
+    // The length is filled in when the sequence is popped.
+    memmove(Context->Buffer + 1, Context->Buffer, Context->Position);
+
+    // Fix up the length
+    Context->Position++;
+
+    // Add a sequence tag
+    Context->Buffer[0] = 0x30;
+
+    // Push the sequence into the collection stack
+    Context->CollectionStart[Context->CollectionPos++] = 1;
+
+    // Context now contains a TBS region inside a SEQUENCE. Signature block next.
+    return 0;
+Error:
+    return -1;
+}
+
+
+
+int
 DERGetNestingDepth(
     DERBuilderContext   *Context
 )
@@ -518,7 +551,8 @@ typedef struct
 const PEMHeadersFooters PEMhf[LAST_CERT_TYPE] = {
     {28, 26, "-----BEGIN CERTIFICATE-----\n", "-----END CERTIFICATE-----\n"},
     {27, 25, "-----BEGIN PUBLIC KEY-----\n", "-----END PUBLIC KEY-----\n\0"},
-    {31, 29, "-----BEGIN EC PRIVATE KEY-----\n", "-----END EC PRIVATE KEY-----\n"}
+    {31, 29, "-----BEGIN EC PRIVATE KEY-----\n", "-----END EC PRIVATE KEY-----\n"},
+    {36, 34, "-----BEGIN CERTIFICATE REQUEST-----\n", "-----END CERTIFICATE REQUEST-----\n"}
 };
 
 int

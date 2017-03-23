@@ -36,8 +36,6 @@ X509GetDEREncodedTBS(
 int
 X509MakeAliasCert(
     DERBuilderContext   *AliasCert,
-    uint8_t             *Tbs,
-    uint32_t             TbsLen,
     RIOT_ECC_SIGNATURE  *TbsSig
 );
 
@@ -52,6 +50,19 @@ X509GetDEREcc(
     DERBuilderContext   *Context,
     RIOT_ECC_PUBLIC      Pub,
     RIOT_ECC_PRIVATE     Priv
+);
+
+int
+X509GetDERCsrTbs(
+    DERBuilderContext   *Context,
+    RIOT_X509_TBS_DATA  *TbsData,
+    RIOT_ECC_PUBLIC     *DeviceIDPub
+);
+
+int
+X509GetDERCsr(
+    DERBuilderContext   *Context,
+    RIOT_ECC_SIGNATURE  *Signature
 );
 
 #ifdef __cplusplus

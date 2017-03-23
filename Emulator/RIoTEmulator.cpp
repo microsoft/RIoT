@@ -55,7 +55,9 @@ CreateDeviceAuthBundle(
     BYTE    *AliasKeyEncoded,
     DWORD   *AliasKeyEncodedSize,
     BYTE    *AliasCertBuffer,
-    DWORD   *AliasCertBufSize
+    DWORD   *AliasCertBufSize,
+    BYTE    *CSRBuffer,
+    DWORD   *CSRBufferSize
 );
 
 //-----TODO---DEBUG---REMOVE-------------
@@ -73,15 +75,19 @@ main()
     BYTE    aliasKey[DER_MAX_PEM];
     BYTE    UDS[DICE_UDS_LENGTH];
     BYTE    FWID[RIOT_DIGEST_LENGTH];
+    BYTE    CSR[DER_MAX_PEM];
+
     DWORD   deviceIDPubSize = DER_MAX_PEM;
     DWORD   aliaskeySize = DER_MAX_PEM;
     DWORD   certSize = DER_MAX_PEM;
+    DWORD   csrSize = DER_MAX_PEM;
 
     CreateDeviceAuthBundle(UDS, DICE_UDS_LENGTH,
                            FWID, RIOT_DIGEST_LENGTH,
                            deviceIDPub, &deviceIDPubSize,
                            aliasKey, &aliaskeySize,
-                           cert, &certSize);
+                           cert, &certSize,
+                           CSR, &csrSize);
 
     return 0;
 }
@@ -97,12 +103,14 @@ CreateDeviceAuthBundle(
     BYTE    *AliasKeyEncoded,
     DWORD   *AliasKeyEncodedSize,
     BYTE    *AliasCertBuffer,
-    DWORD   *AliasCertBufSize
+    DWORD   *AliasCertBufSize,
+    BYTE    *CSRBuffer,
+    DWORD   *CSRBufferSize
 )
 {
     char                PEM[DER_MAX_PEM];
-    uint8_t             derBuffer[DER_MAX_TBS];
     uint8_t             cerBuffer[DER_MAX_TBS];
+    uint8_t             derBuffer[DER_MAX_TBS];
     uint8_t             digest[DICE_DIGEST_LENGTH];
     uint8_t             CDI[DICE_DIGEST_LENGTH];
     RIOT_ECC_PUBLIC     deviceIDPub;
@@ -151,17 +159,40 @@ CreateDeviceAuthBundle(
                            lblSize(RIOT_LABEL_ALIAS));
 
     // Build the TBS (to be signed) region of Alias Key Certificate
-    DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-    X509GetDEREncodedTBS(&derCtx, &x509TBSData,
+    DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
+    X509GetDEREncodedTBS(&cerCtx, &x509TBSData,
                          &aliasKeyPub, &deviceIDPub,
                          Fwid, RIOT_DIGEST_LENGTH);
 
     // Sign the Alias Key Certificate's TBS region
-    RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
+    RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, &deviceIDPriv);
 
-    // Generate Alias Key Certificate
-    DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
-    X509MakeAliasCert(&cerCtx, derCtx.Buffer, derCtx.Position, &tbsSig);
+    // Generate Alias Key Certificate by signing the TBS region
+    X509MakeAliasCert(&cerCtx, &tbsSig);
+
+    // Optionally,  make a CSR for the DeviceID
+    if (CSRBuffer != NULL)
+    {
+        DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+        X509GetDERCsrTbs(&derCtx, &x509TBSData, &deviceIDPub);
+
+        // Sign the Alias Key Certificate's TBS region
+        RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
+
+        // Create CSR for DeviceID
+        X509GetDERCsr(&derCtx, &tbsSig);
+
+        // Copy CSR
+        length = sizeof(PEM);
+        DERtoPEM(&derCtx, CERT_REQ_TYPE, PEM, &length);
+        *CSRBufferSize = length;
+        memcpy(CSRBuffer, PEM, length);
+
+        //-----TODO---DEBUG---REMOVE-------------
+        WriteBinaryFile("DeviceIDCSR.DER", derCtx.Buffer, derCtx.Position);
+        WriteBinaryFile("DeviceIDCSR.PEM", (uint8_t *)PEM, length);
+        //----------------------------------------
+    }
 
     // Copy DeviceID Public
     length = sizeof(PEM);
@@ -175,8 +206,8 @@ CreateDeviceAuthBundle(
     PrintHex(derCtx.Buffer, derCtx.Position);
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
-    WriteBinaryFile("W2DevIDPub.der", derCtx.Buffer, derCtx.Position);
-    WriteBinaryFile("W2DevIDPub.pem", (uint8_t *)PEM, length);
+    WriteBinaryFile("DeviceIDPublic.der", derCtx.Buffer, derCtx.Position);
+    WriteBinaryFile("DeviceIDPublic.pem", (uint8_t *)PEM, length);
     //----------------------------------------
 
     // Copy Alias Key Pair
@@ -191,8 +222,8 @@ CreateDeviceAuthBundle(
     PrintHex(derCtx.Buffer, derCtx.Position);
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
-    WriteBinaryFile("W2AliasPriv.der", derCtx.Buffer, derCtx.Position);
-    WriteBinaryFile("W2AliasPriv.pem", (uint8_t *)PEM, length);
+    WriteBinaryFile("AliasKey.der", derCtx.Buffer, derCtx.Position);
+    WriteBinaryFile("AliasKey.pem", (uint8_t *)PEM, length);
     //----------------------------------------
 
     // Copy Alias Key Certificate
@@ -205,8 +236,8 @@ CreateDeviceAuthBundle(
     PrintHex(cerCtx.Buffer, cerCtx.Position);
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
-    WriteBinaryFile("W2AliasCert.cer", cerCtx.Buffer, cerCtx.Position);
-    WriteBinaryFile("W2AliasCert.pem", (uint8_t *)PEM, length);
+    WriteBinaryFile("AliasCert.cer", cerCtx.Buffer, cerCtx.Position);
+    WriteBinaryFile("AliasCert.pem", (uint8_t *)PEM, length);
     //----------------------------------------
 
     return 0;

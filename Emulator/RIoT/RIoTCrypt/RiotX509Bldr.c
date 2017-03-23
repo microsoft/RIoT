@@ -143,20 +143,16 @@ Error:
 int 
 X509MakeAliasCert(
     DERBuilderContext   *AliasCert,
-    uint8_t             *Tbs,
-    uint32_t             TbsLen,
     RIOT_ECC_SIGNATURE  *TbsSig
 )
-// Create an ALias Certificate given a TBS and the matching signature.
+// Create an ALias Certificate given a ready-to-sign TBS region in the context
 {
     uint8_t     encBuffer[((BIGLEN - 1) * 4)];
     uint32_t    encBufferLen = ((BIGLEN - 1) * 4);
 
-    ASRT(AliasCert->Length >= (TbsLen + 32));
-
-    CHK(DERStartSequenceOrSet(AliasCert, true));
-        memcpy(AliasCert->Buffer + AliasCert->Position, Tbs, TbsLen);
-        AliasCert->Position += TbsLen;
+    // Elevate the "TBS" block into a real certificate,
+    // i.e., copy it into an enclosing sequence.
+    CHK(DERTbsToCert(AliasCert));   
     CHK(    DERStartSequenceOrSet(AliasCert, true));
     CHK(        DERAddOID(AliasCert, ecdsaWithSHA256OID));
     CHK(    DERPopNesting(AliasCert));
@@ -171,8 +167,8 @@ X509MakeAliasCert(
     CHK(DERPopNesting(AliasCert));
 
     ASRT(DERGetNestingDepth(AliasCert) == 0);
-
     return 0;
+
 Error:
     return -1;
 }
@@ -205,7 +201,10 @@ X509AddX501Name(
     CHK(            DERPopNesting(Context));
     CHK(        DERPopNesting(Context));
     CHK(    DERPopNesting(Context));
+
+    ASRT(DERGetNestingDepth(Context) == 0);
     return 0;
+
 Error:
     return -1;
 }
@@ -228,10 +227,11 @@ X509GetDEREccPub(
     CHK(    DERAddBitString(Context, encBuffer, encBufferLen));
     CHK(DERPopNesting(Context));
 
+    ASRT(DERGetNestingDepth(Context) == 0);
     return 0;
+
 Error:
     return -1;
-
 }
 
 int
@@ -257,8 +257,74 @@ X509GetDEREcc(
     CHK(    DERPopNesting(Context));
     CHK(DERPopNesting(Context));
 
+    ASRT(DERGetNestingDepth(Context) == 0);
     return 0;
+
 Error:
     return -1;
+}
 
+int
+X509GetDERCsrTbs(
+    DERBuilderContext   *Context,
+    RIOT_X509_TBS_DATA  *TbsData,
+    RIOT_ECC_PUBLIC*      DeviceIDPub)
+{
+
+    uint8_t     encBuffer[65];
+    uint32_t    encBufferLen;
+
+    CHK(DERStartSequenceOrSet(Context, true));
+    CHK(    DERAddInteger(Context, 0));
+    CHK(    X509AddX501Name(Context, TbsData->IssuerCommon, TbsData->IssuerOrg, TbsData->IssuerCountry));
+    CHK(    DERStartSequenceOrSet(Context, true));
+    CHK(        DERStartSequenceOrSet(Context, true));
+    CHK(            DERAddOID(Context, ecPublicKeyOID));
+    CHK(            DERAddOID(Context, prime256v1OID));
+    CHK(        DERPopNesting(Context));
+                RiotCrypt_ExportEccPub(DeviceIDPub, encBuffer, &encBufferLen);
+    CHK(        DERAddBitString(Context, encBuffer, encBufferLen));
+    CHK(    DERPopNesting(Context));
+    CHK(DERStartExplicit(Context,0));
+    CHK(DERPopNesting(Context));
+    CHK(DERPopNesting(Context));
+
+    ASRT(DERGetNestingDepth(Context) == 0);
+    return 0;
+
+Error:
+    return -1;
+}
+
+int
+X509GetDERCsr(
+    DERBuilderContext   *Context,
+    RIOT_ECC_SIGNATURE  *Signature
+)
+{
+
+    uint8_t     encBuffer[((BIGLEN - 1) * 4)];
+    uint32_t    encBufferLen = ((BIGLEN - 1) * 4);
+
+    // Elevate the "TBS" block into a real certificate, i.e., copy it
+    // into an enclosing sequence and then add the signature block.
+    CHK(DERTbsToCert(Context));
+    CHK(    DERStartSequenceOrSet(Context, true));
+    CHK(        DERAddOID(Context, ecdsaWithSHA256OID));
+    CHK(    DERPopNesting(Context));
+    CHK(    DERStartEnvelopingBitString(Context));
+    CHK(        DERStartSequenceOrSet(Context, true));
+                    BigValToBigInt(encBuffer, &Signature->r);
+    CHK(            DERAddIntegerFromArray(Context, encBuffer, encBufferLen));
+                    BigValToBigInt(encBuffer, &Signature->s);
+    CHK(            DERAddIntegerFromArray(Context, encBuffer, encBufferLen));
+    CHK(        DERPopNesting(Context));
+    CHK(    DERPopNesting(Context));
+    CHK(DERPopNesting(Context));
+
+    ASRT(DERGetNestingDepth(Context) == 0);
+    return 0;
+
+Error:
+    return -1;
 }

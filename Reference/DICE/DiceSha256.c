@@ -45,11 +45,11 @@
  ******************************************************************************/
 
 //
-// 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
+// 4-MAY-2015; DICE adaptation (DennisMa;MSFT).
 //
 #include "stdint.h"
 #include "string.h" // memcpy/memset
-#include "RiotSha256.h"
+#include "DiceSha256.h"
 
 /*** SHA-256 Machine Architecture Definitions *****************/
 /*
@@ -206,7 +206,7 @@
  * library -- they are intended for private internal visibility/use
  * only.
  */
-static void SHA256_Transform(RIOT_SHA256_CONTEXT *, const sha2_word32 *);
+static void SHA256_Transform(DICE_SHA256_CONTEXT *, const sha2_word32 *);
 
 /*** SHA-XYZ INITIAL HASH VALUES AND CONSTANTS ************************/
 /* Hash constant words K for SHA-256: */
@@ -248,9 +248,9 @@ static const sha2_word32 sha256_initial_hash_value[8] = {
 //static const char *sha2_hex_digits = "0123456789abcdef";
 
 /*** SHA-256: *********************************************************/
-void RIOT_SHA256_Init(RIOT_SHA256_CONTEXT *context)
+void DICE_SHA256_Init(DICE_SHA256_CONTEXT *context)
 {
-    if (context == (RIOT_SHA256_CONTEXT *)0) {
+    if (context == (DICE_SHA256_CONTEXT *)0) {
         return;
     }
     context->magic = HASH_MAGIC_VALUE;
@@ -259,7 +259,7 @@ void RIOT_SHA256_Init(RIOT_SHA256_CONTEXT *context)
     context->bitcount = 0;
 }
 
-static void SHA256_Transform(RIOT_SHA256_CONTEXT *context, const sha2_word32 *data)
+static void SHA256_Transform(DICE_SHA256_CONTEXT *context, const sha2_word32 *data)
 {
     sha2_word32 a, b, c, d, e, f, g, h, s0, s1;
     sha2_word32 T1, T2, *W256;
@@ -338,7 +338,7 @@ static void SHA256_Transform(RIOT_SHA256_CONTEXT *context, const sha2_word32 *da
     a = b = c = d = e = f = g = h = T1 = T2 = 0;
 }
 
-void RIOT_SHA256_Update(RIOT_SHA256_CONTEXT *context, const sha2_uint8_t *data, size_t len)
+void DICE_SHA256_Update(DICE_SHA256_CONTEXT *context, const sha2_uint8_t *data, size_t len)
 {
     unsigned int    freespace, usedspace;
 
@@ -346,9 +346,6 @@ void RIOT_SHA256_Update(RIOT_SHA256_CONTEXT *context, const sha2_uint8_t *data, 
         /* Calling with no data is valid - we do nothing */
         return;
     }
-
-    /* Sanity check: */
-    assert(context != (RIOT_SHA256_CONTEXT *)0 && data != (sha2_uint8_t *)0 && context->magic == HASH_MAGIC_VALUE);
 
     usedspace = (context->bitcount >> 3) % SHA256_BLOCK_LENGTH;
     if (usedspace > 0) {
@@ -387,13 +384,10 @@ void RIOT_SHA256_Update(RIOT_SHA256_CONTEXT *context, const sha2_uint8_t *data, 
     usedspace = freespace = 0;
 }
 
-void RIOT_SHA256_Final(RIOT_SHA256_CONTEXT *context, sha2_uint8_t *digest)
+void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context, sha2_uint8_t *digest)
 {
     sha2_word32 *d = (sha2_word32 *)digest;
     unsigned int    usedspace;
-
-    /* Sanity check: */
-    assert(context != (RIOT_SHA256_CONTEXT *)0 && context->magic == HASH_MAGIC_VALUE);
 
     /* If no digest buffer is passed, we don't bother doing this: */
     if (digest != (sha2_uint8_t *)0) {
@@ -447,21 +441,30 @@ void RIOT_SHA256_Final(RIOT_SHA256_CONTEXT *context, sha2_uint8_t *digest)
     }
 
     /* Clean up state data: */
-    MEMSET_BZERO(context, sizeof(RIOT_SHA256_CONTEXT));
+    MEMSET_BZERO(context, sizeof(DICE_SHA256_CONTEXT));
     usedspace = 0;
 }
 
-void RIOT_SHA256_Block_ctx(RIOT_SHA256_CONTEXT *context, const uint8_t *buf, size_t bufSize, uint8_t *digest)
+void DiceSHA256Ctx(DICE_SHA256_CONTEXT *context, const uint8_t *buf, size_t bufSize, uint8_t *digest)
 {
-    RIOT_SHA256_Init(context);
-    RIOT_SHA256_Update(context, buf, bufSize);
-    RIOT_SHA256_Final(context, digest);
+    DICE_SHA256_Init(context);
+    DICE_SHA256_Update(context, buf, bufSize);
+    DICE_SHA256_Final(context, digest);
 }
 
-void RIOT_SHA256_Block(const uint8_t *buf, size_t bufSize, uint8_t *digest)
+void DiceSHA256(const uint8_t *buf, size_t bufSize, uint8_t *digest)
 {
-    RIOT_SHA256_CONTEXT context;
-    RIOT_SHA256_Init(&context);
-    RIOT_SHA256_Update(&context, buf, bufSize);
-    RIOT_SHA256_Final(&context, digest);
+    DICE_SHA256_CONTEXT context;
+    DICE_SHA256_Init(&context);
+    DICE_SHA256_Update(&context, buf, bufSize);
+    DICE_SHA256_Final(&context, digest);
+}
+
+void DiceSHA256_2(const uint8_t *buf1, size_t bufSize1, const uint8_t *buf2, size_t bufSize2, uint8_t *digest)
+{
+    DICE_SHA256_CONTEXT context;
+    DICE_SHA256_Init(&context);
+    DICE_SHA256_Update(&context, buf1, bufSize1);
+    DICE_SHA256_Update(&context, buf2, bufSize2);
+    DICE_SHA256_Final(&context, digest);
 }

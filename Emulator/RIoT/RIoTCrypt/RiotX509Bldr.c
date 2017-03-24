@@ -27,66 +27,6 @@ static int orgNameOID[] = { 2,5,4,10,-1 };
 
 int riotOID[] = { 1,2,3,4,5,6,-1 };
 
-int 
-X509AddExtensions(
-    DERBuilderContext   *Tbs,
-    uint8_t             *DevIdPub,
-    uint32_t             DevIdPubLen,
-    uint8_t             *Fwid,
-    uint32_t             FwidLen
-);
-
-int
-X509AddX501Name(
-    DERBuilderContext   *Context,
-    const char          *CommonName,
-    const char          *OrgName,
-    const char          *CountryName
-);
-
-int X509GetDEREncodedTBS(
-    DERBuilderContext   *Tbs,
-    RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *AliasKeyPub,
-    RIOT_ECC_PUBLIC     *DevIdKeyPub,
-    uint8_t             *Fwid,
-    uint32_t             FwidLen
-)
-{
-    uint8_t     encBuffer[65];
-    uint32_t    encBufferLen;
-
-    CHK(DERStartSequenceOrSet(Tbs, true));
-    CHK(    DERAddShortExplicitInteger(Tbs, 2));
-    CHK(    DERAddIntegerFromArray(Tbs, TbsData->SerialNum, RIOT_X509_SNUM_LEN));
-    CHK(    DERStartSequenceOrSet(Tbs, true));
-    CHK(        DERAddOID(Tbs, ecdsaWithSHA256OID));
-    CHK(    DERPopNesting(Tbs));
-    CHK(    X509AddX501Name(Tbs, TbsData->IssuerCommon, TbsData->IssuerOrg, TbsData->IssuerCountry));
-    CHK(    DERStartSequenceOrSet(Tbs, true));
-    CHK(        DERAddUTCTime(Tbs, TbsData->ValidFrom));
-    CHK(        DERAddUTCTime(Tbs, TbsData->ValidTo));
-    CHK(    DERPopNesting(Tbs));
-    CHK(    X509AddX501Name(Tbs, TbsData->SubjectCommon, TbsData->SubjectOrg, TbsData->SubjectCountry));
-    CHK(    DERStartSequenceOrSet(Tbs, true));
-    CHK(        DERStartSequenceOrSet(Tbs, true));
-    CHK(            DERAddOID(Tbs, ecPublicKeyOID));
-    CHK(            DERAddOID(Tbs, prime256v1OID));
-    CHK(        DERPopNesting(Tbs));
-                RiotCrypt_ExportEccPub(AliasKeyPub, encBuffer, &encBufferLen);
-    CHK(        DERAddBitString(Tbs, encBuffer, encBufferLen));
-    CHK(    DERPopNesting(Tbs));
-            RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen);
-    CHK(    X509AddExtensions(Tbs, encBuffer, encBufferLen, Fwid, FwidLen));
-    CHK(DERPopNesting(Tbs));
-    
-    ASRT(DERGetNestingDepth(Tbs) == 0);
-
-    return 0;
-Error:
-    return -1;
-}
-
 int
 X509AddExtensions(
     DERBuilderContext   *Tbs,
@@ -135,7 +75,9 @@ X509AddExtensions(
     CHK(        DERPopNesting(Tbs));
     CHK(    DERPopNesting(Tbs));
     CHK(DERPopNesting(Tbs));
+
     return 0;
+
 Error:
     return -1;
 }
@@ -202,7 +144,49 @@ X509AddX501Name(
     CHK(        DERPopNesting(Context));
     CHK(    DERPopNesting(Context));
 
-    ASRT(DERGetNestingDepth(Context) == 0);
+    return 0;
+
+Error:
+    return -1;
+}
+
+int X509GetDEREncodedTBS(
+    DERBuilderContext   *Tbs,
+    RIOT_X509_TBS_DATA  *TbsData,
+    RIOT_ECC_PUBLIC     *AliasKeyPub,
+    RIOT_ECC_PUBLIC     *DevIdKeyPub,
+    uint8_t             *Fwid,
+    uint32_t             FwidLen
+)
+{
+    uint8_t     encBuffer[65];
+    uint32_t    encBufferLen;
+
+    CHK(DERStartSequenceOrSet(Tbs, true));
+    CHK(    DERAddShortExplicitInteger(Tbs, 2));
+    CHK(    DERAddIntegerFromArray(Tbs, TbsData->SerialNum, RIOT_X509_SNUM_LEN));
+    CHK(    DERStartSequenceOrSet(Tbs, true));
+    CHK(        DERAddOID(Tbs, ecdsaWithSHA256OID));
+    CHK(    DERPopNesting(Tbs));
+    CHK(    X509AddX501Name(Tbs, TbsData->IssuerCommon, TbsData->IssuerOrg, TbsData->IssuerCountry));
+    CHK(    DERStartSequenceOrSet(Tbs, true));
+    CHK(        DERAddUTCTime(Tbs, TbsData->ValidFrom));
+    CHK(        DERAddUTCTime(Tbs, TbsData->ValidTo));
+    CHK(    DERPopNesting(Tbs));
+    CHK(    X509AddX501Name(Tbs, TbsData->SubjectCommon, TbsData->SubjectOrg, TbsData->SubjectCountry));
+    CHK(    DERStartSequenceOrSet(Tbs, true));
+    CHK(        DERStartSequenceOrSet(Tbs, true));
+    CHK(            DERAddOID(Tbs, ecPublicKeyOID));
+    CHK(            DERAddOID(Tbs, prime256v1OID));
+    CHK(        DERPopNesting(Tbs));
+                RiotCrypt_ExportEccPub(AliasKeyPub, encBuffer, &encBufferLen);
+    CHK(        DERAddBitString(Tbs, encBuffer, encBufferLen));
+    CHK(    DERPopNesting(Tbs));
+            RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen);
+    CHK(    X509AddExtensions(Tbs, encBuffer, encBufferLen, Fwid, FwidLen));
+    CHK(DERPopNesting(Tbs));
+    
+    ASRT(DERGetNestingDepth(Tbs) == 0);
     return 0;
 
 Error:

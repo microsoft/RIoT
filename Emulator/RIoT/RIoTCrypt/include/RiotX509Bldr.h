@@ -24,7 +24,20 @@ typedef struct
 } RIOT_X509_TBS_DATA;
 
 int
-X509GetDEREncodedTBS(
+X509GetDeviceCertTBS(
+    DERBuilderContext   *Tbs,
+    RIOT_X509_TBS_DATA  *TbsData,
+    RIOT_ECC_PUBLIC     *DevIdKeyPub
+);
+
+int
+X509MakeDeviceCert(
+    DERBuilderContext   *DeviceIDCert,
+    RIOT_ECC_SIGNATURE  *TbsSig
+);
+
+int
+X509GetAliasCertTBS(
     DERBuilderContext   *Tbs,
     RIOT_X509_TBS_DATA  *TbsData,
     RIOT_ECC_PUBLIC     *AliasKeyPub,

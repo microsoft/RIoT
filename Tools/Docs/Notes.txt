@@ -1,0 +1,6 @@
+
+Create chains given a CSR (and an alias cert)
+-dir d:\tmp\Emulator -csr
+
+
+-nogen -dir d:\tmp\Emulator -e2e

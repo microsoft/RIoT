@@ -15,6 +15,9 @@ Confidential Information
 #include "RiotX509Bldr.h"
 #include "DiceSha256.h"
 
+//Debug
+#define DEBUG
+
 // Note that even though digest lengths are equivalent here, (and on most
 // devices this will be the case) there is no requirement that DICE and RIoT
 // use the same one-way function/digest length.
@@ -31,11 +34,17 @@ Confidential Information
 // just pick a reasonable minimum buffer size and worry about this later.
 #define REASONABLE_MIN_CERT_SIZE    DER_MAX_TBS
 
-// The static data fields that make up the x509 "to be signed" region
-RIOT_X509_TBS_DATA x509TBSData = { { 0x0A, 0x0B, 0x0C, 0x0D, 0x0E },
-                                   "RIoT Core", "MSR_TEST", "US",
-                                   "170101000000Z", "370101000000Z",
-                                   "RIoT Device", "MSR_TEST", "US" };
+// The static data fields that make up the Alias Cert "to be signed" region
+RIOT_X509_TBS_DATA x509AliasTBSData = { { 0x0A, 0x0B, 0x0C, 0x0D, 0x0E },
+                                       "RIoT Core", "MSR_TEST", "US",
+                                       "170101000000Z", "370101000000Z",
+                                       "RIoT Device", "MSR_TEST", "US" };
+
+// The static data fields that make up the DeviceID Cert "to be signed" region
+RIOT_X509_TBS_DATA x509DeviceTBSData = { { 0x0E, 0x0D, 0x0C, 0x0B, 0x0A },
+                                       "RIoT Core", "MSR_TEST", "US",
+                                       "170101000000Z", "370101000000Z",
+                                       "RIoT Core", "MSR_TEST", "US" };
 
 // Random (i.e., simulated) RIoT Core "measurement"
 uint8_t rDigest[DICE_DIGEST_LENGTH] = {
@@ -52,42 +61,43 @@ CreateDeviceAuthBundle(
     DWORD    FwidSize,
     BYTE    *DeviceIDPublicEncoded,
     DWORD   *DeviceIDPublicEncodedSize,
+    BYTE    *DeviceCertBuffer,
+    DWORD   *DeviceCertBufSize,
+    bool     SelfSignedDeviceCert,
     BYTE    *AliasKeyEncoded,
     DWORD   *AliasKeyEncodedSize,
     BYTE    *AliasCertBuffer,
-    DWORD   *AliasCertBufSize,
-    BYTE    *CSRBuffer,
-    DWORD   *CSRBufferSize
+    DWORD   *AliasCertBufSize
 );
 
-//-----TODO---DEBUG---REMOVE-------------
+#ifdef DEBUG
 void WriteTextFile(const char* fileName, uint8_t* buf, int bufLen, uint8_t append);
 void WriteBinaryFile(const char* fileName, uint8_t* buf, int bufLen);
 void HexConvert(uint8_t* in, int inLen, char* outBuf, int outLen);
 void PrintHex(uint8_t* buf, int bufLen);
-//---------------------------------------
+#endif
 
 int
 main()
 {
-    BYTE    cert[DER_MAX_PEM];
-    BYTE    deviceIDPub[DER_MAX_PEM];
-    BYTE    aliasKey[DER_MAX_PEM];
     BYTE    UDS[DICE_UDS_LENGTH];
     BYTE    FWID[RIOT_DIGEST_LENGTH];
-    BYTE    CSR[DER_MAX_PEM];
+    BYTE    deviceIDPub[DER_MAX_PEM];
+    BYTE    devCert[DER_MAX_PEM];
+    BYTE    aliasKey[DER_MAX_PEM];
+    BYTE    aliasCert[DER_MAX_PEM];    
 
     DWORD   deviceIDPubSize = DER_MAX_PEM;
-    DWORD   aliaskeySize = DER_MAX_PEM;
-    DWORD   certSize = DER_MAX_PEM;
-    DWORD   csrSize = DER_MAX_PEM;
+    DWORD   aliaskeySize    = DER_MAX_PEM;
+    DWORD   devCertSize     = DER_MAX_PEM;
+    DWORD   aliasCertSize   = DER_MAX_PEM;
 
     CreateDeviceAuthBundle(UDS, DICE_UDS_LENGTH,
                            FWID, RIOT_DIGEST_LENGTH,
                            deviceIDPub, &deviceIDPubSize,
+                           devCert, &devCertSize, true,
                            aliasKey, &aliaskeySize,
-                           cert, &certSize,
-                           CSR, &csrSize);
+                           aliasCert, &aliasCertSize);
 
     return 0;
 }
@@ -100,12 +110,13 @@ CreateDeviceAuthBundle(
     DWORD    FwidSize,
     BYTE    *DeviceIDPublicEncoded,
     DWORD   *DeviceIDPublicEncodedSize,
+    BYTE    *DeviceCertBuffer,
+    DWORD   *DeviceCertBufSize,
+    bool     SelfSignedDeviceCert,
     BYTE    *AliasKeyEncoded,
     DWORD   *AliasKeyEncodedSize,
     BYTE    *AliasCertBuffer,
-    DWORD   *AliasCertBufSize,
-    BYTE    *CSRBuffer,
-    DWORD   *CSRBufferSize
+    DWORD   *AliasCertBufSize
 )
 {
     char                PEM[DER_MAX_PEM];
@@ -122,7 +133,7 @@ CreateDeviceAuthBundle(
     DERBuilderContext   cerCtx;
     uint32_t            length;
 
-    // TODO: Implement "required size" invoaction for this function
+    // REVISIT: Implement "required size" invocation for this function?
 
     // Up-front parameter validation
     if (!(Seed) || (SeedSize != DICE_UDS_LENGTH) ||
@@ -158,42 +169,6 @@ CreateDeviceAuthBundle(
                            (const uint8_t *)RIOT_LABEL_ALIAS,
                            lblSize(RIOT_LABEL_ALIAS));
 
-    // Build the TBS (to be signed) region of Alias Key Certificate
-    DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
-    X509GetDEREncodedTBS(&cerCtx, &x509TBSData,
-                         &aliasKeyPub, &deviceIDPub,
-                         Fwid, RIOT_DIGEST_LENGTH);
-
-    // Sign the Alias Key Certificate's TBS region
-    RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, &deviceIDPriv);
-
-    // Generate Alias Key Certificate by signing the TBS region
-    X509MakeAliasCert(&cerCtx, &tbsSig);
-
-    // Optionally,  make a CSR for the DeviceID
-    if (CSRBuffer != NULL)
-    {
-        DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-        X509GetDERCsrTbs(&derCtx, &x509TBSData, &deviceIDPub);
-
-        // Sign the Alias Key Certificate's TBS region
-        RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
-
-        // Create CSR for DeviceID
-        X509GetDERCsr(&derCtx, &tbsSig);
-
-        // Copy CSR
-        length = sizeof(PEM);
-        DERtoPEM(&derCtx, CERT_REQ_TYPE, PEM, &length);
-        *CSRBufferSize = length;
-        memcpy(CSRBuffer, PEM, length);
-
-        //-----TODO---DEBUG---REMOVE-------------
-        WriteBinaryFile("DeviceIDCSR.DER", derCtx.Buffer, derCtx.Position);
-        WriteBinaryFile("DeviceIDCSR.PEM", (uint8_t *)PEM, length);
-        //----------------------------------------
-    }
-
     // Copy DeviceID Public
     length = sizeof(PEM);
     DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
@@ -202,13 +177,13 @@ CreateDeviceAuthBundle(
     *DeviceIDPublicEncodedSize = length;
     memcpy(DeviceIDPublicEncoded, PEM, length);
 
-    //-----TODO---DEBUG---REMOVE-------------
+#ifdef DEBUG
     PrintHex(derCtx.Buffer, derCtx.Position);
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
     WriteBinaryFile("DeviceIDPublic.der", derCtx.Buffer, derCtx.Position);
     WriteBinaryFile("DeviceIDPublic.pem", (uint8_t *)PEM, length);
-    //----------------------------------------
+#endif
 
     // Copy Alias Key Pair
     length = sizeof(PEM);
@@ -218,13 +193,25 @@ CreateDeviceAuthBundle(
     *AliasKeyEncodedSize = length;
     memcpy(AliasKeyEncoded, PEM, length);
 
-    //-----TODO---DEBUG---REMOVE-------------
+#ifdef DEBUG
     PrintHex(derCtx.Buffer, derCtx.Position);
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
     WriteBinaryFile("AliasKey.der", derCtx.Buffer, derCtx.Position);
     WriteBinaryFile("AliasKey.pem", (uint8_t *)PEM, length);
-    //----------------------------------------
+#endif 
+
+    // Build the TBS (to be signed) region of Alias Key Certificate
+    DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
+    X509GetAliasCertTBS(&cerCtx, &x509AliasTBSData,
+                        &aliasKeyPub, &deviceIDPub,
+                        Fwid, RIOT_DIGEST_LENGTH);
+
+    // Sign the Alias Key Certificate's TBS region
+    RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, &deviceIDPriv);
+
+    // Generate Alias Key Certificate
+    X509MakeAliasCert(&cerCtx, &tbsSig);
 
     // Copy Alias Key Certificate
     length = sizeof(PEM);
@@ -232,18 +219,58 @@ CreateDeviceAuthBundle(
     *AliasCertBufSize = length;
     memcpy(AliasCertBuffer, PEM, length);
 
-    //-----TODO---DEBUG---REMOVE-------------
+#ifdef DEBUG
     PrintHex(cerCtx.Buffer, cerCtx.Position);
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
     WriteBinaryFile("AliasCert.cer", cerCtx.Buffer, cerCtx.Position);
     WriteBinaryFile("AliasCert.pem", (uint8_t *)PEM, length);
-    //----------------------------------------
+#endif
+
+    // This reference supports generation of either: a self-signed DeviceID
+    // certificate, or a certificate signing request for the DeviceID Key. 
+    // In a production device, Alias Key Certificates are normally leaf certs
+    // that chain back to a known root CA. This is difficult to represent in
+    // simulation since different vendors each have different manufacturing 
+    // processes and CAs.
+    if (SelfSignedDeviceCert)
+    {
+        // Build the TBS (to be signed) region of DeviceID Certificate
+        DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
+        X509GetDeviceCertTBS(&cerCtx, &x509DeviceTBSData, &deviceIDPub);
+
+        // Sign the DeviceID Certificate's TBS region
+        RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, &deviceIDPriv);
+
+        // Generate DeviceID Certificate
+        X509MakeDeviceCert(&cerCtx, &tbsSig);
+    }
+    else {
+        DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
+        X509GetDERCsrTbs(&cerCtx, &x509AliasTBSData, &deviceIDPub);
+
+        // Sign the Alias Key Certificate's TBS region
+        RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, &deviceIDPriv);
+
+        // Create CSR for DeviceID
+        X509GetDERCsr(&cerCtx, &tbsSig);
+    }
+
+    // Copy DeviceID Certificate or CSR
+    length = sizeof(PEM);
+    DERtoPEM(&cerCtx, CERT_TYPE, PEM, &length);
+    *DeviceCertBufSize = length;
+    memcpy(DeviceCertBuffer, PEM, length);
+
+#ifdef DEBUG
+    WriteBinaryFile("DeviceIDCrt.DER", derCtx.Buffer, derCtx.Position);
+    WriteBinaryFile("DeviceIDCrt.PEM", (uint8_t *)PEM, length);
+#endif
 
     return 0;
 }
 
-//-----TODO---DEBUG---REMOVE-------------
+#ifdef DEBUG
 void HexConvert(uint8_t* in, int inLen, char* outBuf, int outLen)
     {
         int pos = 0;
@@ -294,4 +321,4 @@ void WriteTextFile(const char* fileName, uint8_t* buf, int bufLen, uint8_t appen
     if (res != 0)return;
     return;
 }
-//-------------------------------------------------------
+#endif

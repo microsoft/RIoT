@@ -6,6 +6,7 @@ Confidential Information
 */
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 #ifdef WIN32
     #define WIN32_LEAN_AND_MEAN

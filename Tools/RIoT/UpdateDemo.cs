@@ -31,6 +31,7 @@ namespace RIoT
         internal static HubControl HubController;
 
 
+
         internal UpdateDemo()
         {
             HubController = new HubControl();
@@ -40,7 +41,8 @@ namespace RIoT
 
         internal void FakeDRSTest()
         {
-            MakeClientDevicesAndCerts(5);
+            int numDevices = 2;
+            MakeClientDevicesAndCerts(numDevices);
             StartFakeDRSServerThread();
             RunDemo();
         }
@@ -88,6 +90,10 @@ namespace RIoT
         {
             while(true)
             {
+                // tell the server what version number to look for
+                int versionNumber = HubController.GetTargetVersionNumber();
+
+
                 // register or re-register
                 foreach (var d in ClientDevices)
                 {
@@ -121,7 +127,7 @@ namespace RIoT
                         }
                         else
                         {
-                            Debug.WriteLine("I'm powned");
+                            Debug.WriteLine($"I'm powned: {d.DeviceName}");
                         }
                     }
                 }

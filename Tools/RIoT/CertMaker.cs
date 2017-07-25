@@ -56,10 +56,45 @@ namespace RIoT
 
             bundle.AliasCert = (X509Certificate) Helpers.ReadPemObject(ToPath(Program.AliasCert));
             bundle.DeviceIDPublic = (AsymmetricKeyParameter)Helpers.ReadPemObject(ToPath(Program.DeviceIDPublic));
+
             bundle.AliasKeyPair = (AsymmetricCipherKeyPair)Helpers.ReadPemObject(ToPath(Program.AliasKey));
+
+            //ECPrivateKeyParameters opriv = (ECPrivateKeyParameters) Helpers.ReadPemObject(ToPath("AliasPrivate.PEM"));
+            //ECPublicKeyParameters opub = (ECPublicKeyParameters)Helpers.ReadPemObject(ToPath("AliasPublic.PEM"));
+            //AsymmetricCipherKeyPair kpx = new AsymmetricCipherKeyPair(opub, opriv);
+            //bundle.AliasKeyPair = kpx;
+            //var privKey = PrivateKeyInfoFactory.CreatePrivateKeyInfo(oo);
+            //oo.
+            //var  kp = PrivateKeyInfoFactory.CreatePrivateKeyInfo(oo);
+
+            //AsymmetricCipherKeyPair kp = (AsymmetricCipherKeyPair)KeyIn.CreatePrivateKeyInfo(oo);
+
+            //ECPrivateKeyParameters parms = (ECPrivateKeyParameters) Helpers.ReadPemObject(ToPath(Program.AliasKey));
+            //bundle.AliasKeyPair = new A
 
             MakeCertChain(bundle, chainLen, 0);
         }
+
+        internal void CertifyExistingForJava(int chainLen)
+        {
+            DeviceBundle bundle = new DeviceBundle();
+
+            bundle.AliasCert = (X509Certificate)Helpers.ReadPemObject(ToPath(Program.AliasCert));
+            bundle.DeviceIDPublic = (AsymmetricKeyParameter)Helpers.ReadPemObject(ToPath(Program.DeviceIDPublic));
+
+            // The current Java implementation stores the public and provate keys separately.  Put them back 
+            // together
+            ECPrivateKeyParameters opriv = (ECPrivateKeyParameters)Helpers.ReadPemObject(ToPath("AliasPrivate.PEM"));
+            ECPublicKeyParameters opub = (ECPublicKeyParameters)Helpers.ReadPemObject(ToPath("AliasPublic.PEM"));
+            AsymmetricCipherKeyPair kpx = new AsymmetricCipherKeyPair(opub, opriv);
+            Helpers.WritePEMObject(ToPath(Program.AliasKey), kpx);
+
+            bundle.AliasKeyPair = (AsymmetricCipherKeyPair)Helpers.ReadPemObject(ToPath(Program.AliasKey));
+
+
+            MakeCertChain(bundle, chainLen, 0);
+        }
+
 
         internal void CertifyExistingFromCsr(int chainLen)
         {

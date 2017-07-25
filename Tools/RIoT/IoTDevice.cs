@@ -23,6 +23,7 @@ namespace RIoT
         string MyDevId;
         int CertCount;
         internal int DeviceNumber;
+        internal string DeviceName;
         internal bool P0wned = false;
 
         internal bool HubRefreshNeeded;
@@ -37,6 +38,7 @@ namespace RIoT
         {
             FirmwareUpdateNeeded = false;
             DeviceNumber = deviceNumber;
+            DeviceName = deviceName;
             MyDevId = deviceName;
             CurrentFwVersionNumber = fwidSeed;
             HubRefreshNeeded = true;

@@ -29,6 +29,7 @@ namespace RIoT
         static X509Certificate2 ServerCert;
         static X509Certificate2 DeviceCA;
         static string DeviceIDPEMFile;
+        static internal int TargetFirmwareVersionNumber;
 
         internal static void RunServer(string _serverCA, string serverCert, string serverKey, string deviceCA, string deviceIDPublic)
         {
@@ -397,16 +398,13 @@ namespace RIoT
             {
                 try
                 {
-
                     // clients send us their Id
                     string messageFromClient = ReadMessage(s);
 
                     X509Certificate2 cert = new X509Certificate2(s.RemoteCertificate);
                     UpdateDemo.HubController.FakeDRSServerEnrollOrRefreshDevice(messageFromClient, cert.Thumbprint);
-
-
                     Debug.Write($"Device {messageFromClient} connected");
-
+                    
                     SendMessage(s, "OK");
                     Thread.Sleep(30);
                 }

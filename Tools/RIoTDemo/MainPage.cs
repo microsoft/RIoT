@@ -14,6 +14,7 @@ using System.IO;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.ServiceBus.Messaging;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Crypto.Digests;
 
 namespace RIoTDemo
 {
@@ -26,12 +27,15 @@ namespace RIoTDemo
     {
         bool initialized = false;
         string  DeviceIDMatch = "RIoT_Test";
+        string ControlDevice = "ControlDevice";
+        byte[] ControlDeviceKey  = HashData(new byte[] { 0 } , 0,1);
         RegistryManager RegMgr;
         EventHubClient EventClient;
         EventHubReceiver[] Receivers;
         DateTime LastUpdateTime = DateTime.Now;
         string[] D2CPartitions;
         string ConnectionStringFile = "c:\\tmp\\ConnectionString.txt";
+        //int CurrentFWVersionNumber = 0;
         IEnumerable<Device> CurrentDeviceList;
         List<DeviceStatus> StatusPanes = new List<DeviceStatus>();
 
@@ -41,12 +45,16 @@ namespace RIoTDemo
         public MainPage()
         {
             InitializeComponent();
+            TargetVersionNumber = 0;
+
         }
 
-        private void MainPage_Paint(object sender, PaintEventArgs e)
+        bool paintBusy = false;
+        private async void MainPage_Paint(object sender, PaintEventArgs e)
         {
+            if (paintBusy) return;
+            paintBusy = true;
             if (initialized) return;
-            initialized = true;
 
             if (!File.Exists(ConnectionStringFile))
             {
@@ -65,9 +73,51 @@ namespace RIoTDemo
                 {
                     Receivers[j] = EventClient.GetDefaultConsumerGroup().CreateReceiver(D2CPartitions[j], DateTime.UtcNow - new TimeSpan(0, 0, 10));
                 }
-                Debug.Write("");
-                //CancellationTokenSource cts = new CancellationTokenSource();
 
+                // make or refresh the control device (this is just a convenient way of passing 
+                // data like the targetFWID from the GUI app to the server
+                Device dTemplate = new Device(ControlDevice);
+                dTemplate.Authentication = new AuthenticationMechanism();
+                dTemplate.Authentication.SymmetricKey = new SymmetricKey();
+                dTemplate.Authentication.SymmetricKey.PrimaryKey = Convert.ToBase64String(ControlDeviceKey);
+                dTemplate.Authentication.SymmetricKey.SecondaryKey = Convert.ToBase64String(ControlDeviceKey);
+
+
+                try
+                {
+                    await RegMgr.AddDeviceAsync(dTemplate);
+                }
+                catch(Exception zz)
+                {
+                    Helpers.Notify($"Failed to add device. Probably already exists.  Error is {zz.ToString()}");
+
+                }
+
+
+                try
+                {
+                    // and set the FWID property in the twin 
+                    var props = new TwinCollection();
+                    props["FWID"] = GetFWIDString(TargetVersionNumber);
+                    props["VersionNumber"] = TargetVersionNumber.ToString();
+
+                    var twin = await RegMgr.GetTwinAsync(ControlDevice);
+                    twin.Properties.Desired = props;
+                    await RegMgr.UpdateTwinAsync(ControlDevice, twin, twin.ETag);
+                }
+                catch (Exception ex)
+                {
+                    Helpers.Notify($"Failed to add device. Error is {ex.ToString()}");
+                    return;
+                }
+
+
+
+                Debug.Write("");
+
+                
+
+                //CancellationTokenSource cts = new CancellationTokenSource();
 
             }
             catch (Exception ex)
@@ -79,7 +129,12 @@ namespace RIoTDemo
             this.timer1.Interval = 1000;
             this.timer1.Tick += Timer1_Tick;
             this.timer1.Start();
+            initialized = true;
+            paintBusy = false;
+
         }
+
+
 
         bool executing = false;
         private async void Timer1_Tick(object sender, EventArgs e)
@@ -257,6 +312,26 @@ namespace RIoTDemo
             TargetVersionNumber++;
             this.VersionNumber.Text = $"Target Version Number {TargetVersionNumber}";
 
+            try
+            {
+                // Set the FWID property in the twin 
+                var props = new TwinCollection();
+                props["FWID"] = GetFWIDString(TargetVersionNumber);
+                props["VersionNumber"] = TargetVersionNumber.ToString();
+
+                var twin = await RegMgr.GetTwinAsync(ControlDevice);
+                twin.Properties.Desired = props;
+                await RegMgr.UpdateTwinAsync(ControlDevice, twin, twin.ETag);
+            }
+            catch (Exception ex)
+            {
+                Helpers.Notify($"Failed to add device. Error is {ex.ToString()}");
+                return;
+            }
+
+
+            /*
+
             var devices = await RegMgr.GetDevicesAsync(100);
             var demoDevices = devices.Where(x => x.Id.Contains(DeviceIDMatch));
             foreach(var d in demoDevices)
@@ -269,9 +344,49 @@ namespace RIoTDemo
                 await RegMgr.UpdateTwinAsync(d.Id, twx, twx.ETag);
 
             }
+            */
             LastUpdateTime = DateTime.Now;
             updating = false;
         }
+
+        /// <summary>
+        /// SHA256 hash of data-fragment
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="start"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        internal static byte[] HashData(byte[] data, int start, int length)
+        {
+            var d = new Sha256Digest();
+            d.BlockUpdate(data, start, length);
+            var digest = new byte[32];
+            d.DoFinal(digest, 0);
+            return digest;
+        }
+        /// <summary>
+        /// Convert a byte-array to packed HEX
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static string Hexify(byte[] t)
+        {
+            return BitConverter.ToString(t).Replace("-", "");
+        }
+
+        string GetFWIDString(int versionNumber)
+        {
+            return Hexify(HashData(new byte[] { (byte) versionNumber }, 0, 1));
+        }
+
+
+        void MakeControlDeviceTwin()
+        {
+
+
+        }
+
+
     }
     /*
             var m = new

@@ -18,6 +18,10 @@ namespace RIoT
     class HubControl
     {
         string ConnectionStringFile = "c:\\tmp\\ConnectionString.txt";
+        string ControlDevice = "ControlDevice";
+        byte[] ControlDeviceKey = Helpers.HashData(new byte[] { 0 }, 0, 1);
+
+
         RegistryManager RegMgr;
         internal HubControl()
         {
@@ -28,7 +32,7 @@ namespace RIoT
         /// <returns></returns>
         internal bool Connect()
         {
-            if(!File.Exists(ConnectionStringFile))
+            if (!File.Exists(ConnectionStringFile))
             {
                 Helpers.Notify($"Missing connection string file {ConnectionStringFile}.  This file is omitted from the distribution because it contains passwords.", true);
                 Helpers.Notify($"The file should contain somehting like this:", true);
@@ -39,8 +43,8 @@ namespace RIoT
             try
             {
                 RegMgr = RegistryManager.CreateFromConnectionString(connectionString);
-            } 
-            catch(Exception e)
+            }
+            catch (Exception e)
             {
                 Helpers.Notify($"Failed to CreateFromConnectionString: {e.ToString()}");
                 return false;
@@ -74,7 +78,7 @@ namespace RIoT
         /// <returns></returns>
         internal Device EnrollDevice(string deviceId, int fwVersionNumber, string fwId, string aliasCertThumbprint)
         {
-            if(GetDeviceIDs().Contains(deviceId))
+            if (GetDeviceIDs().Contains(deviceId))
             {
                 Helpers.Notify($"Device {deviceId} already exists");
                 return null;
@@ -120,12 +124,34 @@ namespace RIoT
             RegMgr.UpdateDeviceAsync(dev).Wait();
 
             var twin = RegMgr.GetTwinAsync(deviceId).Result;
-            twin.Properties.Desired["FWID"]  = fwid;
+            twin.Properties.Desired["FWID"] = fwid;
             twin.Properties.Desired["VersionNumber"] = fwVersionNumber.ToString();
             RegMgr.UpdateTwinAsync(deviceId, twin, twin.ETag).Wait();
 
             return true;
         }
+
+        internal int GetTargetVersionNumber()
+        {
+            try
+            {
+                /*
+                /////////////////////////////////////////////////
+                    Look at Notes.txt for what's going on'
+                /////////////////////////////////////////////////
+                */
+                var twin = RegMgr.GetTwinAsync(ControlDevice).Result;
+                int targetVersionNumber = (int)twin.Properties.Desired["VersionNumber"];
+                return targetVersionNumber;
+            }
+            catch (Exception ex)
+            {
+                Helpers.Notify($"Failed to get control device twin. Error is {ex.ToString()}");
+                return 0;
+            }
+
+        }
+
 
         internal bool RemoveDevice(string devId)
         {

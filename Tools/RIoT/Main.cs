@@ -95,6 +95,12 @@ namespace RIoT
                     continue;
                 }
 
+                if (action.Flag == "certifyj")
+                {
+                    CertMaker m = new CertMaker(IODir);
+                    m.CertifyExistingForJava(5);
+                    continue;
+                }
                 if (action.Flag == "csr")
                 {
                     CertMaker m = new CertMaker(IODir);
@@ -215,6 +221,7 @@ namespace RIoT
             Parms.Add(new CommandLineOption("help", "Print this text"));
             Parms.Add(new CommandLineOption("gentest", "Make a set of client and server test certificates"));
             Parms.Add(new CommandLineOption("certify", "Certify a device given a bare DeviceIDPublic.PEM file"));
+            Parms.Add(new CommandLineOption("certifyj", "Certify a device for Java"));
             Parms.Add(new CommandLineOption("csr", "Make certs given a DeviceIDCsr.PEM (AliasKey and AliasCert are assumed to exist)"));
             Parms.Add(new CommandLineOption("server", "Start a TLS test server using SSLStream"));
             Parms.Add(new CommandLineOption("server2", "Start a TLS test server using "));

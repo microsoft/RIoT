@@ -6,6 +6,7 @@ Confidential Information
 */
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 #ifdef WIN32
     #define WIN32_LEAN_AND_MEAN
@@ -137,7 +138,6 @@ DERAddOID(
     int     lenPos, digitPos = 0;
     int     val, digit;
     int     numValues = 0;
-    uint8_t digits[5];
 
     for (j = 0; j < 16; j++) {
         if (Values[j] < 0) {
@@ -165,6 +165,8 @@ DERAddOID(
     // Others are base-128 encoded with the most significant bit of each byte,
     // apart from the least significant byte, set to 1.
     if (numValues >= 2) {
+        uint8_t digits[5] = { 0 };
+
         for (j = 2; j < numValues; j++) {
             digitPos = 0;
             val = Values[j];
@@ -528,8 +530,6 @@ DERTbsToCert(
 Error:
     return -1;
 }
-
-
 
 int
 DERGetNestingDepth(

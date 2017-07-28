@@ -142,9 +142,9 @@ RiotStart(
     
     // Build the TBS (to be signed) region of Alias Key Certificate
     DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
-    X509GetDEREncodedTBS(&cerCtx, &x509TBSData,
-                         &AliasKeyPub, &DeviceIDPub,
-                         FWID, RIOT_DIGEST_LENGTH);
+    X509GetAliasCertTBS(&cerCtx, &x509TBSData,
+                        &AliasKeyPub, &DeviceIDPub,
+                        FWID, RIOT_DIGEST_LENGTH);
 
     // Sign the Alias Key Certificate's TBS region
     RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, &deviceIDPriv);

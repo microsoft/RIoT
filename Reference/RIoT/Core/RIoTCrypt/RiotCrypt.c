@@ -33,8 +33,8 @@ RiotCrypt_Kdf(
         return RIOT_INVALID_PARAMETER;
     }
 
-    RIOT_KDF_FIXED(fixed, fixedSize, context, contextSize,
-                   label, labelSize, bytesToDerive * 8);
+    fixedSize = RIOT_KDF_FIXED(fixed, fixedSize, context, contextSize,
+                               label, labelSize, bytesToDerive * 8);
 
     while (counter < (bytesToDerive / (RIOT_KEY_LENGTH))) {
 
@@ -164,7 +164,8 @@ RiotCrypt_DeriveEccKey(
     size_t              labelSize       // IN:  TODO
 )
 {
-    bigval_t    srcVal, *pSrcVal;
+    bigval_t    srcVal  = { 0 };
+    bigval_t   *pSrcVal = NULL;
 
     if (srcDataSize > sizeof(bigval_t)) {
         return RIOT_INVALID_PARAMETER;
@@ -258,8 +259,8 @@ RiotCrypt_VerifyDigest(
     return RIOT_DSAVerifyDigest(digest, sig, key);
 }
 
-#define RIOT_LABEL_EXCHANGE_KEY     "RiotExchange"
-
+#if USES_EPHEMERAL
+#define RIOT_LABEL_EXCHANGE     "Exchange"
 RIOT_STATUS
 RiotCrypt_EccEncrypt(
     uint8_t                *result,         // OUT: Buffer to receive encrypted data
@@ -289,8 +290,8 @@ RiotCrypt_EccEncrypt(
 
     status = RiotCrypt_Kdf(exchKey, sizeof(exchKey),
                            (uint8_t *)&secret, sizeof(secret),
-                           NULL, 0, (const uint8_t*)RIOT_LABEL_EXCHANGE_KEY,
-                           (sizeof(RIOT_LABEL_EXCHANGE_KEY) - 1),
+                           NULL, 0, (const uint8_t*)RIOT_LABEL_EXCHANGE,
+                           (sizeof(RIOT_LABEL_EXCHANGE) - 1),
                            sizeof(exchKey));
 
     if (status != RIOT_SUCCESS) {
@@ -324,8 +325,8 @@ RiotCrypt_EccDecrypt(
 
     status = RiotCrypt_Kdf(exchKey, sizeof(exchKey),
                            (uint8_t *)&secret, sizeof(secret),
-                           NULL, 0, (const uint8_t*)RIOT_LABEL_EXCHANGE_KEY,
-                           (sizeof(RIOT_LABEL_EXCHANGE_KEY) - 1),
+                           NULL, 0, (const uint8_t*)RIOT_LABEL_EXCHANGE,
+                           (sizeof(RIOT_LABEL_EXCHANGE) - 1),
                            sizeof(exchKey));
 
     if (status != RIOT_SUCCESS) {
@@ -336,6 +337,7 @@ RiotCrypt_EccDecrypt(
                                          data, dataSize, exchKey);
     return status;
 }
+#endif
 
 RIOT_STATUS
 RiotCrypt_SymEncryptDecrypt(

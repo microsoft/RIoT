@@ -31,7 +31,7 @@ extern "C" {
 #define     ECDH_IN         NO
 #define     ECDH_OUT        YES
 
-#if ECDSA_SIZE || ECDH_OUT || ECDSA_SIGN
+#if ECDSA_SIGN || ECDH_OUT
 #define USES_EPHEMERAL      YES
 #else
 #define USES_EPHEMERAL      NO

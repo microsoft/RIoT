@@ -1402,6 +1402,7 @@ ECDH_generate(affine_point_t *P1, bigval_t *k)
 
     return (0);
 }
+#endif
 
 //
 //Derives a secret value, k, and a point, P1, from the values of src and label.
@@ -1419,15 +1420,14 @@ ECDH_derive(affine_point_t *P1, bigval_t *k,
 
     k->data[BIGLEN - 1] = 0;
     do {
-        RIOT_KDF_FIXED(fixed, fixedSize,
-                       label, labelSize, NULL, 0, RIOT_ECC_PRIVATE_BYTES * 8);
+        fixedSize = RIOT_KDF_FIXED(fixed, fixedSize,  label, labelSize,
+                                   NULL, 0, RIOT_ECC_PRIVATE_BYTES * 8);
         RIOT_KDF_SHA256((uint8_t *)k, (uint8_t *)src, RIOT_ECC_PRIVATE_BYTES,
                         NULL, fixed, fixedSize);
     } while (big_is_zero(k) || (big_cmp(k, &orderP) >= 0));
 
     pointMpyP(P1, k, &base_point);
 }
-#endif
 
 // takes the point sent by the other party, and verifies that it is a
 // valid point.  If 1 <= k < orderP and the point is valid, it stores
@@ -1670,11 +1670,11 @@ ECC_feature_list(void)
 static int
 get_random_bytes(uint8_t *buf, size_t len)
 {
-    // DJM: DICE (time->SOMETHING ELSE (TODO)
-    // srand((unsigned)time(NULL));
-    srand(4);
+    srand((unsigned)time(NULL));
     for (; len; len--)
-    { *buf++ = (uint8_t)rand(); }
+    {
+        *buf++ = (uint8_t)rand();
+    }
     return 0;
 }
 #endif
@@ -1700,7 +1700,7 @@ RIOT_GenerateDHKeyPair(ecc_publickey *publicKey, ecc_privatekey *privateKey)
 }
 #endif
 
-//*
+//
 // Generates the Diffie-Hellman share secret.
 //
 // @param peerPublicKey The peer's public key

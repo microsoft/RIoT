@@ -80,12 +80,12 @@ void PrintHex(uint8_t* buf, int bufLen);
 int
 main()
 {
-    BYTE    UDS[DICE_UDS_LENGTH];
-    BYTE    FWID[RIOT_DIGEST_LENGTH];
-    BYTE    deviceIDPub[DER_MAX_PEM];
-    BYTE    devCert[DER_MAX_PEM];
-    BYTE    aliasKey[DER_MAX_PEM];
-    BYTE    aliasCert[DER_MAX_PEM];    
+    BYTE    UDS[DICE_UDS_LENGTH]     = { 0 };
+    BYTE    FWID[RIOT_DIGEST_LENGTH] = { 0 };
+    BYTE    deviceIDPub[DER_MAX_PEM] = { 0 };
+    BYTE    devCert[DER_MAX_PEM]     = { 0 };
+    BYTE    aliasKey[DER_MAX_PEM]    = { 0 };
+    BYTE    aliasCert[DER_MAX_PEM]   = { 0 };
 
     DWORD   deviceIDPubSize = DER_MAX_PEM;
     DWORD   aliaskeySize    = DER_MAX_PEM;
@@ -119,19 +119,19 @@ CreateDeviceAuthBundle(
     DWORD   *AliasCertBufSize
 )
 {
-    char                PEM[DER_MAX_PEM];
-    uint8_t             cerBuffer[DER_MAX_TBS];
-    uint8_t             derBuffer[DER_MAX_TBS];
-    uint8_t             digest[DICE_DIGEST_LENGTH];
-    uint8_t             CDI[DICE_DIGEST_LENGTH];
-    RIOT_ECC_PUBLIC     deviceIDPub;
-    RIOT_ECC_PRIVATE    deviceIDPriv;
-    RIOT_ECC_PUBLIC     aliasKeyPub;
-    RIOT_ECC_PRIVATE    aliasKeyPriv;
-    RIOT_ECC_SIGNATURE  tbsSig;
-    DERBuilderContext   derCtx;
-    DERBuilderContext   cerCtx;
-    uint32_t            length;
+    char                PEM[DER_MAX_PEM]           = { 0 };
+    uint8_t             cerBuffer[DER_MAX_TBS]     = { 0 };
+    uint8_t             derBuffer[DER_MAX_TBS]     = { 0 };
+    uint8_t             digest[DICE_DIGEST_LENGTH] = { 0 };
+    uint8_t             CDI[DICE_DIGEST_LENGTH]    = { 0 };
+    RIOT_ECC_PUBLIC     deviceIDPub                = { 0 };
+    RIOT_ECC_PRIVATE    deviceIDPriv               = { 0 };
+    RIOT_ECC_PUBLIC     aliasKeyPub                = { 0 };
+    RIOT_ECC_PRIVATE    aliasKeyPriv               = { 0 };
+    RIOT_ECC_SIGNATURE  tbsSig                     = { 0 };
+    DERBuilderContext   derCtx                     = { 0 };
+    DERBuilderContext   cerCtx                     = { 0 };
+    uint32_t            length                     = 0;
 
     // REVISIT: Implement "required size" invocation for this function?
 

@@ -1673,7 +1673,10 @@ get_random_bytes(uint8_t *buf, size_t len)
     srand((unsigned)time(NULL));
     for (; len; len--)
     {
-        *buf++ = (uint8_t)rand();
+    //  TODO: REVERT THIS WHEN THE SDK
+    //        NO LONGER REQUIRES IT!!
+    //  *buf++ = (uint8_t)rand();
+        *buf++ = (uint8_t)len;
     }
     return 0;
 }

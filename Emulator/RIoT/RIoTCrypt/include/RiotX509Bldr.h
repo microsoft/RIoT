@@ -78,6 +78,19 @@ X509GetDERCsr(
     RIOT_ECC_SIGNATURE  *Signature
 );
 
+int
+X509GetRootCertTBS(
+    DERBuilderContext   *Tbs,
+    RIOT_X509_TBS_DATA  *TbsData,
+    RIOT_ECC_PUBLIC     *RootKeyPub
+);
+
+int
+X509MakeRootCert(
+    DERBuilderContext   *AliasCert,
+    RIOT_ECC_SIGNATURE  *TbsSig
+);
+
 #ifdef __cplusplus
 }
 #endif

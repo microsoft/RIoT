@@ -14,10 +14,11 @@ Confidential Information
 #define CHK(_X)  if(((_X)) < 0) {goto Error;}
 
 // OIDs.  Note that the encoder expects a -1 sentinel.
-static int riotOID[] = { 1,3,6,1,4,1,311,89,3,1,-1 };
+static int riotOID[] = { 2,23,133,5,4,1,-1 };
 static int ecdsaWithSHA256OID[] = { 1,2,840,10045,4,3,2,-1 };
 static int ecPublicKeyOID[] = { 1,2,840,10045, 2,1,-1 };
 static int prime256v1OID[] = { 1,2,840,10045, 3,1,7,-1 };
+static int keyUsageOID[] = { 2,5,29,15,-1 };
 static int extKeyUsageOID[] = { 2,5,29,37,-1 };
 static int subjectAltNameOID[] = { 2,5,29,17,-1 };
 static int clientAuthOID[] = { 1,3,6,1,5,5,7,3,2,-1 };
@@ -41,7 +42,6 @@ X509AddExtensions(
     CHK(    DERStartSequenceOrSet(Tbs, true));
     CHK(        DERStartSequenceOrSet(Tbs, true));
     CHK(            DERAddOID(Tbs, extKeyUsageOID));
-    CHK(            DERAddBoolean(Tbs, true));
     CHK(            DERStartEnvelopingOctetString(Tbs));
     CHK(                DERStartSequenceOrSet(Tbs, true));
     CHK(                    DERAddOID(Tbs, clientAuthOID));
@@ -49,25 +49,20 @@ X509AddExtensions(
     CHK(            DERPopNesting(Tbs));
     CHK(        DERPopNesting(Tbs));
     CHK(        DERStartSequenceOrSet(Tbs, true));
-    CHK(            DERAddOID(Tbs, subjectAltNameOID));
-    CHK(            DERAddBoolean(Tbs, true));
-    CHK(            DERStartEnvelopingOctetString(Tbs));
-    CHK(                DERStartSequenceOrSet(Tbs, true));
-    CHK(                    DERStartExplicit(Tbs, 0));
-    CHK(                        DERAddOID(Tbs, riotOID));
+    CHK(           DERAddOID(Tbs, riotOID));
+    CHK(               DERStartEnvelopingOctetString(Tbs));
+    CHK(                   DERStartSequenceOrSet(Tbs, true));
+    CHK(                       DERAddInteger(Tbs, 1));
+    CHK(                       DERStartSequenceOrSet(Tbs, true));
+    CHK(                            DERStartSequenceOrSet(Tbs, true));
+    CHK(                                DERAddOID(Tbs, ecPublicKeyOID));
+    CHK(                                DERAddOID(Tbs, prime256v1OID));
+    CHK(                            DERPopNesting(Tbs));
+    CHK(                            DERAddBitString(Tbs, DevIdPub, DevIdPubLen));
+    CHK(                        DERPopNesting(Tbs));
     CHK(                        DERStartSequenceOrSet(Tbs, true));
-    CHK(                            DERAddInteger(Tbs, 1));
-    CHK(                            DERStartSequenceOrSet(Tbs, true));
-    CHK(                                DERStartSequenceOrSet(Tbs, true));
-    CHK(                                    DERAddOID(Tbs, ecPublicKeyOID));
-    CHK(                                    DERAddOID(Tbs, prime256v1OID));
-    CHK(                                DERPopNesting(Tbs));
-    CHK(                                DERAddBitString(Tbs, DevIdPub, DevIdPubLen));
-    CHK(                            DERPopNesting(Tbs));
-    CHK(                            DERStartSequenceOrSet(Tbs, true));
-    CHK(                                DERAddOID(Tbs, sha256OID));
-    CHK(                                DERAddOctetString(Tbs, Fwid, FwidLen));
-    CHK(                            DERPopNesting(Tbs));
+    CHK(                            DERAddOID(Tbs, sha256OID));
+    CHK(                            DERAddOctetString(Tbs, Fwid, FwidLen));
     CHK(                        DERPopNesting(Tbs));
     CHK(                    DERPopNesting(Tbs));
     CHK(                DERPopNesting(Tbs));
@@ -126,6 +121,7 @@ X509GetDeviceCertTBS(
 {
     uint8_t     encBuffer[65];
     uint32_t    encBufferLen;
+    uint8_t     keyUsage = RIOT_X509_KEY_USAGE;
 
     CHK(DERStartSequenceOrSet(Tbs, true));
     CHK(    DERAddShortExplicitInteger(Tbs, 2));
@@ -150,7 +146,15 @@ X509GetDeviceCertTBS(
     CHK(    DERStartExplicit(Tbs, 3));
     CHK(        DERStartSequenceOrSet(Tbs, true));
     CHK(            DERStartSequenceOrSet(Tbs, true));
+    CHK(                DERAddOID(Tbs, keyUsageOID));
+    CHK(                DERStartEnvelopingOctetString(Tbs));
+                            encBufferLen = 1;
+    CHK(                    DERAddBitString(Tbs, &keyUsage, encBufferLen)); // Actually 6bits
+    CHK(                DERPopNesting(Tbs));
+    CHK(            DERPopNesting(Tbs));
+    CHK(            DERStartSequenceOrSet(Tbs, true));
     CHK(                DERAddOID(Tbs, basicConstraintsOID));
+    CHK(                DERAddBoolean(Tbs, true));
     CHK(                DERStartEnvelopingOctetString(Tbs));
     CHK(                    DERStartSequenceOrSet(Tbs, true));
     CHK(                        DERAddBoolean(Tbs, true));
@@ -407,6 +411,7 @@ X509GetRootCertTBS(
 {
     uint8_t     encBuffer[65];
     uint32_t    encBufferLen;
+    uint8_t     keyUsage = RIOT_X509_KEY_USAGE;
 
     CHK(DERStartSequenceOrSet(Tbs, true));
     CHK(    DERAddShortExplicitInteger(Tbs, 2));
@@ -431,7 +436,15 @@ X509GetRootCertTBS(
     CHK(    DERStartExplicit(Tbs, 3));
     CHK(        DERStartSequenceOrSet(Tbs, true));
     CHK(            DERStartSequenceOrSet(Tbs, true));
+    CHK(                DERAddOID(Tbs, keyUsageOID));
+    CHK(                DERStartEnvelopingOctetString(Tbs));
+                            encBufferLen = 1;
+    CHK(                    DERAddBitString(Tbs, &keyUsage, encBufferLen)); // Actually 6bits
+    CHK(                DERPopNesting(Tbs));
+    CHK(            DERPopNesting(Tbs));
+    CHK(            DERStartSequenceOrSet(Tbs, true));
     CHK(                DERAddOID(Tbs, basicConstraintsOID));
+    CHK(                DERAddBoolean(Tbs, true));
     CHK(                DERStartEnvelopingOctetString(Tbs));
     CHK(                    DERStartSequenceOrSet(Tbs, true));
     CHK(                        DERAddBoolean(Tbs, true));

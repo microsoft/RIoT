@@ -9,6 +9,17 @@ extern "C" {
 
 #define RIOT_X509_SNUM_LEN  0x05
 
+// KeyUsage :: = BIT STRING{
+//     digitalSignature(0),
+//     nonRepudiation(1),
+//     keyEncipherment(2),
+//     dataEncipherment(3),
+//     keyAgreement(4),
+//     keyCertSign(5),
+//     cRLSign(6)
+// }
+#define RIOT_X509_KEY_USAGE 0x4  // keyCertSign
+
 // Const x509 "to be signed" data
 typedef struct
 {

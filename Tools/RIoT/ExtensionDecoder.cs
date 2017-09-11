@@ -26,7 +26,7 @@ namespace RIoT
     /// </summary>
     class ExtensionDecoder
     {
-        static string RIoTOid = "1.3.6.1.4.1.311.89.3.1";
+        static string RIoTOid = "2.23.133.5.4.1";
         static string ecPubKeyOID = "1.2.840.10045.2.1";
         static string prime256v1Oid = "1.2.840.10045.3.1.7";
         static string sha256Oid = "2.16.840.1.101.3.4.2.1";
@@ -45,7 +45,7 @@ namespace RIoT
             AsnEncodedData altNames = null;
             foreach (var ext in aliasCert.Extensions)
             {
-                if (ext.Oid.Value != SubjectAltNameOID.Value) continue;
+                if (ext.Oid.Value != RIoTOid) continue;
                 altNames = new AsnEncodedData(ext.Oid, ext.RawData);
             }
             // an AltName is mandatory
@@ -75,23 +75,23 @@ namespace RIoT
             try
             {
                 DerSequence seq = (DerSequence)DerSequence.FromByteArray(altNames.RawData);
-                DerTaggedObject obj = (DerTaggedObject)seq[0];
-                DerSequence obj2 = (DerSequence)obj.GetObject();
-                var oid = (DerObjectIdentifier)obj2[0];
-                if (oid.Id != RIoTOid) return ParseError("Incorrect RIoT OID");
+                //DerTaggedObject obj = (DerTaggedObject)seq[0];
+                //DerSequence obj2 = (DerSequence)obj.GetObject();
+                //var oid = (DerObjectIdentifier)obj2[0];
+                //if (oid.Id != RIoTOid) return ParseError("Incorrect RIoT OID");
 
-                DerSequence obj3 = (DerSequence)obj2[1];
-                var versionNumber = (DerInteger)obj3[0];
+                
+                var versionNumber = (DerInteger)seq[0];
                 if (versionNumber.PositiveValue.IntValue != 1) return ParseError("Wrong version number");
 
-                DerSequence obj4 = (DerSequence)obj3[1];
+                DerSequence obj4 = (DerSequence)seq[1];
                 DerSequence obj5 = (DerSequence)obj4[0];
                 var keyAlg1 = (DerObjectIdentifier)obj5[0];
                 var keyAlg2 = (DerObjectIdentifier)obj5[1];
                 if (keyAlg1.Id != ecPubKeyOID) return ParseError("Bad ECPubKey OID");
                 if (keyAlg2.Id != prime256v1Oid) return ParseError("Bad curve OID");
                 var key = (DerBitString)obj4[1];
-                var obj4b = (DerSequence)obj3[2];
+                var obj4b = (DerSequence)seq[2];
                 var hashAlg = (DerObjectIdentifier)obj4b[0];
                 if (hashAlg.Id != sha256Oid) return ParseError("Bad fwid hash OID");
                 var hash = (DerOctetString)obj4b[1];

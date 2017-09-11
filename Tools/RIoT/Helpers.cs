@@ -14,6 +14,7 @@ namespace RIoT
     using System.IO;
     using System.Linq;
     using System.Security.Cryptography.X509Certificates;
+    using System.Text;
 
     public class Helpers
     {
@@ -157,6 +158,28 @@ namespace RIoT
             var o = reader.ReadObject();
             stream.Close();
             return o;
+        }
+
+        internal static byte[] GetBytesFromPEM(string pemFile, string section)
+        {
+            var pem = File.ReadAllText(pemFile);
+            var header = String.Format("-----BEGIN {0}-----", section);
+            var footer = String.Format("-----END {0}-----", section);
+
+            var start = pem.IndexOf(header, StringComparison.Ordinal);
+            if (start < 0)
+            {
+                return null;
+            }
+
+            start += header.Length;
+            var end = pem.IndexOf(footer, start, StringComparison.Ordinal) - start;
+            if (end < 0)
+            {
+                return null;
+            }
+
+            return Convert.FromBase64String(pem.Substring(start, end));
         }
 
         /// <summary>

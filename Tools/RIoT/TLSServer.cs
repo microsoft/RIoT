@@ -23,13 +23,14 @@ namespace RIoT
     using Org.BouncyCastle.X509;
     using Org.BouncyCastle.Asn1.Nist;
     using Org.BouncyCastle.Math.EC;
+    using System.Collections.Generic;
 
     public sealed class SslTcpServer
     {
         static X509Certificate2 ServerCert;
         static X509Certificate2 DeviceCA;
         static string DeviceIDPEMFile;
-        static internal int TargetFirmwareVersionNumber;
+        //static internal int TargetFirmwareVersionNumber;
 
         internal static void RunServer(string _serverCA, string serverCert, string serverKey, string deviceCA, string deviceIDPublic)
         {
@@ -188,6 +189,7 @@ namespace RIoT
             // rather than the bare-certificate validation rules.
             if (inChain.ChainElements.Count==1)
             {
+                Helpers.Notify($"count==1", true);
                 return ValidateBareCertificate(certificate);
             }
 
@@ -231,7 +233,8 @@ namespace RIoT
                 Helpers.Notify($"Chain building failed: {chainLength}", true);
                 foreach (var err in chain.ChainStatus)
                 {
-                    Helpers.Notify($"        Error:{err.ToString()}", true);
+                    
+                    Helpers.Notify($"        Error:{err.StatusInformation.ToString()}", true);
                 }
                 return false;
             }
@@ -465,7 +468,49 @@ namespace RIoT
             }
         }
 
+        public static void ValidateEmulatorChain(string alias, string deviceID, string root)
+        {
+            try
+            {
+                X509Certificate2 aliasCert = new X509Certificate2();
+                X509Certificate2 devIDCert = null;
+                X509Certificate2 rootCert = new X509Certificate2();
 
+                rootCert.Import(Helpers.GetBytesFromPEM(root, "CERTIFICATE"));
+
+                aliasCert = new X509Certificate2(Helpers.GetBytesFromPEM(alias, "CERTIFICATE"));
+                devIDCert = new X509Certificate2(Helpers.GetBytesFromPEM(deviceID, "CERTIFICATE"));
+                rootCert = new X509Certificate2(Helpers.GetBytesFromPEM(root, "CERTIFICATE"));
+
+                var chain = new X509Chain
+                {
+                    ChainPolicy =
+                    {
+                        RevocationMode = X509RevocationMode.NoCheck,
+                        RevocationFlag = X509RevocationFlag.ExcludeRoot,
+                        VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority
+                    }
+                };
+
+                //chain.ChainPolicy.ExtraStore.Add(devIDCert);
+                chain.ChainPolicy.ExtraStore.Add(rootCert);
+
+                bool chainBuildSucceeded = chain.Build(aliasCert as X509Certificate2 ?? new X509Certificate2(aliasCert.Export(X509ContentType.Cert)));
+
+                if (!chainBuildSucceeded)
+                {
+                    foreach (var err in chain.ChainStatus)
+                    {
+                        Helpers.Notify($"Error:{err.StatusInformation.ToString()}", true);
+                    }
+                }
+
+            }
+            catch (Exception e)
+            {
+                Helpers.Notify($"ValidateEmulatorChain error {e.ToString()}");
+            }
+        }
 
     }
 

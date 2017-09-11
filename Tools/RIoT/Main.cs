@@ -50,7 +50,8 @@ namespace RIoT
         internal static bool MakeCerts = true;
 
         // This is from the MS/MSR arc.  
-        internal static string DeviceIdOid = "1.3.6.1.4.1.311.89.3.1";
+        //internal static string DeviceIdOid = "1.3.6.1.4.1.311.89.3.1";
+        internal static string DeviceIdOid = "2.23.133.5.4.1";
 
         static List<CommandLineOption> Parms = new List<CommandLineOption>();
         internal static string ChainOrBareCert = "C";
@@ -120,6 +121,11 @@ namespace RIoT
                     continue;
                 }
 
+                if (action.Flag == "testemu")
+                {
+                    SslTcpServer.ValidateEmulatorChain(@"AliasCert.pem", @"DeviceIDCrt.pem", @"r00tcrt.pem");
+                    continue;
+                }
 
                 if (action.Flag == "sc")
                 {
@@ -234,6 +240,7 @@ namespace RIoT
             Parms.Add(new CommandLineOption("dir", "Set the directory to put and gets certs and keys", 1));
             Parms.Add(new CommandLineOption("bare", "Present a bare alias certificate rather than a chain (use before other options)"));
             Parms.Add(new CommandLineOption("demo", "Update demo"));
+            Parms.Add(new CommandLineOption("testemu", "Test cert chain from emulator"));
         }
         static bool ParseParms(string[] parms)
         {

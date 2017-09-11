@@ -44,19 +44,19 @@ uint8_t rDigest[DICE_DIGEST_LENGTH] = {
 // The static data fields that make up the Alias Cert "to be signed" region
 RIOT_X509_TBS_DATA x509AliasTBSData = { { 0x0A, 0x0B, 0x0C, 0x0D, 0x0E },
                                        "RIoT Core", "MSR_TEST", "US",
-                                       "201701010000Z", "370101000000Z",
+                                       "170101000000Z", "370101000000Z",
                                        "RIoT Device", "MSR_TEST", "US" };
 
 // The static data fields that make up the DeviceID Cert "to be signed" region
 RIOT_X509_TBS_DATA x509DeviceTBSData = { { 0x0E, 0x0D, 0x0C, 0x0B, 0x0A },
                                        "RIoT R00t", "MSR_TEST", "US",
-                                       "201701010000Z", "370101000000Z",
+                                       "170101000000Z", "370101000000Z",
                                        "RIoT Core", "MSR_TEST", "US" };
 
 // The static data fields that make up the "root signer" Cert
 RIOT_X509_TBS_DATA x509RootTBSData   = { { 0x1A, 0x2B, 0x3C, 0x4D, 0x5E },
                                        "RIoT R00t", "MSR_TEST", "US",
-                                       "201701010000Z", "370101000000Z",
+                                       "170101000000Z", "370101000000Z",
                                        "RIoT R00t", "MSR_TEST", "US" };
 
 // Selectors for DeviceID cert handling (See comment below)
@@ -150,7 +150,6 @@ CreateDeviceAuthBundle(
 )
 {
     char                PEM[DER_MAX_PEM] = { 0 };
-    uint8_t             cerBuffer[DER_MAX_TBS] = { 0 };
     uint8_t             derBuffer[DER_MAX_TBS] = { 0 };
     uint8_t             digest[DICE_DIGEST_LENGTH] = { 0 };
     uint8_t             CDI[DICE_DIGEST_LENGTH] = { 0 };
@@ -160,7 +159,6 @@ CreateDeviceAuthBundle(
     RIOT_ECC_PRIVATE    aliasKeyPriv = { 0 };
     RIOT_ECC_SIGNATURE  tbsSig = { 0 };
     DERBuilderContext   derCtx = { 0 };
-    DERBuilderContext   cerCtx = { 0 };
     uint32_t            length = 0;
 
     // REVISIT: Implement "required size" invocation for this function?
@@ -208,6 +206,7 @@ CreateDeviceAuthBundle(
     memcpy(DeviceIDPublicEncoded, PEM, length);
 
 #ifdef DEBUG
+    printf("DevID Public");
     PrintHex(derCtx.Buffer, derCtx.Position);
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
@@ -224,6 +223,7 @@ CreateDeviceAuthBundle(
     memcpy(AliasKeyEncoded, PEM, length);
 
 #ifdef DEBUG
+    printf("Alias Key");
     PrintHex(derCtx.Buffer, derCtx.Position);
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
@@ -232,28 +232,29 @@ CreateDeviceAuthBundle(
 #endif 
 
     // Build the TBS (to be signed) region of Alias Key Certificate
-    DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
-    X509GetAliasCertTBS(&cerCtx, &x509AliasTBSData,
+    DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+    X509GetAliasCertTBS(&derCtx, &x509AliasTBSData,
         &aliasKeyPub, &deviceIDPub,
         Fwid, RIOT_DIGEST_LENGTH);
 
     // Sign the Alias Key Certificate's TBS region
-    RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, &deviceIDPriv);
+    RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
 
     // Generate Alias Key Certificate
-    X509MakeAliasCert(&cerCtx, &tbsSig);
+    X509MakeAliasCert(&derCtx, &tbsSig);
 
     // Copy Alias Key Certificate
     length = sizeof(PEM);
-    DERtoPEM(&cerCtx, CERT_TYPE, PEM, &length);
+    DERtoPEM(&derCtx, CERT_TYPE, PEM, &length);
     *AliasCertBufSize = length;
     memcpy(AliasCertBuffer, PEM, length);
 
 #ifdef DEBUG
-    PrintHex(cerCtx.Buffer, cerCtx.Position);
+    printf("Alias Cert");
+    PrintHex(derCtx.Buffer, derCtx.Position);
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
-    WriteBinaryFile("AliasCert.cer", cerCtx.Buffer, cerCtx.Position);
+    WriteBinaryFile("AliasCert.der", derCtx.Buffer, derCtx.Position);
     WriteBinaryFile("AliasCert.pem", (uint8_t *)PEM, length);
 #endif
 
@@ -266,66 +267,74 @@ CreateDeviceAuthBundle(
 
     if (DeviceCertType == RIOT_SELF_SIGNED) {
         // Generating self-signed DeviceID certificate
-        DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
-        X509GetDeviceCertTBS(&cerCtx, &x509DeviceTBSData, &deviceIDPub);
+        DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub);
 
         // Sign the DeviceID Certificate's TBS region
-        RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, &deviceIDPriv);
+        RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
 
         // Generate DeviceID Certificate
-        X509MakeDeviceCert(&cerCtx, &tbsSig);
+        X509MakeDeviceCert(&derCtx, &tbsSig);
     }
     else if (DeviceCertType == RIOT_CSR) {
         // Generating CSR
-        DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
-        X509GetDERCsrTbs(&cerCtx, &x509AliasTBSData, &deviceIDPub);
+        DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+        X509GetDERCsrTbs(&derCtx, &x509AliasTBSData, &deviceIDPub);
 
         // Sign the Alias Key Certificate's TBS region
-        RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, &deviceIDPriv);
+        RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
 
         // Create CSR for DeviceID
-        X509GetDERCsr(&cerCtx, &tbsSig);
+        X509GetDERCsr(&derCtx, &tbsSig);
     }
     else {
         // Generating "root"-signed DeviceID certificate
-        DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
-        X509GetDeviceCertTBS(&cerCtx, &x509DeviceTBSData, &deviceIDPub);
+        DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub);
 
         // Sign the DeviceID Certificate's TBS region
-        RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, (RIOT_ECC_PRIVATE *)eccRootPrivBytes);
+        RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, (RIOT_ECC_PRIVATE *)eccRootPrivBytes);
 
         // Generate DeviceID Certificate
-        X509MakeDeviceCert(&cerCtx, &tbsSig);
+        X509MakeDeviceCert(&derCtx, &tbsSig);
     }
 
     // Copy DeviceID Certificate or CSR
     length = sizeof(PEM);
-    DERtoPEM(&cerCtx, CERT_TYPE, PEM, &length);
+    DERtoPEM(&derCtx, CERT_TYPE, PEM, &length);
     *DeviceCertBufSize = length;
     memcpy(DeviceCertBuffer, PEM, length);
 
 #ifdef DEBUG
-    WriteBinaryFile("DeviceIDCrt.DER", derCtx.Buffer, derCtx.Position);
-    WriteBinaryFile("DeviceIDCrt.PEM", (uint8_t *)PEM, length);
+    printf("DeviceID Cert");
+    PrintHex(derCtx.Buffer, derCtx.Position);
+    PEM[length] = '\0'; // JUST FOR PRINTF
+    printf("%s", PEM);
+    WriteBinaryFile("DeviceIDCrt.der", derCtx.Buffer, derCtx.Position);
+    WriteBinaryFile("DeviceIDCrt.pem", (uint8_t *)PEM, length);
 #endif
 
     // Generate "root" CA certficiate
-    DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
-    X509GetRootCertTBS(&cerCtx, &x509RootTBSData, (RIOT_ECC_PUBLIC*)eccRootPubBytes);
+    DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+    X509GetRootCertTBS(&derCtx, &x509RootTBSData, (RIOT_ECC_PUBLIC*)eccRootPubBytes);
 
     // Self-sign the "root" Certificate's TBS region
-    RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, &deviceIDPriv);
+    RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
 
     // Generate "root" CA cert
-    X509MakeRootCert(&cerCtx, &tbsSig);
+    X509MakeRootCert(&derCtx, &tbsSig);
 
     // Copy "root" CA Certificate
     length = sizeof(PEM);
-    DERtoPEM(&cerCtx, CERT_TYPE, PEM, &length);
+    DERtoPEM(&derCtx, CERT_TYPE, PEM, &length);
 
 #ifdef DEBUG
-    WriteBinaryFile("R00tCrt.DER", derCtx.Buffer, derCtx.Position);
-    WriteBinaryFile("R00tCrt.PEM", (uint8_t *)PEM, length);
+    printf("\"root\" CA Cert");
+    PrintHex(derCtx.Buffer, derCtx.Position);
+    PEM[length] = '\0'; // JUST FOR PRINTF
+    printf("%s", PEM);
+    WriteBinaryFile("R00tCrt.der", derCtx.Buffer, derCtx.Position);
+    WriteBinaryFile("R00tCrt.pem", (uint8_t *)PEM, length);
 #endif
 
     return 0;

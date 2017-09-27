@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define RIOT_X509_SNUM_LEN  0x05
+#define RIOT_X509_SNUM_LEN  0x10
 
 // KeyUsage :: = BIT STRING{
 //     digitalSignature(0),
@@ -18,7 +18,7 @@ extern "C" {
 //     keyCertSign(5),
 //     cRLSign(6)
 // }
-#define RIOT_X509_KEY_USAGE 0x4  // keyCertSign
+#define RIOT_X509_CA_KEY_USAGE 0x43  // digitalSignature, nonRepudiation, keyCertSign
 
 // Const x509 "to be signed" data
 typedef struct
@@ -38,7 +38,9 @@ int
 X509GetDeviceCertTBS(
     DERBuilderContext   *Tbs,
     RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *DevIdKeyPub
+    RIOT_ECC_PUBLIC     *DevIdKeyPub,
+    RIOT_ECC_PUBLIC     *IssuerIdKeyPub,
+    uint32_t            PathLength
 );
 
 int
@@ -54,7 +56,8 @@ X509GetAliasCertTBS(
     RIOT_ECC_PUBLIC     *AliasKeyPub,
     RIOT_ECC_PUBLIC     *DevIdKeyPub,
     uint8_t             *Fwid,
-    uint32_t             FwidLen
+    uint32_t             FwidLen,
+    uint32_t             PathLen
 );
 
 int
@@ -93,7 +96,8 @@ int
 X509GetRootCertTBS(
     DERBuilderContext   *Tbs,
     RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *RootKeyPub
+    RIOT_ECC_PUBLIC     *RootKeyPub,
+    uint32_t            PathLength
 );
 
 int

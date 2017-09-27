@@ -378,6 +378,25 @@ Error:
 }
 
 int
+DERAddSequenceOctets(
+    DERBuilderContext   *Context,
+    uint8_t             Num,
+    uint8_t             *OctetString,
+    uint32_t             OctetStringLen
+)
+{
+    CHECK_SPACE2(Context, OctetStringLen);
+    Context->Buffer[Context->Position++] = 0x80 + Num;
+    EncodeInt(Context->Buffer + Context->Position, OctetStringLen);
+    Context->Position += GetIntEncodedNumBytes(OctetStringLen);
+    memcpy(Context->Buffer + Context->Position, OctetString, OctetStringLen);
+    Context->Position += OctetStringLen;
+    return 0;
+Error:
+    return -1;
+}
+
+int
 DERAddOctetString(
     DERBuilderContext   *Context,
     uint8_t             *OctetString,

@@ -113,6 +113,14 @@ DERAddBitString(
 );
 
 int
+DERAddSequenceOctets(
+    DERBuilderContext   *Context,
+    uint8_t             Num,
+    uint8_t             *OctetString,
+    uint32_t             OctetStringLen
+);
+
+int
 DERAddOctetString(
     DERBuilderContext   *Context,
     uint8_t             *OctetString,

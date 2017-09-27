@@ -42,19 +42,19 @@ uint8_t rDigest[DICE_DIGEST_LENGTH] = {
 #define REASONABLE_MIN_CERT_SIZE    DER_MAX_TBS
 
 // The static data fields that make up the Alias Cert "to be signed" region
-RIOT_X509_TBS_DATA x509AliasTBSData = { { 0x0A, 0x0B, 0x0C, 0x0D, 0x0E },
+RIOT_X509_TBS_DATA x509AliasTBSData = { { 0 },
                                        "RIoT Core", "MSR_TEST", "US",
                                        "170101000000Z", "370101000000Z",
                                        "RIoT Device", "MSR_TEST", "US" };
 
 // The static data fields that make up the DeviceID Cert "to be signed" region
-RIOT_X509_TBS_DATA x509DeviceTBSData = { { 0x0E, 0x0D, 0x0C, 0x0B, 0x0A },
+RIOT_X509_TBS_DATA x509DeviceTBSData = { { 0 },
                                        "RIoT R00t", "MSR_TEST", "US",
                                        "170101000000Z", "370101000000Z",
                                        "RIoT Core", "MSR_TEST", "US" };
 
 // The static data fields that make up the "root signer" Cert
-RIOT_X509_TBS_DATA x509RootTBSData   = { { 0x1A, 0x2B, 0x3C, 0x4D, 0x5E },
+RIOT_X509_TBS_DATA x509RootTBSData   = { { 0 },
                                        "RIoT R00t", "MSR_TEST", "US",
                                        "170101000000Z", "370101000000Z",
                                        "RIoT R00t", "MSR_TEST", "US" };
@@ -233,9 +233,18 @@ CreateDeviceAuthBundle(
 
     // Build the TBS (to be signed) region of Alias Key Certificate
     DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+    RiotCrypt_Kdf(digest,
+        sizeof(digest),
+        (uint8_t*)&aliasKeyPub, sizeof(aliasKeyPub),
+        NULL, 0,
+        (const uint8_t *)RIOT_LABEL_SERIAL,
+        lblSize(RIOT_LABEL_SERIAL),
+        sizeof(digest));
+    digest[0] &= 0x7F; // Ensure that the serial number is positive
+    memcpy(x509AliasTBSData.SerialNum, digest, sizeof(x509AliasTBSData.SerialNum));
     X509GetAliasCertTBS(&derCtx, &x509AliasTBSData,
         &aliasKeyPub, &deviceIDPub,
-        Fwid, RIOT_DIGEST_LENGTH);
+        Fwid, RIOT_DIGEST_LENGTH, 0);
 
     // Sign the Alias Key Certificate's TBS region
     RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
@@ -255,7 +264,7 @@ CreateDeviceAuthBundle(
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
     WriteBinaryFile("AliasCert.der", derCtx.Buffer, derCtx.Position);
-    WriteBinaryFile("AliasCert.pem", (uint8_t *)PEM, length);
+    WriteBinaryFile("AliasCert.cer", (uint8_t *)PEM, length);
 #endif
 
     // This reference supports generation of either: a "root"-signed DeviceID
@@ -268,7 +277,16 @@ CreateDeviceAuthBundle(
     if (DeviceCertType == RIOT_SELF_SIGNED) {
         // Generating self-signed DeviceID certificate
         DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub);
+        RiotCrypt_Kdf(digest,
+            sizeof(digest),
+            (uint8_t*)&deviceIDPub, sizeof(deviceIDPub),
+            NULL, 0,
+            (const uint8_t *)RIOT_LABEL_SERIAL,
+            lblSize(RIOT_LABEL_SERIAL),
+            sizeof(digest));
+        digest[0] &= 0x7F; // Ensure that the serial number is positive
+        memcpy(x509DeviceTBSData.SerialNum, digest, sizeof(x509DeviceTBSData.SerialNum));
+        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub, NULL, 1);
 
         // Sign the DeviceID Certificate's TBS region
         RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
@@ -290,7 +308,16 @@ CreateDeviceAuthBundle(
     else {
         // Generating "root"-signed DeviceID certificate
         DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub);
+        RiotCrypt_Kdf(digest,
+            sizeof(digest),
+            (uint8_t*)&deviceIDPub, sizeof(deviceIDPub),
+            NULL, 0,
+            (const uint8_t *)RIOT_LABEL_SERIAL,
+            lblSize(RIOT_LABEL_SERIAL),
+            sizeof(digest));
+        digest[0] &= 0x7F; // Ensure that the serial number is positive
+        memcpy(x509DeviceTBSData.SerialNum, digest, sizeof(x509DeviceTBSData.SerialNum));
+        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub, (RIOT_ECC_PUBLIC *)eccRootPubBytes, 1);
 
         // Sign the DeviceID Certificate's TBS region
         RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, (RIOT_ECC_PRIVATE *)eccRootPrivBytes);
@@ -311,15 +338,24 @@ CreateDeviceAuthBundle(
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
     WriteBinaryFile("DeviceIDCrt.der", derCtx.Buffer, derCtx.Position);
-    WriteBinaryFile("DeviceIDCrt.pem", (uint8_t *)PEM, length);
+    WriteBinaryFile("DeviceIDCrt.cer", (uint8_t *)PEM, length);
 #endif
 
     // Generate "root" CA certficiate
     DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-    X509GetRootCertTBS(&derCtx, &x509RootTBSData, (RIOT_ECC_PUBLIC*)eccRootPubBytes);
+    RiotCrypt_Kdf(digest,
+        sizeof(digest),
+        eccRootPubBytes, sizeof(eccRootPubBytes),
+        NULL, 0,
+        (const uint8_t *)RIOT_LABEL_SERIAL,
+        lblSize(RIOT_LABEL_SERIAL),
+        sizeof(digest));
+    digest[0] &= 0x7F; // Ensure that the serial number is positive
+    memcpy(x509RootTBSData.SerialNum, digest, sizeof(x509RootTBSData.SerialNum));
+    X509GetRootCertTBS(&derCtx, &x509RootTBSData, (RIOT_ECC_PUBLIC*)eccRootPubBytes, 2);
 
     // Self-sign the "root" Certificate's TBS region
-    RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
+    RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, (RIOT_ECC_PRIVATE*)&eccRootPrivBytes);
 
     // Generate "root" CA cert
     X509MakeRootCert(&derCtx, &tbsSig);
@@ -334,7 +370,7 @@ CreateDeviceAuthBundle(
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
     WriteBinaryFile("R00tCrt.der", derCtx.Buffer, derCtx.Position);
-    WriteBinaryFile("R00tCrt.pem", (uint8_t *)PEM, length);
+    WriteBinaryFile("R00tCrt.cer", (uint8_t *)PEM, length);
 #endif
 
     return 0;

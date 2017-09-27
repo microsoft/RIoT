@@ -27,6 +27,7 @@ extern "C" {
 #define RIOT_LABEL_SK           "Sealing"
 #define RIOT_LABEL_MK           "Migration"
 #define RIOT_LABEL_AK           "Attestation"
+#define RIOT_LABEL_SERIAL       "Serial"
 
 //
 // Macro for label sizes (skip strlen()).

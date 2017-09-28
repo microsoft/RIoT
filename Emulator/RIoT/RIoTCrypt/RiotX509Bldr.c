@@ -88,7 +88,7 @@ X509AddExtensions(
         CHK(        DERAddOID(Tbs, keyUsageOID));
         CHK(        DERAddBoolean(Tbs, true));
         CHK(        DERStartEnvelopingOctetString(Tbs));
-        CHK(            DERAddBitString(Tbs, &keyUsageCA, 7));
+        CHK(            DERAddBitString(Tbs, &keyUsageCA, 1));
         CHK(        DERPopNesting(Tbs));
         CHK(    DERPopNesting(Tbs));
     }
@@ -245,7 +245,7 @@ X509GetDeviceCertTBS(
         CHK(            DERAddOID(Tbs, keyUsageOID));
         CHK(            DERAddBoolean(Tbs, true));
         CHK(            DERStartEnvelopingOctetString(Tbs));
-        CHK(                DERAddBitString(Tbs, &keyUsageCA, 7));
+        CHK(                DERAddBitString(Tbs, &keyUsageCA, 1));
         CHK(            DERPopNesting(Tbs));
         CHK(        DERPopNesting(Tbs));
     }
@@ -566,7 +566,7 @@ X509GetRootCertTBS(
     CHK(                DERAddOID(Tbs, keyUsageOID));
     CHK(                DERAddBoolean(Tbs, true));
     CHK(                DERStartEnvelopingOctetString(Tbs));
-    CHK(                    DERAddBitString(Tbs, &keyUsageCA, 7));
+    CHK(                    DERAddBitString(Tbs, &keyUsageCA, 1));
     CHK(                DERPopNesting(Tbs));
     CHK(            DERPopNesting(Tbs));
     CHK(            DERStartSequenceOrSet(Tbs, true));

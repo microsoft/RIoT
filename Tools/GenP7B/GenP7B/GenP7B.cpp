@@ -10,7 +10,20 @@ std::vector<BYTE> ReadFromFile(
     // http://stackoverflow.com/questions/14841396/stdunique-ptr-deleters-and-the-win32-api
     std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)> hFile(::CreateFile(fileName.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL), &::CloseHandle);
     DWORD bytesRead = 0;
-    std::vector<BYTE> data(GetFileSize(hFile.get(), NULL));
+    LARGE_INTEGER fileSize;
+    if (hFile.get() == INVALID_HANDLE_VALUE)
+    {
+        wprintf(L"ERROR: CreateFile failed with 0x%08x.\n", GetLastError());
+        throw GetLastError();
+    }
+    if (!GetFileSizeEx(hFile.get(), &fileSize))
+    {
+        wprintf(L"ERROR: GetFileSizeEx failed with 0x%08x.\n", GetLastError());
+        throw GetLastError();
+    }
+    wprintf(L"  Size: %llu\n", fileSize.QuadPart);
+    std::vector<BYTE> data((int)fileSize.QuadPart);
+
     if (!ReadFile(hFile.get(), data.data(), (DWORD)data.size(), &bytesRead, NULL))
     {
         wprintf(L"ERROR: ReadFile failed with 0x%08x.\n", GetLastError());

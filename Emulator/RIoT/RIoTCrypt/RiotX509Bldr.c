@@ -46,7 +46,7 @@ X509AddExtensions(
 // Create the RIoT extensions.  The RIoT subject altName + extended key usage.
 {
     uint8_t     authorityKeyId[RIOT_DIGEST_LENGTH];
-    uint8_t     keyUsageCA = RIOT_X509_CA_KEY_USAGE;
+    uint8_t     keyUsageCA[] = RIOT_X509_CA_KEY_USAGE;
 
     CHK(DERStartExplicit(Tbs, 3));
     CHK(    DERStartSequenceOrSet(Tbs, true));
@@ -86,9 +86,8 @@ X509AddExtensions(
     {
         CHK(    DERStartSequenceOrSet(Tbs, true));
         CHK(        DERAddOID(Tbs, keyUsageOID));
-        CHK(        DERAddBoolean(Tbs, true));
         CHK(        DERStartEnvelopingOctetString(Tbs));
-        CHK(            DERAddBitString(Tbs, &keyUsageCA, 1));
+        CHK(            DERAddBitString(Tbs, keyUsageCA, sizeof(keyUsageCA)));
         CHK(        DERPopNesting(Tbs));
         CHK(    DERPopNesting(Tbs));
     }
@@ -177,7 +176,7 @@ X509GetDeviceCertTBS(
     uint32_t    encBufferLen;
     uint8_t     keyId[RIOT_DIGEST_LENGTH];
     uint8_t     issuerKeyId[RIOT_DIGEST_LENGTH];
-    uint8_t     keyUsageCA = RIOT_X509_CA_KEY_USAGE;
+	uint8_t     keyUsageCA[] = RIOT_X509_CA_KEY_USAGE;
 
     if (IssuerIdKeyPub != NULL)
     {
@@ -243,9 +242,8 @@ X509GetDeviceCertTBS(
     {
         CHK(        DERStartSequenceOrSet(Tbs, true));
         CHK(            DERAddOID(Tbs, keyUsageOID));
-        CHK(            DERAddBoolean(Tbs, true));
         CHK(            DERStartEnvelopingOctetString(Tbs));
-        CHK(                DERAddBitString(Tbs, &keyUsageCA, 1));
+        CHK(                DERAddBitString(Tbs, keyUsageCA, sizeof(keyUsageCA)));
         CHK(            DERPopNesting(Tbs));
         CHK(        DERPopNesting(Tbs));
     }
@@ -522,7 +520,7 @@ X509GetRootCertTBS(
     uint8_t     encBuffer[65];
     uint32_t    encBufferLen;
     uint8_t     keyId[RIOT_DIGEST_LENGTH];
-    uint8_t     keyUsageCA = RIOT_X509_CA_KEY_USAGE;
+	uint8_t     keyUsageCA[] = RIOT_X509_CA_KEY_USAGE;
 
     CHK(DERStartSequenceOrSet(Tbs, true));
     CHK(    DERAddShortExplicitInteger(Tbs, 2));
@@ -564,9 +562,8 @@ X509GetRootCertTBS(
     CHK(            DERPopNesting(Tbs));
     CHK(            DERStartSequenceOrSet(Tbs, true));
     CHK(                DERAddOID(Tbs, keyUsageOID));
-    CHK(                DERAddBoolean(Tbs, true));
     CHK(                DERStartEnvelopingOctetString(Tbs));
-    CHK(                    DERAddBitString(Tbs, &keyUsageCA, 1));
+    CHK(                    DERAddBitString(Tbs, keyUsageCA, sizeof(keyUsageCA)));
     CHK(                DERPopNesting(Tbs));
     CHK(            DERPopNesting(Tbs));
     CHK(            DERStartSequenceOrSet(Tbs, true));

@@ -9,6 +9,7 @@ extern "C" {
 
 #define RIOT_X509_SNUM_LEN  0x10
 
+// KeyUsage is defined as a 4 byte bit string, with flag = 0
 // KeyUsage :: = BIT STRING{
 //     digitalSignature(0),
 //     nonRepudiation(1),
@@ -18,7 +19,7 @@ extern "C" {
 //     keyCertSign(5),
 //     cRLSign(6)
 // }
-#define RIOT_X509_CA_KEY_USAGE 0x43  // digitalSignature, nonRepudiation, keyCertSign
+#define RIOT_X509_CA_KEY_USAGE {0x86, 0x00, 0x00, 0x00}
 
 // Const x509 "to be signed" data
 typedef struct

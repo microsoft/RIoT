@@ -241,6 +241,7 @@ CreateDeviceAuthBundle(
         lblSize(RIOT_LABEL_SERIAL),
         sizeof(digest));
     digest[0] &= 0x7F; // Ensure that the serial number is positive
+    digest[0] |= 0x01; // Ensure that there is no leading zero
     memcpy(x509AliasTBSData.SerialNum, digest, sizeof(x509AliasTBSData.SerialNum));
     X509GetAliasCertTBS(&derCtx, &x509AliasTBSData,
         &aliasKeyPub, &deviceIDPub,
@@ -285,6 +286,7 @@ CreateDeviceAuthBundle(
             lblSize(RIOT_LABEL_SERIAL),
             sizeof(digest));
         digest[0] &= 0x7F; // Ensure that the serial number is positive
+        digest[0] |= 0x01; // Ensure that there is no leading zero
         memcpy(x509DeviceTBSData.SerialNum, digest, sizeof(x509DeviceTBSData.SerialNum));
         X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub, NULL, 1);
 
@@ -316,6 +318,7 @@ CreateDeviceAuthBundle(
             lblSize(RIOT_LABEL_SERIAL),
             sizeof(digest));
         digest[0] &= 0x7F; // Ensure that the serial number is positive
+        digest[0] |= 0x01; // Ensure that there is no leading zero
         memcpy(x509DeviceTBSData.SerialNum, digest, sizeof(x509DeviceTBSData.SerialNum));
         X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub, (RIOT_ECC_PUBLIC *)eccRootPubBytes, 1);
 
@@ -351,6 +354,7 @@ CreateDeviceAuthBundle(
         lblSize(RIOT_LABEL_SERIAL),
         sizeof(digest));
     digest[0] &= 0x7F; // Ensure that the serial number is positive
+    digest[0] |= 0x01; // Ensure that there is no leading zero
     memcpy(x509RootTBSData.SerialNum, digest, sizeof(x509RootTBSData.SerialNum));
     X509GetRootCertTBS(&derCtx, &x509RootTBSData, (RIOT_ECC_PUBLIC*)eccRootPubBytes, 2);
 

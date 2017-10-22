@@ -46,7 +46,7 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
-#include "barnacle.h"
+#include "BarnacleTA.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -93,7 +93,8 @@ int main(void)
   MX_RNG_Init();
 
   /* USER CODE BEGIN 2 */
-
+  fprintf(stderr, "Barnacle Trusted Agent\r\n");
+  fprintf(stderr, "Identity:\r\n%s\r\n", BarnacleCertChain());
   /* USER CODE END 2 */
 
   /* Infinite loop */

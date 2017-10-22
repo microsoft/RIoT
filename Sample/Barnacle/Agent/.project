@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
 	<name>BarnacleTA</name>
-	<comment />
+	<comment></comment>
 	<projects>
 	</projects>
 	<buildSpec>
@@ -15,7 +15,7 @@
 				</dictionary>
 				<dictionary>
 					<key>?name?</key>
-					<value />
+					<value></value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.append_environment</key>
@@ -23,7 +23,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildArguments</key>
-					<value />
+					<value></value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildCommand</key>
@@ -71,6 +71,15 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
 	<linkedResources>
-		
+		<link>
+			<name>Middlewares/BarnacleTA</name>
+			<type>2</type>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Shared/BarnacleTA</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/RIoT</name>
+			<type>2</type>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Shared/RIoT</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>

@@ -94,15 +94,15 @@ int main(void)
   MX_RNG_Init();
 
   /* USER CODE BEGIN 2 */
-  fprintf(stderr, "Barnacle\r\n");
+  fprintf(stderr, "Barnacle BootLdr\r\n");
   BarnacleInitialProvision();
-  BarnacleDumpCertBag();
 
   // If DFU connected we service that
   HAL_Delay(200);
   if(DFU_UsrStrDescr_requested)
   {
-      fprintf(stderr, "INFO: DFU connected\r\n");
+      fprintf(stderr, "INFO: DFU connected\r\nReset to exit.\r\n");
+      for(;;);
   }
   else
   {

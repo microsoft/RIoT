@@ -40,9 +40,11 @@ _Min_Stack_Size = 0x1000; /* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 96K
+RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 96K
 RAM2 (xrw)      : ORIGIN = 0x10000000, LENGTH = 32K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 1024K
+AGENTHDR (rx)   : ORIGIN = 0x08020000, LENGTH = 2K
+FLASH (rx)      : ORIGIN = 0x08020200, LENGTH = 886K
+PURO (rw)       : ORIGIN = 0x080FE000, LENGTH = 4K
 }
 
 /* Define output sections */
@@ -161,6 +163,20 @@ SECTIONS
     *(.PURW*);
     . = ALIGN(4);
   } >RAM2
+
+  .agenthdr :
+  {
+    . = ALIGN(4);
+    *(.AGENTHDR*);
+    . = ALIGN(4);
+  } >AGENTHDR
+
+  .puro (NOLOAD):
+  {
+    . = ALIGN(4);
+    *(.PURO*);
+    . = ALIGN(4);
+  } >PURO
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

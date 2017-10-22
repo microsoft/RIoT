@@ -40,13 +40,14 @@ _Min_Stack_Size = 0x1000; /* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)   : ORIGIN = 0x20000000, LENGTH = 96K
-RAM2 (xrw)  : ORIGIN = 0x10000000, LENGTH = 32K
-FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 128K
-AGENT (rx)  : ORIGIN = 0x08020000, LENGTH = 890K
-PURO (rw)   : ORIGIN = 0x080FE000, LENGTH = 4K
-FWRO (rw)   : ORIGIN = 0x080FF000, LENGTH = 2K
-FWRW (rw)   : ORIGIN = 0x080FF800, LENGTH = 2K
+RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 96K
+RAM2 (xrw)     : ORIGIN = 0x10000000, LENGTH = 32K
+FLASH (rx)     : ORIGIN = 0x08000000, LENGTH = 32K
+AGENTHDR (rx)  : ORIGIN = 0x08008000, LENGTH = 2K
+AGENTCODE (rx) : ORIGIN = 0x08008800, LENGTH = 982K
+PURO (rw)      : ORIGIN = 0x080FE000, LENGTH = 4K
+FWRO (rw)      : ORIGIN = 0x080FF000, LENGTH = 2K
+FWRW (rw)      : ORIGIN = 0x080FF800, LENGTH = 2K
 }
 
 /* Define output sections */
@@ -157,13 +158,19 @@ SECTIONS
     . = ALIGN(4);
   } >RAM
 
-  .agent (NOLOAD):
+  .agenthdr (NOLOAD):
   {
     . = ALIGN(4);
-    *(.AGENT.Hdr);
-    *(.AGENT*);
+    *(.AGENTHDR*);
     . = ALIGN(4);
-  } >AGENT
+  } >AGENTHDR
+  
+    .agentcode (NOLOAD):
+  {
+    . = ALIGN(4);
+    *(.AGENTCODE*);
+    . = ALIGN(4);
+  } >AGENTCODE
 
   .puro (NOLOAD):
   {

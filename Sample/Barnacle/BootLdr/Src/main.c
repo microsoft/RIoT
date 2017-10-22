@@ -112,20 +112,20 @@ int main(void)
   for(;;);
 
   // The point of no return: Launch the agent
-  fprintf(stderr, "INFO: Preparing for launching agent '%s'...\r\n", AgentHdr.s.sign.agent.name);
+  fprintf(stderr, "INFO: Preparing for launching agent '%s'...\r\n", AgentHdr.sign.agent.name);
   // Release the clock source
   HAL_RCC_DeInit();
   // Release the HAL
   HAL_DeInit();
   // Redirect the vector table to the agent vector table
-  SCB->VTOR = ((uint32_t)&AgentHdr) + AgentHdr.s.sign.agent.offset;
+  SCB->VTOR = ((uint32_t)AgentCode);
   // Wipe all accessible RAM to make sure we didn't leave anything behind
   memset((void*)RAMWIPESTART1, 0x00, RAMWIPESIZE1);
   memset((void*)RAMWIPESTART2, 0x00, RAMWIPESIZE2);
   // Set the stack pointer to where the agent expects it
-  __set_MSP(*((uint32_t*)(((uint32_t)&AgentHdr) + AgentHdr.s.sign.agent.offset)));
+  __set_MSP(*((uint32_t*)AgentCode));
   // Jump into the abyss
-  ((void (*)(void)) *((uint32_t*)(((uint32_t)&AgentHdr) + AgentHdr.s.sign.agent.offset + sizeof(uint32_t))))();
+  ((void (*)(void)) *((uint32_t*)(((uint32_t)AgentCode) + sizeof(uint32_t))))();
   // We will never return from this call!!
 
   /* USER CODE END 2 */

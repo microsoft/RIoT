@@ -15,7 +15,6 @@ __attribute__((section(".PURO"))) const BARNACLE_ISSUED_PUBLIC IssuedCerts;
 __attribute__((section(".FWRO"))) const BARNACLE_IDENTITY_PRIVATE FwDeviceId;
 __attribute__((section(".FWRW"))) const BARNACLE_CACHED_DATA FwCache;
 
-
 char* BarnacleIssuedCertChain()
 {
     if(CertStore.magic == BARNACLEMAGIC)
@@ -157,23 +156,30 @@ bool BarnacleVerifyAgent()
     RIOT_ECC_SIGNATURE sig = {0};
 
     // Sniff the header
-    if(!(result = ((AgentHdr.s.sign.hdr.magic == BARNACLEMAGIC) &&
-                   (AgentHdr.s.sign.hdr.version <= BARNACLEVERSION))))
+    if(!(result = ((AgentHdr.sign.hdr.magic == BARNACLEMAGIC) &&
+                   (AgentHdr.sign.hdr.version <= BARNACLEVERSION))))
     {
         fprintf(stderr, "ERROR: Invalid agent present.\r\n");
+        goto Cleanup;
+    }
+
+    // Make sure the agent code starts where we expect it to start
+    if(AgentCode != &((uint8_t*)&AgentHdr)[AgentHdr.sign.agent.offset])
+    {
+        fprintf(stderr, "ERROR: Unexpected agent start.\r\n");
         goto Cleanup;
     }
 
     // Verify the agent code digest against the header
     if(!(result = (RiotCrypt_Hash(digest,
                                   sizeof(digest),
-                                  &((uint8_t*)&AgentHdr)[AgentHdr.s.sign.agent.offset],
-                                  AgentHdr.s.sign.agent.size) == RIOT_SUCCESS)))
+                                  AgentCode,
+                                  AgentHdr.sign.agent.size) == RIOT_SUCCESS)))
     {
         fprintf(stderr, "ERROR: RiotCrypt_Hash failed.\r\n");
         goto Cleanup;
     }
-    if(!(result = (memcmp(digest, AgentHdr.s.sign.agent.digest, sizeof(digest)) == 0)))
+    if(!(result = (memcmp(digest, AgentHdr.sign.agent.digest, sizeof(digest)) == 0)))
     {
         fprintf(stderr, "ERROR: Agent digest mismatch.\r\n");
         goto Cleanup;
@@ -182,14 +188,14 @@ bool BarnacleVerifyAgent()
     // Verify the header signature if we have a signer policy
     if(!(result = (RiotCrypt_Hash(digest,
                                   sizeof(digest),
-                                  (const void*)&AgentHdr.s.sign,
-                                  sizeof(AgentHdr.s.sign)) == RIOT_SUCCESS)))
+                                  (const void*)&AgentHdr.sign,
+                                  sizeof(AgentHdr.sign)) == RIOT_SUCCESS)))
     {
         fprintf(stderr, "ERROR: RiotCrypt_Hash failed.\r\n");
         goto Cleanup;
     }
-    BigIntToBigVal(&sig.r, AgentHdr.s.signature.r, sizeof(AgentHdr.s.signature.r));
-    BigIntToBigVal(&sig.s, AgentHdr.s.signature.s, sizeof(AgentHdr.s.signature.s));
+    BigIntToBigVal(&sig.r, AgentHdr.signature.r, sizeof(AgentHdr.signature.r));
+    BigIntToBigVal(&sig.s, AgentHdr.signature.s, sizeof(AgentHdr.signature.s));
     if((!BarnacleNullCheck((void*)&IssuedCerts.codeAuthPubKey, sizeof(IssuedCerts.codeAuthPubKey))) &&
        (!(result = (RiotCrypt_VerifyDigest(digest,
                                            sizeof(digest),
@@ -206,7 +212,7 @@ bool BarnacleVerifyAgent()
         RIOT_X509_TBS_DATA x509TBSData = { { 0 },
                                            "CyReP Device", "Microsoft", "US",
                                            "170101000000Z", "370101000000Z",
-                                           AgentHdr.s.sign.agent.name, NULL, NULL };
+                                           AgentHdr.sign.agent.name, NULL, NULL };
         DERBuilderContext derCtx = { 0 };
         uint8_t derBuffer[DER_MAX_TBS] = { 0 };
         char PEM[DER_MAX_PEM] = { 0 };
@@ -247,8 +253,8 @@ bool BarnacleVerifyAgent()
                                            &x509TBSData,
                                            (RIOT_ECC_PUBLIC*)&cache.compoundPubKey,
                                            (RIOT_ECC_PUBLIC*)&FwDeviceId.pubKey,
-                                           (uint8_t*)AgentHdr.s.sign.agent.digest,
-                                           sizeof(AgentHdr.s.sign.agent.digest),
+                                           (uint8_t*)AgentHdr.sign.agent.digest,
+                                           sizeof(AgentHdr.sign.agent.digest),
                                            1) == 0)))
         {
             fprintf(stderr, "ERROR: X509GetAliasCertTBS failed.\r\n");

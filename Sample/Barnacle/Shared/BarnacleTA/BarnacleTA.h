@@ -18,37 +18,32 @@
 #define BARNACLEMAGIC               (0x6d6f6854)
 #define BARNACLEVERSION             (0x00010000)
 #define BARNACLETIMESTAMP           (0x59e7bd55)
-#define AGENTHDRSIZE                (0x200)
+#define AGENTHDRSIZE                (0x800)
 
-typedef union
+typedef struct
 {
     struct
     {
         struct
         {
-            struct
-            {
-                uint32_t magic;
-                uint32_t version;
-            } hdr;
-            struct
-            {
-                uint32_t offset;
-                uint32_t size;
-                uint32_t version;
-                uint32_t issued;
-                char name[16];
-                uint8_t digest[SHA256_DIGEST_LENGTH];
-            } agent;
-        } sign;
+            uint32_t magic;
+            uint32_t version;
+        } hdr;
         struct
         {
-            uint8_t r[SHA256_DIGEST_LENGTH];
-            uint8_t s[SHA256_DIGEST_LENGTH];
-        } signature;
-    } s;
-    uint32_t raw32[AGENTHDRSIZE / sizeof(uint32_t)];
-    uint8_t raw8[AGENTHDRSIZE];
+            uint32_t offset;
+            uint32_t size;
+            uint32_t version;
+            uint32_t issued;
+            char name[16];
+            uint8_t digest[SHA256_DIGEST_LENGTH];
+        } agent;
+    } sign;
+    struct
+    {
+        uint8_t r[SHA256_DIGEST_LENGTH];
+        uint8_t s[SHA256_DIGEST_LENGTH];
+    } signature;
 } BARNACLE_AGENT_HDR, *PBARNACLE_AGENT_HDR;
 
 typedef struct
@@ -75,6 +70,7 @@ typedef struct
 extern BARNACLE_IDENTITY_PRIVATE CompoundId;
 extern BARNACLE_CERTSTORE CertStore;
 extern const BARNACLE_AGENT_HDR AgentHdr;
+extern const uint8_t* AgentCode;
 
 bool BarnacleFlashPages(void* dest, void* src, uint32_t size);
 void BarnacleGetRandom(void* dest, uint32_t size);

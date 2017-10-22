@@ -13,7 +13,8 @@ extern RNG_HandleTypeDef hrng;
 
 __attribute__((section(".PURW.Private"))) BARNACLE_IDENTITY_PRIVATE CompoundId;
 __attribute__((section(".PURW.Public"))) BARNACLE_CERTSTORE CertStore;
-__attribute__((section(".AGENT.Hdr"))) const BARNACLE_AGENT_HDR AgentHdr;
+__attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{BARNACLEMAGIC, BARNACLEVERSION}, {AGENTHDRSIZE, 0, 0x00010000, 0x59e7bd55, "Barnacle", {0}}}, {{0}, {0}}};
+__attribute__((section(".AGENTCODE"))) const uint8_t* AgentCode;
 
 bool BarnacleFlashPages(void* dest, void* src, uint32_t size)
 {

@@ -18,7 +18,6 @@
 #define BARNACLEMAGIC               (0x6d6f6854)
 #define BARNACLEVERSION             (0x00010000)
 #define BARNACLETIMESTAMP           (0x59e7bd55)
-#define AGENTHDRSIZE                (0x800)
 
 typedef struct
 {
@@ -28,14 +27,14 @@ typedef struct
         {
             uint32_t magic;
             uint32_t version;
+            uint32_t size;
         } hdr;
         struct
         {
-            uint32_t offset;
-            uint32_t size;
-            uint32_t version;
-            uint32_t issued;
             char name[16];
+            uint32_t version;
+            uint32_t size;
+            uint32_t issued;
             uint8_t digest[SHA256_DIGEST_LENGTH];
         } agent;
     } sign;
@@ -44,6 +43,7 @@ typedef struct
         uint8_t r[SHA256_DIGEST_LENGTH];
         uint8_t s[SHA256_DIGEST_LENGTH];
     } signature;
+    uint8_t unused[0x178];
 } BARNACLE_AGENT_HDR, *PBARNACLE_AGENT_HDR;
 
 typedef struct

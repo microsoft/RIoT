@@ -164,7 +164,7 @@ bool BarnacleVerifyAgent()
     }
 
     // Make sure the agent code starts where we expect it to start
-    if(AgentCode != &((uint8_t*)&AgentHdr)[AgentHdr.sign.agent.offset])
+    if(AgentCode != &((uint8_t*)&AgentHdr)[AgentHdr.sign.hdr.size])
     {
         fprintf(stderr, "ERROR: Unexpected agent start.\r\n");
         goto Cleanup;

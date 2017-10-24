@@ -93,7 +93,7 @@ int main(void)
   MX_RNG_Init();
 
   /* USER CODE BEGIN 2 */
-  fprintf(stderr, "Trusted Agent(%u bytes): %s\r\n", AgentHdr.sign.agent.size, AgentHdr.sign.agent.name);
+  fprintf(stderr, "Trusted Agent(%u bytes): %s\r\n", (unsigned int)AgentHdr.sign.agent.size, AgentHdr.sign.agent.name);
   fprintf(stderr, "Identity:\r\n%s\r\n", BarnacleCertChain());
   /* USER CODE END 2 */
 

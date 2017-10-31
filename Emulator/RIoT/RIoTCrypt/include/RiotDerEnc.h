@@ -4,7 +4,8 @@ Microsoft Copyright 2015, 2016
 Confidential Information
 
 */
-#pragma once
+#ifndef __RIOT_DER_ENC_H__
+#define __RIOT_DER_ENC_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -175,3 +176,5 @@ DERtoPEM(
 #ifdef __cplusplus
 }
 #endif
+
+#endif // __RIOT_DER_ENC_H__

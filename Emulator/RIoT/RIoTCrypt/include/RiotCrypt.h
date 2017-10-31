@@ -24,8 +24,6 @@ Confidential Information
 // reference code.
 //
 
-#include <stdint.h>
-#include <stdbool.h>
 #include "RiotSha256.h"
 #include "RiotAes128.h"
 #include "RiotHmac.h"

@@ -16,24 +16,10 @@
  *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  ******************************************************************************/
 
-//
-// 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
-//
-#include <stdlib.h>
-#include <stdio.h>
-#include <stddef.h>
+#ifdef _MSC_VER
 #include <string.h>
-
-// TODO: Fix this so we actually get asserts on non-MSFT platforms
-#ifndef _MSC_VER
-#define assert(expr)    ((void)0)
-#else
 #include <assert.h>
-#endif
 
-#ifndef _MSC_VER
-#include <stdint.h>
-#else
 #if _MSC_VER >= 1600   /* MSVC 2010 or higher */
 #include <stdint.h>
 #else
@@ -46,6 +32,10 @@ typedef unsigned int uint32_t;        // 32-bit unsigned integer
 typedef signed long long int64_t;     // 64-bit signed integer
 typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #endif
+
+#else
+// #include <stdint.h>
+// #define assert(expr)    ((void)0)
 #endif
 
 #ifndef MIN
@@ -98,8 +88,6 @@ extern uint8_t dbgTARGET_NVRAM;
 extern uint8_t dbgTARGET_UTIL;
 
 #endif
-
-#define inline __inline
 
 // Main method allows argc, argv
 #define MAIN_ALLOWS_ARGS

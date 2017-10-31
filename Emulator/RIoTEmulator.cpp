@@ -295,6 +295,8 @@ CreateDeviceAuthBundle(
         // Sign the DeviceID Certificate's TBS region
         RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, (RIOT_ECC_PRIVATE *)eccRootPrivBytes);
 
+        RiotCrypt_Verify(derCtx.Buffer, derCtx.Position, &tbsSig, (RIOT_ECC_PUBLIC *)eccRootPubBytes);
+
         // Generate DeviceID Certificate
         X509MakeDeviceCert(&derCtx, &tbsSig);
     }

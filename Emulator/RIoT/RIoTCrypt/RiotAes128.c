@@ -225,7 +225,7 @@ void RIOT_AES_CBC_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,
 
 #if AES_ECB_MODE
 void RIOT_AES_ECB_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,
-                              const uint8_t *in, uint8_t *out, size_t size)
+                              const uint8_t *in, uint8_t *out, uint32_t size)
 {
     uint32_t in32[4];
     uint32_t out32[4];

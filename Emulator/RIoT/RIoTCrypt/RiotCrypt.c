@@ -164,7 +164,7 @@ RiotCrypt_DeriveEccKey(
     size_t              labelSize       // IN:  TODO
 )
 {
-    bigval_t    srcVal  = { 0 };
+    bigval_t    srcVal = { { 0 } };
     bigval_t   *pSrcVal = NULL;
 
     if (srcDataSize > sizeof(bigval_t)) {

@@ -30,7 +30,14 @@ static int basicConstraintsOID[] = { 2,5,29,19,-1 };
 static int subjectKeyIdentifierOID[] = { 2,5,29,14,-1 };
 static int authorityKeyIdentifierOID[] = { 2,5,29,1,-1 };
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdate-time"
+#endif
 const char DeviceBuildId[] = __DATE__ "-" __TIME__;
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 static int
 X509AddExtensions(

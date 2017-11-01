@@ -66,7 +66,7 @@ void RIOT_AES_CBC_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,
                               uint8_t *iv);
 
 void RIOT_AES_ECB_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,
-                              const uint8_t *in, uint8_t *out, size_t size);
+                              const uint8_t *in, uint8_t *out, uint32_t size);
 
 
 #ifdef __cplusplus

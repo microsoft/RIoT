@@ -44,8 +44,8 @@
  *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  ******************************************************************************/
 
-#include <RiotTarget.h>
-#include <RiotSha256.h>
+#include <cyrep/RiotTarget.h>
+#include <cyrep/RiotSha256.h>
 
 /*** SHA-256 Machine Architecture Definitions *****************/
 /*

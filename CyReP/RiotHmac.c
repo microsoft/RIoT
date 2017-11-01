@@ -17,8 +17,8 @@
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
-#include <RiotTarget.h>
-#include <RiotHmac.h>
+#include <cyrep/RiotTarget.h>
+#include <cyrep/RiotHmac.h>
 
 void
 RIOT_HMAC_SHA256_Init(

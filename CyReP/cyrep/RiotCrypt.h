@@ -24,10 +24,10 @@ Confidential Information
 // reference code.
 //
 
-#include <RiotSha256.h>
-#include <RiotAes128.h>
-#include <RiotKdf.h>
-#include <RiotEcc.h>
+#include <cyrep/RiotSha256.h>
+#include <cyrep/RiotAes128.h>
+#include <cyrep/RiotKdf.h>
+#include <cyrep/RiotEcc.h>
 
 #ifdef __cplusplus
 extern "C" {

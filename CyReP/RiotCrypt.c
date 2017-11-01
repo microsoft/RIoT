@@ -4,8 +4,8 @@ Microsoft Copyright 2017
 Confidential Information
 
 */
-#include <RiotTarget.h>
-#include <RiotCrypt.h>
+#include <cyrep/RiotTarget.h>
+#include <cyrep/RiotCrypt.h>
 
 #define RIOT_MAX_KDF_FIXED_SIZE     RIOT_MAX_KDF_CONTEXT_LENGTH + \
                                     RIOT_MAX_KDF_LABEL_LENGTH   + 5

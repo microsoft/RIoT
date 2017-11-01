@@ -16,9 +16,9 @@
  *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  ******************************************************************************/
 
-#include <RiotTarget.h>
-#include <RiotStatus.h>
-#include <RiotSha256.h>
+#include <cyrep/RiotTarget.h>
+#include <cyrep/RiotStatus.h>
+#include <cyrep/RiotSha256.h>
 
 #ifdef __cplusplus
 extern "C" {

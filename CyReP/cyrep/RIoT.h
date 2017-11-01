@@ -11,8 +11,8 @@ Confidential Information
 extern "C" {
 #endif
 
-#include "RiotStatus.h"
-#include "RiotCrypt.h"
+#include <cyrep/RiotStatus.h>
+#include <cyrep/RiotCrypt.h>
 
 #define RIOT_SUCCESS(a) (a == (RIOT_OK))
 

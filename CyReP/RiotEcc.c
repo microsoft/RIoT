@@ -17,10 +17,10 @@
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
-#include <RiotTarget.h>
-#include <RiotSha256.h>
-#include <RiotKdf.h>
-#include <RiotEcc.h>
+#include <cyrep/RiotTarget.h>
+#include <cyrep/RiotSha256.h>
+#include <cyrep/RiotKdf.h>
+#include <cyrep/RiotEcc.h>
 
 // P256 is tested directly with known answer tests from example in
 // ANSI X9.62 Annex L.4.2.  (See item in pt_mpy_testcases below.)

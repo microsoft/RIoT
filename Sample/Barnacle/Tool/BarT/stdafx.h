@@ -13,12 +13,12 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
-#include "Windows.h"
+#include <Windows.h>
 #include <Wincrypt.h>
 #include <BCrypt.h>
 #include <NCrypt.h>
 #include "DfuSe.h"
-#include "RIoT.h"
+#include "cyrep/RIoT.h"
 #include "BarnacleTA.h"
 
 #define WSTR_TO_LOWER(__str) for (UINT32 n = 0; n < __str.size(); n++) __str[n] = tolower(__str[n]);

@@ -50,16 +50,16 @@
     <ClCompile Include="helper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\CyReP\RIoT\RIoTCrypt\RiotEcc.c">
+    <ClCompile Include="..\..\..\..\CyReP\RiotEcc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\CyReP\RIoT\RIoTCrypt\RiotSha256.c">
+    <ClCompile Include="..\..\..\..\CyReP\RiotHmac.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\CyReP\RIoT\RIoTCrypt\RiotHmac.c">
+    <ClCompile Include="..\..\..\..\CyReP\RiotKdf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\CyReP\RIoT\RIoTCrypt\RiotKdf.c">
+    <ClCompile Include="..\..\..\..\CyReP\RiotSha256.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

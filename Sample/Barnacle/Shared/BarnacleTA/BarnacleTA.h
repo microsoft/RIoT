@@ -8,10 +8,10 @@
 #ifndef BARNACLETA_H_
 #define BARNACLETA_H_
 
-#include "RIoT.h"
-#include "RiotCrypt.h"
-#include "RiotDerEnc.h"
-#include "RiotX509Bldr.h"
+#include "cyrep/RIoT.h"
+#include "cyrep/RiotCrypt.h"
+#include "cyrep/RiotDerEnc.h"
+#include "cyrep/RiotX509Bldr.h"
 
 #define NUMELEM(a) (sizeof(a) / sizeof(*a))
 

@@ -16,7 +16,7 @@
 *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ******************************************************************************/
 
-#include <RiotHmac.h>
+#include <cyrep/RiotHmac.h>
 
 #ifdef __cplusplus
 extern "C" {

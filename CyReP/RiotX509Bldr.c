@@ -4,9 +4,9 @@ Microsoft Copyright 2017
 Confidential Information
 
 */
-#include <RiotTarget.h>
-#include <RiotDerEnc.h>
-#include <RiotX509Bldr.h>
+#include <cyrep/RiotTarget.h>
+#include <cyrep/RiotDerEnc.h>
+#include <cyrep/RiotX509Bldr.h>
 
 #define ASRT(_X) if(!(_X))      {goto Error;}
 #define CHK(_X)  if(((_X)) < 0) {goto Error;}

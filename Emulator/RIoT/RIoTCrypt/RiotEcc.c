@@ -136,7 +136,7 @@
 // this function, if necessary.
 //
 COND_STATIC int get_random_bytes(uint8_t *buf, size_t len);
-COND_STATIC int big_get_random_n(bigval_t *tgt, bool allow_zero);
+COND_STATIC int big_get_random_n(bigval_t *tgt, boolean_t allow_zero);
 COND_STATIC int ECDH_generate(affine_point_t *P1, bigval_t *k);
 #endif
 
@@ -974,7 +974,7 @@ big_halveP(bigval_t *tgt, bigval_t const *a)
 }
 
 // returns true if a is zero
-static bool
+static boolean_t
 big_is_zero(bigval_t const *a)
 {
     int i;
@@ -988,7 +988,7 @@ big_is_zero(bigval_t const *a)
 }
 
 // returns true if a is one
-static bool
+static boolean_t
 big_is_one(bigval_t const *a)
 {
     int i;
@@ -1344,7 +1344,7 @@ pointMpyP(affine_point_t *tgt, bigval_t const *k, affine_point_t const *P)
     toAffine(tgt, &Q);
 }
 
-COND_STATIC bool
+COND_STATIC boolean_t
 on_curveP(affine_point_t const *P)
 {
     bigval_t sum, product;
@@ -1370,7 +1370,7 @@ on_curveP(affine_point_t const *P)
 // returns a bigval between 0 or 1 (depending on allow_zero)
 // and order-1, inclusive.  Returns 0 on success, -1 otherwise
 COND_STATIC int
-big_get_random_n(bigval_t *tgt, bool allow_zero)
+big_get_random_n(bigval_t *tgt, boolean_t allow_zero)
 {
     int rv;
 
@@ -1435,7 +1435,7 @@ ECDH_derive(affine_point_t *P1, bigval_t *k,
 // returns false.  The behavior with k out of range is unspecified,
 // but safe.
 
-COND_STATIC bool
+COND_STATIC boolean_t
 ECDH_derive_pt(affine_point_t *tgt, bigval_t const *k, affine_point_t const *Q)
 {
     if (Q->infinity) {
@@ -1571,7 +1571,7 @@ ECDSA_verify_inner(bigval_t const *msgdgst,
     return (V_SUCCESS);
 }
 
-bool
+boolean_t
 ECDSA_verify(bigval_t const *msgdgst,
              affine_point_t const *pubkey,
              ECDSA_sig_t const *sig)
@@ -1731,7 +1731,7 @@ RIOT_GenerateShareSecret(ecc_publickey *peerPublicKey,
                          ecc_privatekey *privateKey,
                          ecc_secret *secret)
 {
-    bool derive_rv;
+    boolean_t derive_rv;
 
     derive_rv = ECDH_derive_pt(secret, privateKey, peerPublicKey);
     if (!derive_rv) {

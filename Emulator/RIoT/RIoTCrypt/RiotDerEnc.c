@@ -268,7 +268,7 @@ DERAddIntegerFromArray(
 // Leading zeros in the input number will be removed.
 {
     uint32_t j, numLeadingZeros = 0;
-    bool negative;
+    boolean_t negative;
 
     ASRT(NumBytes < 128);
     CHECK_SPACE2(Context, NumBytes);
@@ -330,7 +330,7 @@ Error:
 int
 DERAddBoolean(
     DERBuilderContext   *Context,
-    bool                 Val
+    boolean_t            Val
 )
 {
     CHECK_SPACE(Context);
@@ -408,7 +408,7 @@ Error:
 int
 DERStartSequenceOrSet(
     DERBuilderContext   *Context,
-    bool                 Sequence
+    boolean_t            Sequence
 )
 {
     uint8_t tp = Sequence ? 0x30 : 0x31;

@@ -102,7 +102,7 @@ DERAddShortExplicitInteger(
 int
 DERAddBoolean(
     DERBuilderContext   *Context,
-    bool                 Val
+    boolean_t            Val
 );
 
 
@@ -131,7 +131,7 @@ DERAddOctetString(
 int
 DERStartSequenceOrSet(
     DERBuilderContext   *Context,
-    bool                 Sequence
+    boolean_t            Sequence
 );
 
 int

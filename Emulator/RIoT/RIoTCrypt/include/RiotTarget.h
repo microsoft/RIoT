@@ -47,8 +47,8 @@ typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #define assert(expr)    ((void)0)
 #endif
 
-#ifndef bool
-typedef unsigned char bool;
+#ifndef boolean_t
+typedef unsigned char boolean_t;           // 8-bit boolean
 #endif
 
 #ifndef MIN

@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#include <stdint.h>
-#include <string.h>
+#include "RiotTarget.h"
 #include "RiotBase64.h"
 
 #define splitInt(intVal, bytePos) (char)((intVal >> (bytePos << 3)) & 0xFF)

@@ -32,9 +32,8 @@ typedef unsigned int uint32_t;        // 32-bit unsigned integer
 typedef signed long long int64_t;     // 64-bit signed integer
 typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #endif
-#else
-// #include <stdint.h>
-// #define assert(expr)    ((void)0)
+#elif __GNUC__
+#include "CyrepCommon.h"
 typedef signed char int8_t;           // 8-bit signed integer
 typedef unsigned char uint8_t;        // 8-bit unsigned integer
 typedef signed short int16_t;         // 16-bit signed integer
@@ -43,6 +42,13 @@ typedef signed int int32_t;           // 32-bit signed integer
 typedef unsigned int uint32_t;        // 32-bit unsigned integer
 typedef signed long long int64_t;     // 64-bit signed integer
 typedef unsigned long long uint64_t;  // 64-bit unsigned integer
+#else
+#include <stdint.h>
+#define assert(expr)    ((void)0)
+#endif
+
+#ifndef bool
+typedef unsigned char bool;
 #endif
 
 #ifndef MIN
@@ -51,6 +57,10 @@ typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 
 #ifndef MAX
 #define MAX(a,b) (((a)>(b))?(a):(b))
+#endif
+
+#ifndef SWAP32
+#define SWAP32(x) (((x >> 24) & 0x000000FF) | ((x >> 8) & 0x0000FF00) | ((x << 8) & 0x00FF0000) | ((x << 24) & 0xFF000000))
 #endif
 
 #ifdef  _MSC_VER

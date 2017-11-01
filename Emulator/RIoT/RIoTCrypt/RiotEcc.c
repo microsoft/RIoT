@@ -17,9 +17,7 @@
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
-#include "stdint.h"
-#include "stdbool.h"
-#include "RiotStatus.h"
+#include "RiotTarget.h"
 #include "RiotSha256.h"
 #include "RiotKdf.h"
 #include "RiotEcc.h"
@@ -91,15 +89,6 @@
 // An exact reduction function is supplied, and must be called as necessary.
 //
 
-#if USES_EPHEMERAL
-//
-// The external function get_random_bytes is expected to be available.
-// It must return 0 on success, and -1 on error.  Feel free to rename
-// this function, if necessary.
-//
-static int get_random_bytes(uint8_t *buf, size_t len);
-#endif
-
 //
 // CONFIGURATION STUFF
 //
@@ -138,6 +127,17 @@ static int get_random_bytes(uint8_t *buf, size_t len);
 #define COND_STATIC
 #else
 #define COND_STATIC static
+#endif
+
+#ifdef USES_EPHEMERAL
+//
+// The external function get_random_bytes is expected to be available.
+// It must return 0 on success, and -1 on error.  Feel free to rename
+// this function, if necessary.
+//
+COND_STATIC int get_random_bytes(uint8_t *buf, size_t len);
+COND_STATIC int big_get_random_n(bigval_t *tgt, bool allow_zero);
+COND_STATIC int ECDH_generate(affine_point_t *P1, bigval_t *k);
 #endif
 
 typedef struct {
@@ -1366,7 +1366,7 @@ on_curveP(affine_point_t const *P)
 
 }
 
-#if USES_EPHEMERAL
+#ifdef USES_EPHEMERAL
 // returns a bigval between 0 or 1 (depending on allow_zero)
 // and order-1, inclusive.  Returns 0 on success, -1 otherwise
 COND_STATIC int
@@ -1389,7 +1389,7 @@ big_get_random_n(bigval_t *tgt, bool allow_zero)
 //
 // computes a secret value, k, and a point, P1, to send to the other
 // party.  Returns 0 on success, -1 on failure (of the RNG).
-int
+COND_STATIC int
 ECDH_generate(affine_point_t *P1, bigval_t *k)
 {
     int rv;
@@ -1664,10 +1664,23 @@ ECC_feature_list(void)
 #endif // ECC_TEST 
 
 
-#if USES_EPHEMERAL
+#ifdef USES_EPHEMERAL
+#if defined(CONFIG_CYREP_UBOOT_BUILD)
+COND_STATIC int
+get_random_bytes(uint8_t *buf, size_t len)
+{
+    // [mlotfy] FIXME: implement pseudo random number generation
+    uint8_t seed = 0x00;
+    for (; len; len--)
+    {
+        *buf++ = seed++;
+    }
+    return 0;
+}
+#else
 #include <stdlib.h>
 #include <time.h>
-static int
+COND_STATIC int
 get_random_bytes(uint8_t *buf, size_t len)
 {
     srand((unsigned)time(NULL));
@@ -1681,7 +1694,7 @@ get_random_bytes(uint8_t *buf, size_t len)
     return 0;
 }
 #endif
-
+#endif
 
 #if ECDH_OUT
 //

@@ -4,18 +4,8 @@ Microsoft Copyright 2017
 Confidential Information
 
 */
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
 
-#ifdef WIN32
-    #define WIN32_LEAN_AND_MEAN
-    #include <windows.h>
-    #include <winsock2.h> // TODO: REMOVE THIS
-#else
-    #include <arpa/inet.h>
-#endif
-
+#include "RiotTarget.h"
 #include "RiotDerEnc.h"
 #include "RiotBase64.h"
 
@@ -314,7 +304,7 @@ DERAddInteger(
     int                  Val
 )
 {
-    long valx = htonl(Val); // TODO: REMOVE USAGE
+    long valx = SWAP32(Val);
     int res = DERAddIntegerFromArray(Context, (uint8_t*)&valx, 4);
     return res;
 }
@@ -331,7 +321,7 @@ DERAddShortExplicitInteger(
     Context->Buffer[Context->Position++] = 0xA0;
     Context->Buffer[Context->Position++] = 3;
 
-    valx = htonl(Val);
+    valx = SWAP32(Val);
     return (DERAddIntegerFromArray(Context, (uint8_t*)&valx, 4));
 Error:
     return -1;

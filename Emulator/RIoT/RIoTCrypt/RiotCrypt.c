@@ -4,6 +4,7 @@ Microsoft Copyright 2017
 Confidential Information
 
 */
+#include "RiotTarget.h"
 #include "RiotCrypt.h"
 
 #define RIOT_MAX_KDF_FIXED_SIZE     RIOT_MAX_KDF_CONTEXT_LENGTH + \

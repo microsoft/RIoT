@@ -17,9 +17,9 @@
 #include <Wincrypt.h>
 #include <BCrypt.h>
 #include <NCrypt.h>
+#include <cyrep/RIoT.h>
+#include <BarnacleTA.h>
 #include "DfuSe.h"
-#include "cyrep/RIoT.h"
-#include "BarnacleTA.h"
 
 #define WSTR_TO_LOWER(__str) for (UINT32 n = 0; n < __str.size(); n++) __str[n] = tolower(__str[n]);
 #define WSTR_TO_UPPER(__str) for (UINT32 n = 0; n < __str.size(); n++) __str[n] = toupper(__str[n]);

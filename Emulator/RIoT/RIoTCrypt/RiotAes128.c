@@ -14,12 +14,10 @@
  *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  ******************************************************************************/
 
-//
-// 4-MAY-2015; RIoT adaptation (DennisMa;MSFT)
-//
-#include "RiotTarget.h"
-#include "RiotAes128.h"
+#include <RiotTarget.h>
+#include <RiotAes128.h>
 
+// This file contains data tables and is not supposed to be compiled on it's own
 #define _AES_COMPILE_
 #include "RiotAesTables.c"
 

@@ -48,7 +48,7 @@ typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #endif
 
 #ifndef boolean_t
-typedef unsigned char boolean_t;           // 8-bit boolean
+typedef unsigned char boolean_t;      // 8-bit boolean
 #endif
 
 #ifndef MIN

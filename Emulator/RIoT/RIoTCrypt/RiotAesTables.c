@@ -14,9 +14,7 @@
 *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ******************************************************************************/
 
-//
-// 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
-//
+// This file contains AES data tables and is not supposed to be compiled on it's own
 
 #ifdef _AES_COMPILE_
 

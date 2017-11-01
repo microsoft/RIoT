@@ -16,12 +16,6 @@
  *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  ******************************************************************************/
 
-//
-// 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
-//
-#include "RiotTarget.h"
-#include "RiotStatus.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

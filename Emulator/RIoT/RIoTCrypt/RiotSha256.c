@@ -44,11 +44,8 @@
  *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  ******************************************************************************/
 
-//
-// 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
-//
-#include "RiotTarget.h"
-#include "RiotSha256.h"
+#include <RiotTarget.h>
+#include <RiotSha256.h>
 
 /*** SHA-256 Machine Architecture Definitions *****************/
 /*

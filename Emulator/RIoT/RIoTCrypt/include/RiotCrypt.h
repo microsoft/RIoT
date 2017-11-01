@@ -24,12 +24,14 @@ Confidential Information
 // reference code.
 //
 
-#include "RiotSha256.h"
-#include "RiotAes128.h"
-#include "RiotHmac.h"
-#include "RiotKdf.h"
-#include "RiotEcc.h"
-#include "RiotBase64.h"
+#include <RiotSha256.h>
+#include <RiotAes128.h>
+#include <RiotKdf.h>
+#include <RiotEcc.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Size, in bytes, of a RIoT digest using the chosen hash algorithm.
 #define RIOT_DIGEST_LENGTH      SHA256_DIGEST_LENGTH
@@ -202,5 +204,9 @@ RiotCrypt_SymEncryptDecrypt(
     size_t      inSize,                   // IN:  Size of input data
     uint8_t     key[RIOT_SYM_KEY_LENGTH]  // IN/OUT: Symmetric key & IV
 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -33,8 +33,6 @@
 #ifndef __RIOT_CRYPTO_SHA256_H__
 #define __RIOT_CRYPTO_SHA256_H__
 
-#include "RiotTarget.h"
-
 typedef int asb;
 
 typedef uint8_t  sha2_uint8_t;  // Exactly 1 byte

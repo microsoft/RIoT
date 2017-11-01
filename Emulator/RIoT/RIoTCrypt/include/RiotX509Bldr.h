@@ -1,7 +1,7 @@
 #ifndef _RIOT_X509_BLDR_H
 #define _RIOT_X509_BLDR_H
 
-#include "RiotCrypt.h"
+#include <RiotCrypt.h>
 
 #ifdef __cplusplus
 extern "C" {

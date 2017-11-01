@@ -17,7 +17,7 @@
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
-#include "stdint.h"
+#include "RiotTarget.h"
 #include "RiotKdf.h"
 
 #if HOST_IS_LITTLE_ENDIAN

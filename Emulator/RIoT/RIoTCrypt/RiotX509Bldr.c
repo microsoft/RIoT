@@ -4,9 +4,7 @@ Microsoft Copyright 2017
 Confidential Information
 
 */
-#include <stdint.h>
-#include <stdbool.h>
-
+#include "RiotTarget.h"
 #include "RiotDerEnc.h"
 #include "RiotX509Bldr.h"
 

@@ -17,6 +17,7 @@
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
+#include "RiotTarget.h"
 #include "RiotHmac.h"
 
 void

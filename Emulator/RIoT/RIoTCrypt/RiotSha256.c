@@ -47,8 +47,7 @@
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
-#include "stdint.h"
-#include "string.h" // memcpy/memset
+#include "RiotTarget.h"
 #include "RiotSha256.h"
 
 /*** SHA-256 Machine Architecture Definitions *****************/

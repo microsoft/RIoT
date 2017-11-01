@@ -13,7 +13,7 @@ Confidential Information
 #include "RiotCrypt.h"
 #include "RiotDerEnc.h"
 #include "RiotX509Bldr.h"
-#include "DiceSha256.h"
+//#include "DiceSha256.h"
 
 //Debug
 #define DEBUG
@@ -170,10 +170,10 @@ CreateDeviceAuthBundle(
     }
 
     // Don't use UDS directly
-    DiceSHA256(Seed, DICE_UDS_LENGTH, digest);
+    RiotCrypt_Hash(digest, DICE_DIGEST_LENGTH, Seed, DICE_UDS_LENGTH);
 
     // Derive CDI based on UDS and RIoT Core "measurement"
-    DiceSHA256_2(digest, DICE_DIGEST_LENGTH, rDigest, DICE_DIGEST_LENGTH, CDI);
+    RiotCrypt_Hash2(CDI, DICE_DIGEST_LENGTH, digest, DICE_DIGEST_LENGTH, rDigest, DICE_DIGEST_LENGTH);
 
     // Don't use CDI directly
     RiotCrypt_Hash(digest, RIOT_DIGEST_LENGTH, CDI, DICE_DIGEST_LENGTH);

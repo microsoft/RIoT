@@ -131,7 +131,7 @@ void SignAgent(
             }
             memcpy(AgentHdr->signature.r, &sig[0], sizeof(AgentHdr->signature.r));
             memcpy(AgentHdr->signature.s, &sig[sizeof(AgentHdr->signature.r)], sizeof(AgentHdr->signature.s));
-/*
+
             // Check the header signature
             ecc_signature riotSig = { 0 };
             BigIntToBigVal(&riotSig.r, AgentHdr->signature.r, sizeof(AgentHdr->signature.r));
@@ -151,12 +151,11 @@ void SignAgent(
             ecc_publickey codeAuthPub = { 0 };
             BigIntToBigVal(&codeAuthPub.x, &codeAuthKeyData[sizeof(BCRYPT_ECCKEY_BLOB)], keyHdr->cbKey);
             BigIntToBigVal(&codeAuthPub.y, &codeAuthKeyData[sizeof(BCRYPT_ECCKEY_BLOB) + keyHdr->cbKey], keyHdr->cbKey);
-            if ((retVal = RiotCrypt_Verify((PBYTE)&AgentHdr->sign, sizeof(AgentHdr->sign), &riotSig, &codeAuthPub)) != RIOT_SUCCESS)
+            if ((retVal = RIOT_DSAVerify((PBYTE)&AgentHdr->sign, sizeof(AgentHdr->sign), &riotSig, &codeAuthPub)) != RIOT_SUCCESS)
             {
                 printf("%s: RiotCrypt_Verify failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
                 throw retVal;
             }
-*/
         }
         else
         {

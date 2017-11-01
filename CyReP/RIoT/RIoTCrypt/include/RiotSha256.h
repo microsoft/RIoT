@@ -44,7 +44,7 @@ typedef uint64_t sha2_word64;   // Exactly 8 bytes
 
 typedef uint64_t hashMagic_t;
 
-#if HOST_IS_LITTLE_ENDIAN
+#ifdef HOST_IS_LITTLE_ENDIAN
 #define HASH_MAGIC_VALUE    (0x4078746368736168LL)
 #else
 #define HASH_MAGIC_VALUE    (0x6861736863747840LL)

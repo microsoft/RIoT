@@ -5,9 +5,9 @@ Confidential Information
 
 */
 
-#include <cyrep/RiotTarget.h>
-#include <cyrep/RiotDerEnc.h>
-#include <cyrep/RiotBase64.h>
+#include <RiotTarget.h>
+#include <RiotDerEnc.h>
+#include <RiotBase64.h>
 
 // 
 // This file contains basic DER-encoding routines that are sufficient to create
@@ -268,7 +268,7 @@ DERAddIntegerFromArray(
 // Leading zeros in the input number will be removed.
 {
     uint32_t j, numLeadingZeros = 0;
-    boolean_t negative;
+    bool negative;
 
     ASRT(NumBytes < 128);
     CHECK_SPACE2(Context, NumBytes);
@@ -330,7 +330,7 @@ Error:
 int
 DERAddBoolean(
     DERBuilderContext   *Context,
-    boolean_t            Val
+    bool                 Val
 )
 {
     CHECK_SPACE(Context);
@@ -408,7 +408,7 @@ Error:
 int
 DERStartSequenceOrSet(
     DERBuilderContext   *Context,
-    boolean_t            Sequence
+    bool                 Sequence
 )
 {
     uint8_t tp = Sequence ? 0x30 : 0x31;

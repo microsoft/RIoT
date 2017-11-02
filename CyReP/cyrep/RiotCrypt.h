@@ -24,10 +24,15 @@ Confidential Information
 // reference code.
 //
 
-#include <cyrep/RiotSha256.h>
-#include <cyrep/RiotAes128.h>
-#include <cyrep/RiotKdf.h>
-#include <cyrep/RiotEcc.h>
+#include <RiotStatus.h>
+#include <RiotSha256.h>
+#include <RiotHmac.h>
+#include <RiotKdf.h>
+#include <RiotAes128.h>
+#include <RiotKdf.h>
+#include <RiotEcc.h>
+#include <RiotDerEnc.h>
+#include <RiotX509Bldr.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,10 +69,6 @@ extern "C" {
 
 // Maximal number of bytes in a RIOT_AIK certificate
 #define RIOT_MAX_CERT_LENGTH        2048
-
-typedef ecc_publickey           RIOT_ECC_PUBLIC;
-typedef ecc_privatekey          RIOT_ECC_PRIVATE;
-typedef ecc_signature           RIOT_ECC_SIGNATURE;
 
 typedef enum {
     RIOT_ENCRYPT,

@@ -16,13 +16,13 @@
  *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  ******************************************************************************/
 
-#ifdef _MSC_VER
+#include <stdbool.h>
+#include <stdint.h>
+
+#if defined(_MSC_VER)
 #include <string.h>
 #include <assert.h>
-
-#if _MSC_VER >= 1600   /* MSVC 2010 or higher */
-#include <stdint.h>
-#else
+#if _MSC_VER < 1600   /* MSVC 2010 or higher */
 typedef signed char int8_t;           // 8-bit signed integer
 typedef unsigned char uint8_t;        // 8-bit unsigned integer
 typedef signed short int16_t;         // 16-bit signed integer
@@ -32,10 +32,10 @@ typedef unsigned int uint32_t;        // 32-bit unsigned integer
 typedef signed long long int64_t;     // 64-bit signed integer
 typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #endif
-#elif __GNUC__
 
+#elif defined(__GNUC__)
 #if defined(CONFIG_CYREP_UBOOT_BUILD)
-#include "cyrep/CyrepCommon.h"
+#include <CyrepCommon.h>
 typedef signed char int8_t;           // 8-bit signed integer
 typedef unsigned char uint8_t;        // 8-bit unsigned integer
 typedef signed short int16_t;         // 16-bit signed integer
@@ -53,12 +53,7 @@ typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #endif
 
 #else
-#include <stdint.h>
-#define assert(expr)    ((void)0)
-#endif
-
-#ifndef boolean_t
-typedef unsigned char boolean_t;      // 8-bit boolean
+#define assert(expr) ((void)0)
 #endif
 
 #ifndef MIN
@@ -104,6 +99,22 @@ typedef unsigned char boolean_t;      // 8-bit boolean
 #define WORD_ALIGN(x) ((x & 0x3) ? ((x >> 2) + 1) << 2 : x)
 #define HOST_IS_LITTLE_ENDIAN  true
 #define HOST_IS_BIG_ENDIAN     false
+
+#define RIOT_SUCCESS(a) (a == (RIOT_OK))
+
+//
+// Key derivation labels used by both RIoT Devices and External Infrastructure
+//
+#define RIOT_LABEL_IDENTITY     "Identity"
+#define RIOT_LABEL_ALIAS        "Alias"
+#define RIOT_LABEL_PROTECTOR    "Encrypt"
+#define RIOT_LABEL_INTEGRITY    "HMAC"
+#define RIOT_LABEL_AIK          "AikProtector"
+#define RIOT_LABEL_SK           "Sealing"
+#define RIOT_LABEL_MK           "Migration"
+#define RIOT_LABEL_AK           "Attestation"
+#define RIOT_LABEL_SERIAL       "Serial"
+#define lblSize(a)          (sizeof(a) - 1)
 
 #ifndef NDEBUG
 

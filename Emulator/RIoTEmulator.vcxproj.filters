@@ -37,9 +37,6 @@
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="..\CyReP\CyReP\RIoT.h">
-      <Filter>CyReP</Filter>
-    </ClInclude>
     <ClInclude Include="..\CyReP\CyReP\RiotAes128.h">
       <Filter>CyReP</Filter>
     </ClInclude>

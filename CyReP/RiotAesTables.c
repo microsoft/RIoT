@@ -127,7 +127,7 @@ static const uint32_t Rconst[12] = {
 
 #else
 
-#include "stdint.h"
+#include <stdint.h>
 extern const uint32_t ftable[];
 
 #endif

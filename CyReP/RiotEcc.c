@@ -17,10 +17,8 @@
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
-#include <cyrep/RiotTarget.h>
-#include <cyrep/RiotSha256.h>
-#include <cyrep/RiotKdf.h>
-#include <cyrep/RiotEcc.h>
+#include <RiotTarget.h>
+#include <RiotCrypt.h>
 
 // P256 is tested directly with known answer tests from example in
 // ANSI X9.62 Annex L.4.2.  (See item in pt_mpy_testcases below.)
@@ -136,7 +134,7 @@
 // this function, if necessary.
 //
 COND_STATIC int get_random_bytes(uint8_t *buf, size_t len);
-COND_STATIC int big_get_random_n(bigval_t *tgt, boolean_t allow_zero);
+COND_STATIC int big_get_random_n(bigval_t *tgt, bool allow_zero);
 COND_STATIC int ECDH_generate(affine_point_t *P1, bigval_t *k);
 #endif
 
@@ -974,7 +972,7 @@ big_halveP(bigval_t *tgt, bigval_t const *a)
 }
 
 // returns true if a is zero
-static boolean_t
+static bool
 big_is_zero(bigval_t const *a)
 {
     int i;
@@ -988,7 +986,7 @@ big_is_zero(bigval_t const *a)
 }
 
 // returns true if a is one
-static boolean_t
+static bool
 big_is_one(bigval_t const *a)
 {
     int i;
@@ -1344,7 +1342,7 @@ pointMpyP(affine_point_t *tgt, bigval_t const *k, affine_point_t const *P)
     toAffine(tgt, &Q);
 }
 
-COND_STATIC boolean_t
+COND_STATIC bool
 on_curveP(affine_point_t const *P)
 {
     bigval_t sum, product;
@@ -1370,7 +1368,7 @@ on_curveP(affine_point_t const *P)
 // returns a bigval between 0 or 1 (depending on allow_zero)
 // and order-1, inclusive.  Returns 0 on success, -1 otherwise
 COND_STATIC int
-big_get_random_n(bigval_t *tgt, boolean_t allow_zero)
+big_get_random_n(bigval_t *tgt, bool allow_zero)
 {
     int rv;
 
@@ -1435,7 +1433,7 @@ ECDH_derive(affine_point_t *P1, bigval_t *k,
 // returns false.  The behavior with k out of range is unspecified,
 // but safe.
 
-COND_STATIC boolean_t
+COND_STATIC bool
 ECDH_derive_pt(affine_point_t *tgt, bigval_t const *k, affine_point_t const *Q)
 {
     if (Q->infinity) {
@@ -1571,7 +1569,7 @@ ECDSA_verify_inner(bigval_t const *msgdgst,
     return (V_SUCCESS);
 }
 
-boolean_t
+bool
 ECDSA_verify(bigval_t const *msgdgst,
              affine_point_t const *pubkey,
              ECDSA_sig_t const *sig)
@@ -1731,7 +1729,7 @@ RIOT_GenerateShareSecret(ecc_publickey *peerPublicKey,
                          ecc_privatekey *privateKey,
                          ecc_secret *secret)
 {
-    boolean_t derive_rv;
+    bool derive_rv;
 
     derive_rv = ECDH_derive_pt(secret, privateKey, peerPublicKey);
     if (!derive_rv) {

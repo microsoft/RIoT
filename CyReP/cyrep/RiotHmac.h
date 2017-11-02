@@ -1,5 +1,5 @@
-#ifndef _RIOT_CRYPTO_SHA2_H
-#define _RIOT_CRYPTO_SHA2_H
+#ifndef _RIOT_CRYPTO_HMAC_SHA256_H
+#define _RIOT_CRYPTO_HMAC_SHA256_H
 /******************************************************************************
  * Copyright (c) 2014, AllSeen Alliance. All rights reserved.
  *
@@ -15,10 +15,6 @@
  *    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  ******************************************************************************/
-
-#include <cyrep/RiotTarget.h>
-#include <cyrep/RiotStatus.h>
-#include <cyrep/RiotSha256.h>
 
 #ifdef __cplusplus
 extern "C" {

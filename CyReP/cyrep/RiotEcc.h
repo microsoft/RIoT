@@ -68,6 +68,10 @@ typedef affine_point_t ecc_publickey;
 typedef affine_point_t ecc_secret;
 typedef ECDSA_sig_t ecc_signature;
 
+typedef ecc_publickey RIOT_ECC_PUBLIC;
+typedef ecc_privatekey RIOT_ECC_PRIVATE;
+typedef ecc_signature RIOT_ECC_SIGNATURE;
+
 //
 // Convert a number from big endian by uint8_t to bigval_t. If the
 // size of the input number is larger than the initialization size

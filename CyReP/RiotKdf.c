@@ -17,8 +17,8 @@
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
-#include <cyrep/RiotTarget.h>
-#include <cyrep/RiotKdf.h>
+#include <RiotTarget.h>
+#include <RiotCrypt.h>
 
 #if HOST_IS_LITTLE_ENDIAN
 #define UINT32_TO_BIGENDIAN(i)          \

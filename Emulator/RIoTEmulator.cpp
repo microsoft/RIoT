@@ -9,10 +9,8 @@ Confidential Information
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-#include "cyrep/RIoT.h"
+#include "cyrep/RiotTarget.h"
 #include "cyrep/RiotCrypt.h"
-#include "cyrep/RiotDerEnc.h"
-#include "cyrep/RiotX509Bldr.h"
 
 //Debug
 #define DEBUG

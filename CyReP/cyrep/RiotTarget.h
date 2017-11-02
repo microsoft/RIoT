@@ -38,14 +38,6 @@ typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 
 #if defined(CONFIG_CYREP_UBOOT_BUILD)
 #include <common.h>
-typedef signed char int8_t;           // 8-bit signed integer
-typedef unsigned char uint8_t;        // 8-bit unsigned integer
-typedef signed short int16_t;         // 16-bit signed integer
-typedef unsigned short uint16_t;      // 16-bit unsigned integer
-typedef signed int int32_t;           // 32-bit signed integer
-typedef unsigned int uint32_t;        // 32-bit unsigned integer
-typedef signed long long int64_t;     // 64-bit signed integer
-typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #define CYREP_PLATFORM_TRACE_ERROR printf
 
 #elif defined(CONFIG_CYREP_OPTEE_BUILD)
@@ -127,7 +119,7 @@ typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #define HOST_IS_LITTLE_ENDIAN  true
 #define HOST_IS_BIG_ENDIAN     false
 
-#define RIOT_SUCCESS(a) (a == (RIOT_OK))
+#define RIOT_SUCCESS(a) ((a) == (RIOT_OK))
 
 //
 // Key derivation labels used by both RIoT Devices and External Infrastructure

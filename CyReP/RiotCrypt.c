@@ -5,6 +5,12 @@ Confidential Information
 
 */
 #include <RiotTarget.h>
+#include <RiotStatus.h>
+#include <RiotSha256.h>
+#include <RiotHmac.h>
+#include <RiotKdf.h>
+#include <RiotEcc.h>
+#include <RiotAes128.h>
 #include <RiotCrypt.h>
 
 #define RIOT_MAX_KDF_FIXED_SIZE     RIOT_MAX_KDF_CONTEXT_LENGTH + \

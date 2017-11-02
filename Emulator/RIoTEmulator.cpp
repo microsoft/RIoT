@@ -10,6 +10,15 @@ Confidential Information
 #include <Windows.h>
 
 #include "cyrep/RiotTarget.h"
+#include <cyrep/RiotStatus.h>
+#include <cyrep/RiotSha256.h>
+#include <cyrep/RiotHmac.h>
+#include <cyrep/RiotKdf.h>
+#include <cyrep/RiotAes128.h>
+#include <cyrep/RiotKdf.h>
+#include <cyrep/RiotEcc.h>
+#include <cyrep/RiotDerEnc.h>
+#include <cyrep/RiotX509Bldr.h>
 #include "cyrep/RiotCrypt.h"
 
 //Debug

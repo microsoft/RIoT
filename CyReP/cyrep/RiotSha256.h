@@ -27,9 +27,6 @@
  * SUCH DAMAGE.
  */
 
-//
-// 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
-//
 #ifndef __RIOT_CRYPTO_SHA256_H__
 #define __RIOT_CRYPTO_SHA256_H__
 

@@ -24,16 +24,6 @@ Confidential Information
 // reference code.
 //
 
-#include <RiotStatus.h>
-#include <RiotSha256.h>
-#include <RiotHmac.h>
-#include <RiotKdf.h>
-#include <RiotAes128.h>
-#include <RiotKdf.h>
-#include <RiotEcc.h>
-#include <RiotDerEnc.h>
-#include <RiotX509Bldr.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

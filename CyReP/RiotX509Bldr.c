@@ -5,6 +5,13 @@ Confidential Information
 
 */
 #include <RiotTarget.h>
+#include <RiotStatus.h>
+#include <RiotSha256.h>
+#include <RiotHmac.h>
+#include <RiotKdf.h>
+#include <RiotEcc.h>
+#include <RiotDerEnc.h>
+#include <RiotX509Bldr.h>
 #include <RiotCrypt.h>
 
 #define ASRT(_X) if(!(_X))      {goto Error;}

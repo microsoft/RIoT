@@ -16,8 +16,6 @@
 *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ******************************************************************************/
 
-#include <RiotHmac.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

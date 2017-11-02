@@ -20,7 +20,8 @@ namespace drtester
 
             var bundle = DiceRiotEmulator.RIoTEngine.CreateDeviceAuthBundle(uds, fwid);
 
-            //var popCert = DiceRiotEmulator.RIoTEngine.
+            string challengePoPCN = "CN=XXXXyyyyZZZZ";
+            var popCertPem = DiceRiotEmulator.RIoTEngine.CreateDevIDPoP(bundle, challengePoPCN);
 
             File.WriteAllText("AliasCert.PEM", bundle.AliasCredential.CertPem);
             File.WriteAllText("DeviceIDCert.PEM", bundle.DeviceIDCredential.CertPem);
@@ -32,6 +33,7 @@ namespace drtester
             File.WriteAllBytes("DeviceIDCert.CER", bundle.DeviceIDCredential.Cert.GetEncoded());
             File.WriteAllBytes("DeviceIDSelfSignedCert.CER", bundle.SelfSignedDeviceIDCredential.Cert.GetEncoded());
             File.WriteAllBytes("RootCert.CER", bundle.RootCredential.Cert.GetEncoded());
+            File.WriteAllText("DevIDPopCert.PEM", popCertPem);
 
             string helpString =
                 "Certificate and chain validation:\n" +

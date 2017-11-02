@@ -118,6 +118,65 @@
 							<inputType id="com.atollic.truestudio.gcc.input.1274347818" superClass="com.atollic.truestudio.gcc.input"/>
 						</tool>
 					</fileInfo>
+					<folderInfo id="com.atollic.truestudio.exe.debug.1518366166.210626347" name="/" resourcePath="Middlewares/BarnacleTA">
+						<toolChain id="com.atollic.truestudio.exe.debug.toolchain.317189459" name="Atollic ARM Tools" superClass="com.atollic.truestudio.exe.debug.toolchain" unusedChildren="">
+							<option id="com.atollic.truestudio.general.runtimelib.474553471.1909552498" name="Runtime Library" superClass="com.atollic.truestudio.general.runtimelib.474553471"/>
+							<option id="com.atollic.truestudio.toolchain_options.mcu.208954776.1404581286" name="Microcontroller" superClass="com.atollic.truestudio.toolchain_options.mcu.208954776"/>
+							<option id="com.atollic.truestudio.toolchain_options.vendor.1558984484.2059188541" name="Vendor name" superClass="com.atollic.truestudio.toolchain_options.vendor.1558984484"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.atollic.truestudio.exe.debug.toolchain.platform" isAbstract="false" name="Debug platform" osList="all" superClass="com.atollic.truestudio.exe.debug.toolchain.platform"/>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.as.1838223591" name="Assembler" superClass="com.atollic.truestudio.exe.debug.toolchain.as.1545899283">
+								<inputType id="com.atollic.truestudio.as.input.293919212" name="Input" superClass="com.atollic.truestudio.as.input"/>
+							</tool>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.gcc.1798599523" name="C Compiler" superClass="com.atollic.truestudio.exe.debug.toolchain.gcc.1836874447">
+								<option id="com.atollic.truestudio.gcc.directories.select.104825114" name="Include path" superClass="com.atollic.truestudio.gcc.directories.select" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="../Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy"/>
+									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Core/Inc"/>
+									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32L4xx/Include"/>
+									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../../../CyReP"/>
+									<listOptionValue builtIn="false" value="../../Shared/BarnacleTA"/>
+								</option>
+								<inputType id="com.atollic.truestudio.gcc.input.1402073272" superClass="com.atollic.truestudio.gcc.input"/>
+							</tool>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.ld.2080574216" name="C Linker" superClass="com.atollic.truestudio.exe.debug.toolchain.ld.1444973427"/>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.gpp.1622654229" name="C++ Compiler" superClass="com.atollic.truestudio.exe.debug.toolchain.gpp.981298185"/>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.ldcc.2057197464" name="C++ Linker" superClass="com.atollic.truestudio.exe.debug.toolchain.ldcc.428260"/>
+							<tool id="com.atollic.truestudio.ar.base.1312109917" name="Archiver" superClass="com.atollic.truestudio.ar.base.1869000576"/>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.secoutput.124332563" name="Other" superClass="com.atollic.truestudio.exe.debug.toolchain.secoutput.839033486"/>
+						</toolChain>
+					</folderInfo>
+					<folderInfo id="com.atollic.truestudio.exe.debug.1518366166.1903465862" name="/" resourcePath="Middlewares/CyReP">
+						<toolChain id="com.atollic.truestudio.exe.debug.toolchain.732327918" name="Atollic ARM Tools" superClass="com.atollic.truestudio.exe.debug.toolchain" unusedChildren="">
+							<option id="com.atollic.truestudio.general.runtimelib.474553471.2018653962" name="Runtime Library" superClass="com.atollic.truestudio.general.runtimelib.474553471"/>
+							<option id="com.atollic.truestudio.toolchain_options.mcu.208954776.317684697" name="Microcontroller" superClass="com.atollic.truestudio.toolchain_options.mcu.208954776"/>
+							<option id="com.atollic.truestudio.toolchain_options.vendor.1558984484.1811231691" name="Vendor name" superClass="com.atollic.truestudio.toolchain_options.vendor.1558984484"/>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.as.1538388694" name="Assembler" superClass="com.atollic.truestudio.exe.debug.toolchain.as.1545899283">
+								<inputType id="com.atollic.truestudio.as.input.1600203317" name="Input" superClass="com.atollic.truestudio.as.input"/>
+							</tool>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.gcc.47111869" name="C Compiler" superClass="com.atollic.truestudio.exe.debug.toolchain.gcc.1836874447">
+								<option id="com.atollic.truestudio.gcc.directories.select.260594897" superClass="com.atollic.truestudio.gcc.directories.select" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="../Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy"/>
+									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Core/Inc"/>
+									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32L4xx/Include"/>
+									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../../../CyReP/cyrep"/>
+									<listOptionValue builtIn="false" value="../../Shared/BarnacleTA"/>
+								</option>
+								<inputType id="com.atollic.truestudio.gcc.input.1137768595" superClass="com.atollic.truestudio.gcc.input"/>
+							</tool>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.ld.1982496526" name="C Linker" superClass="com.atollic.truestudio.exe.debug.toolchain.ld.1444973427"/>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.gpp.810387233" name="C++ Compiler" superClass="com.atollic.truestudio.exe.debug.toolchain.gpp.981298185"/>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.ldcc.569192965" name="C++ Linker" superClass="com.atollic.truestudio.exe.debug.toolchain.ldcc.428260"/>
+							<tool id="com.atollic.truestudio.ar.base.652501637" name="Archiver" superClass="com.atollic.truestudio.ar.base.1869000576"/>
+							<tool id="com.atollic.truestudio.exe.debug.toolchain.secoutput.753100210" name="Other" superClass="com.atollic.truestudio.exe.debug.toolchain.secoutput.839033486"/>
+						</toolChain>
+					</folderInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="startup"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Middlewares"/>
@@ -247,6 +306,65 @@
 							<inputType id="com.atollic.truestudio.gcc.input.1274347818" superClass="com.atollic.truestudio.gcc.input"/>
 						</tool>
 					</fileInfo>
+					<folderInfo id="com.atollic.truestudio.exe.release.1518366166.846933558" name="/" resourcePath="Middlewares/BarnacleTA">
+						<toolChain id="com.atollic.truestudio.exe.release.toolchain.385527661" name="Atollic ARM Tools" superClass="com.atollic.truestudio.exe.release.toolchain" unusedChildren="">
+							<option id="com.atollic.truestudio.general.runtimelib.1274143787.1570092516" name="Runtime Library" superClass="com.atollic.truestudio.general.runtimelib.1274143787"/>
+							<option id="com.atollic.truestudio.toolchain_options.mcu.256744777.642357873" name="Microcontroller" superClass="com.atollic.truestudio.toolchain_options.mcu.256744777"/>
+							<option id="com.atollic.truestudio.toolchain_options.vendor.1757730307.881745310" name="Vendor name" superClass="com.atollic.truestudio.toolchain_options.vendor.1757730307"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.atollic.truestudio.exe.release.toolchain.platform" isAbstract="false" name="release platform" superClass="com.atollic.truestudio.exe.release.toolchain.platform"/>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.as.1081264376" name="Assembler" superClass="com.atollic.truestudio.exe.release.toolchain.as.1545899283">
+								<inputType id="com.atollic.truestudio.as.input.1461087727" name="Input" superClass="com.atollic.truestudio.as.input"/>
+							</tool>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.gcc.790757787" name="C Compiler" superClass="com.atollic.truestudio.exe.release.toolchain.gcc.1836874447">
+								<option id="com.atollic.truestudio.gcc.directories.select.174691514" name="Include path" superClass="com.atollic.truestudio.gcc.directories.select" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="../Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy"/>
+									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Core/Inc"/>
+									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32L4xx/Include"/>
+									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../../../CyReP"/>
+									<listOptionValue builtIn="false" value="../../Shared/BarnacleTA"/>
+								</option>
+								<inputType id="com.atollic.truestudio.gcc.input.1324646406" superClass="com.atollic.truestudio.gcc.input"/>
+							</tool>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.ld.1921591039" name="C Linker" superClass="com.atollic.truestudio.exe.release.toolchain.ld.1444973427"/>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.gpp.1568142435" name="C++ Compiler" superClass="com.atollic.truestudio.exe.release.toolchain.gpp.981298185"/>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.ldcc.1512254647" name="C++ Linker" superClass="com.atollic.truestudio.exe.release.toolchain.ldcc.428260"/>
+							<tool id="com.atollic.truestudio.ar.base.582149000" name="Archiver" superClass="com.atollic.truestudio.ar.base.277497384"/>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.secoutput.1951241945" name="Other" superClass="com.atollic.truestudio.exe.release.toolchain.secoutput.839033486"/>
+						</toolChain>
+					</folderInfo>
+					<folderInfo id="com.atollic.truestudio.exe.release.1518366166.1126791907" name="/" resourcePath="Middlewares/CyReP">
+						<toolChain id="com.atollic.truestudio.exe.release.toolchain.1341020918" name="Atollic ARM Tools" superClass="com.atollic.truestudio.exe.release.toolchain" unusedChildren="">
+							<option id="com.atollic.truestudio.general.runtimelib.1274143787.1563350207" name="Runtime Library" superClass="com.atollic.truestudio.general.runtimelib.1274143787"/>
+							<option id="com.atollic.truestudio.toolchain_options.mcu.256744777.263081747" name="Microcontroller" superClass="com.atollic.truestudio.toolchain_options.mcu.256744777"/>
+							<option id="com.atollic.truestudio.toolchain_options.vendor.1757730307.715660257" name="Vendor name" superClass="com.atollic.truestudio.toolchain_options.vendor.1757730307"/>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.as.2126665228" name="Assembler" superClass="com.atollic.truestudio.exe.release.toolchain.as.1545899283">
+								<inputType id="com.atollic.truestudio.as.input.613058156" name="Input" superClass="com.atollic.truestudio.as.input"/>
+							</tool>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.gcc.433413758" name="C Compiler" superClass="com.atollic.truestudio.exe.release.toolchain.gcc.1836874447">
+								<option id="com.atollic.truestudio.gcc.directories.select.1469189023" superClass="com.atollic.truestudio.gcc.directories.select" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="../Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy"/>
+									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Core/Inc"/>
+									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc"/>
+									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32L4xx/Include"/>
+									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../../../CyReP/cyrep"/>
+									<listOptionValue builtIn="false" value="../../Shared/BarnacleTA"/>
+								</option>
+								<inputType id="com.atollic.truestudio.gcc.input.1046224890" superClass="com.atollic.truestudio.gcc.input"/>
+							</tool>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.ld.76562390" name="C Linker" superClass="com.atollic.truestudio.exe.release.toolchain.ld.1444973427"/>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.gpp.1195524858" name="C++ Compiler" superClass="com.atollic.truestudio.exe.release.toolchain.gpp.981298185"/>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.ldcc.640670120" name="C++ Linker" superClass="com.atollic.truestudio.exe.release.toolchain.ldcc.428260"/>
+							<tool id="com.atollic.truestudio.ar.base.395638820" name="Archiver" superClass="com.atollic.truestudio.ar.base.277497384"/>
+							<tool id="com.atollic.truestudio.exe.release.toolchain.secoutput.9270011" name="Other" superClass="com.atollic.truestudio.exe.release.toolchain.secoutput.839033486"/>
+						</toolChain>
+					</folderInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="startup"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Middlewares"/>

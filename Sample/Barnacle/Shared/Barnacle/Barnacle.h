@@ -8,12 +8,6 @@
 #ifndef BARNACLE_H_
 #define BARNACLE_H_
 
-#include "cyrep/RIoT.h"
-#include "cyrep/RiotCrypt.h"
-#include "cyrep/RiotDerEnc.h"
-#include "cyrep/RiotX509Bldr.h"
-#include "BarnacleTA.h"
-
 #define BARNACLEMAGIC               (0x6d6f6854)
 #define BARNACLEVERSION             (0x00010000)
 #define BARNACLETIMESTAMP           (0x59e7bd55)
@@ -48,8 +42,8 @@ extern const BARNACLE_ISSUED_PUBLIC IssuedCerts;
 extern const BARNACLE_IDENTITY_PRIVATE FwDeviceId;
 extern const BARNACLE_CACHED_DATA FwCache;
 
-boolean_t BarnacleInitialProvision();
+bool BarnacleInitialProvision();
 void BarnacleDumpCertBag();
-boolean_t BarnacleVerifyAgent();
+bool BarnacleVerifyAgent();
 
 #endif /* BARNACLE_H_ */

@@ -7,7 +7,14 @@
 
 #include "main.h"
 #include "stm32l4xx_hal.h"
-#include "BarnacleTA.h"
+#include <cyrep/RiotTarget.h>
+#include <cyrep/RiotStatus.h>
+#include <cyrep/RiotSha256.h>
+#include <cyrep/RiotEcc.h>
+#include <cyrep/RiotCrypt.h>
+#include <cyrep/RiotDerEnc.h>
+#include <cyrep/RiotX509Bldr.h>
+#include <BarnacleTA.h>
 
 extern RNG_HandleTypeDef hrng;
 
@@ -23,9 +30,9 @@ __attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{BAR
 #pragma GCC diagnostic pop
 __attribute__((section(".AGENTCODE"))) const uint8_t* AgentCode;
 
-boolean_t BarnacleFlashPages(void* dest, void* src, uint32_t size)
+bool BarnacleFlashPages(void* dest, void* src, uint32_t size)
 {
-    boolean_t result = true;
+    bool result = true;
     uint32_t pageError = 0;
     FLASH_EraseInitTypeDef eraseInfo = {FLASH_TYPEERASE_PAGES,
                                         FLASH_BANK_1,
@@ -84,7 +91,7 @@ void BarnacleGetRandom(void* dest, uint32_t size)
     }
 }
 
-boolean_t BarnacleNullCheck(void* dataPtr, uint32_t dataSize)
+bool BarnacleNullCheck(void* dataPtr, uint32_t dataSize)
 {
     for(uint32_t n = 0; n < dataSize; n++)
     {

@@ -44,9 +44,17 @@
 #include "main.h"
 #include "stm32l4xx_hal.h"
 #include "usb_device.h"
-#include "Barnacle.h"
 
 /* USER CODE BEGIN Includes */
+#include <cyrep/RiotTarget.h>
+#include <cyrep/RiotStatus.h>
+#include <cyrep/RiotSha256.h>
+#include <cyrep/RiotEcc.h>
+#include <cyrep/RiotDerEnc.h>
+#include <cyrep/RiotX509Bldr.h>
+#include <cyrep/RiotCrypt.h>
+#include <BarnacleTA.h>
+#include <Barnacle.h>
 
 /* USER CODE END Includes */
 

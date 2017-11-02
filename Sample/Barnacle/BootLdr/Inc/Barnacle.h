@@ -8,13 +8,6 @@
 #ifndef BARNACLE_H_
 #define BARNACLE_H_
 
-#include <cyrep/RiotTarget.h>
-#include <cyrep/RIoT.h>
-#include <cyrep/RiotCrypt.h>
-#include <cyrep/RiotDerEnc.h>
-#include <cyrep/RiotX509Bldr.h>
-#include <BarnacleTA.h>
-
 #define RAMWIPESTART1               (0x20000000)
 #define RAMWIPESIZE1                (96 * 0x400)
 #define RAMWIPESTART2               (0x10000000 - sizeof(BARNACLE_CERTSTORE) - sizeof(BARNACLE_IDENTITY_PRIVATE))
@@ -41,8 +34,8 @@ extern const BARNACLE_ISSUED_PUBLIC IssuedCerts;
 extern const BARNACLE_IDENTITY_PRIVATE FwDeviceId;
 extern const BARNACLE_CACHED_DATA FwCache;
 
-boolean_t BarnacleInitialProvision();
+bool BarnacleInitialProvision();
 void BarnacleDumpCertBag();
-boolean_t BarnacleVerifyAgent();
+bool BarnacleVerifyAgent();
 
 #endif /* BARNACLE_H_ */

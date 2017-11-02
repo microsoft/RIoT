@@ -7,7 +7,15 @@
 
 #include "main.h"
 #include "stm32l4xx_hal.h"
-#include "Barnacle.h"
+#include <cyrep/RiotTarget.h>
+#include <cyrep/RiotStatus.h>
+#include <cyrep/RiotSha256.h>
+#include <cyrep/RiotEcc.h>
+#include <cyrep/RiotCrypt.h>
+#include <cyrep/RiotDerEnc.h>
+#include <cyrep/RiotX509Bldr.h>
+#include <BarnacleTA.h>
+#include <Barnacle.h>
 
 extern RNG_HandleTypeDef hrng;
 
@@ -30,10 +38,10 @@ char* BarnacleIssuedCertChain()
     return NULL;
 }
 
-boolean_t BarnacleInitialProvision()
+bool BarnacleInitialProvision()
 {
-    boolean_t result = true;
-    boolean_t generateCerts = false;
+    bool result = true;
+    bool generateCerts = false;
 
     // Check if the platform identity is already provisioned
     if(FwDeviceId.magic != BARNACLEMAGIC)
@@ -149,9 +157,9 @@ Cleanup:
     return result;
 }
 
-boolean_t BarnacleVerifyAgent()
+bool BarnacleVerifyAgent()
 {
-    boolean_t result = true;
+    bool result = true;
     uint8_t digest[SHA256_DIGEST_LENGTH];
     RIOT_ECC_SIGNATURE sig = {0};
 

@@ -17,7 +17,10 @@
 #include <Wincrypt.h>
 #include <BCrypt.h>
 #include <NCrypt.h>
-#include <cyrep/RIoT.h>
+#include <cyrep/RiotTarget.h>
+#include <cyrep/RiotStatus.h>
+#include <cyrep/RiotEcc.h>
+#include <cyrep/RiotCrypt.h>
 #include <BarnacleTA.h>
 #include "DfuSe.h"
 

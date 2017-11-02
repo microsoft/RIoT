@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\CyReP">
+      <UniqueIdentifier>{dc71c5c6-4cf9-4752-8a64-1f98d3479f95}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -51,16 +54,16 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\CyReP\RiotEcc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\CyReP\RiotHmac.c">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\CyReP</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\CyReP\RiotKdf.c">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\CyReP\RiotHmac.c">
+      <Filter>Source Files\CyReP</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\CyReP\RiotSha256.c">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\CyReP</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

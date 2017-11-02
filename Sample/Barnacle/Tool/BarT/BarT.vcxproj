@@ -154,10 +154,30 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\CyReP\RiotEcc.c" />
-    <ClCompile Include="..\..\..\..\CyReP\RiotHmac.c" />
-    <ClCompile Include="..\..\..\..\CyReP\RiotKdf.c" />
-    <ClCompile Include="..\..\..\..\CyReP\RiotSha256.c" />
+    <ClCompile Include="..\..\..\..\CyReP\RiotEcc.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\CyReP\RiotHmac.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\CyReP\RiotKdf.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\CyReP\RiotSha256.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="BarT.cpp" />
     <ClCompile Include="DfuSe.cpp" />
     <ClCompile Include="helper.cpp" />

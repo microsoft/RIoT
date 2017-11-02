@@ -8,16 +8,12 @@
 #ifndef BARNACLETA_H_
 #define BARNACLETA_H_
 
-#include <cyrep/RIoT.h>
-#include <cyrep/RiotCrypt.h>
-#include <cyrep/RiotDerEnc.h>
-#include <cyrep/RiotX509Bldr.h>
-
 #define NUMELEM(a) (sizeof(a) / sizeof(*a))
 
 #define BARNACLEMAGIC               (0x6d6f6854)
 #define BARNACLEVERSION             (0x00010000)
 #define BARNACLETIMESTAMP           (0x59e7bd55)
+#define BARNACLEDIGESTLEN           (32)
 
 typedef struct
 {
@@ -35,13 +31,13 @@ typedef struct
             uint32_t version;
             uint32_t size;
             uint32_t issued;
-            uint8_t digest[SHA256_DIGEST_LENGTH];
+            uint8_t digest[BARNACLEDIGESTLEN];
         } agent;
     } sign;
     struct
     {
-        uint8_t r[SHA256_DIGEST_LENGTH];
-        uint8_t s[SHA256_DIGEST_LENGTH];
+        uint8_t r[BARNACLEDIGESTLEN];
+        uint8_t s[BARNACLEDIGESTLEN];
     } signature;
     uint8_t unused[0x178];
 } BARNACLE_AGENT_HDR, *PBARNACLE_AGENT_HDR;
@@ -72,9 +68,9 @@ extern BARNACLE_CERTSTORE CertStore;
 extern const BARNACLE_AGENT_HDR AgentHdr;
 extern const uint8_t* AgentCode;
 
-boolean_t BarnacleFlashPages(void* dest, void* src, uint32_t size);
+bool BarnacleFlashPages(void* dest, void* src, uint32_t size);
 void BarnacleGetRandom(void* dest, uint32_t size);
-boolean_t BarnacleNullCheck(void* dataPtr, uint32_t dataSize);
+bool BarnacleNullCheck(void* dataPtr, uint32_t dataSize);
 char* BarnacleCertChain();
 
 #endif /* BARNACLETA_H_ */

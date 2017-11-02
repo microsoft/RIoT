@@ -116,7 +116,7 @@ void SignAgent(
         // Sign the header
         if (codeAuth != NULL)
         {
-            std::vector<BYTE> hdrDigest(SHA256_DIGEST_LENGTH, 0);
+            std::vector<BYTE> hdrDigest(BARNACLEDIGESTLEN, 0);
             if ((retVal = BCryptHash(hSha256, NULL, 0, (PBYTE)&AgentHdr->sign, sizeof(AgentHdr->sign), hdrDigest.data(), hdrDigest.size())) != 0)
             {
                 printf("%s: BCryptHash failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);

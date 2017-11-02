@@ -17,7 +17,6 @@
  ******************************************************************************/
 
 #include <stdbool.h>
-#include <stdint.h>
 
 #if defined(_MSC_VER)
 #include <string.h>
@@ -31,11 +30,14 @@ typedef signed int int32_t;           // 32-bit signed integer
 typedef unsigned int uint32_t;        // 32-bit unsigned integer
 typedef signed long long int64_t;     // 64-bit signed integer
 typedef unsigned long long uint64_t;  // 64-bit unsigned integer
+#else
+#include <stdint.h>
 #endif
 
 #elif defined(__GNUC__)
+
 #if defined(CONFIG_CYREP_UBOOT_BUILD)
-#include <CyrepCommon.h>
+#include <common.h>
 typedef signed char int8_t;           // 8-bit signed integer
 typedef unsigned char uint8_t;        // 8-bit unsigned integer
 typedef signed short int16_t;         // 16-bit signed integer
@@ -44,6 +46,31 @@ typedef signed int int32_t;           // 32-bit signed integer
 typedef unsigned int uint32_t;        // 32-bit unsigned integer
 typedef signed long long int64_t;     // 64-bit signed integer
 typedef unsigned long long uint64_t;  // 64-bit unsigned integer
+#define CYREP_PLATFORM_TRACE_ERROR printf
+
+#elif defined(CONFIG_CYREP_OPTEE_BUILD)
+#include <types_ext.h>
+#include <string.h>
+#include <assert.h>
+typedef signed char int8_t;           // 8-bit signed integer
+typedef unsigned char uint8_t;        // 8-bit unsigned integer
+typedef signed short int16_t;         // 16-bit signed integer
+typedef unsigned short uint16_t;      // 16-bit unsigned integer
+typedef signed int int32_t;           // 32-bit signed integer
+typedef unsigned int uint32_t;        // 32-bit unsigned integer
+typedef signed long long int64_t;     // 64-bit signed integer
+typedef unsigned long long uint64_t;  // 64-bit unsigned integer
+#define CYREP_PLATFORM_TRACE_ERROR EMSG
+
+#elif defined(CONFIG_CYREP_UEFI_BUILD)
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <assert.h>
+#include <string.h>
+#include <Library/DebugLib.h>
+#define CYREP_PLATFORM_TRACE_ERROR(...) \
+    DEBUG((DEBUG_ERROR, __VA_ARGS__))
 
 #elif defined(STM32L476xx)
 #include <string.h>

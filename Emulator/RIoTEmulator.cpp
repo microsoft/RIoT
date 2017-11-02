@@ -9,7 +9,7 @@ Confidential Information
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-#include "cyrep/RiotTarget.h"
+#include <cyrep/RiotTarget.h>
 #include <cyrep/RiotStatus.h>
 #include <cyrep/RiotSha256.h>
 #include <cyrep/RiotHmac.h>

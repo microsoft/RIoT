@@ -20,6 +20,8 @@ namespace drtester
 
             var bundle = DiceRiotEmulator.RIoTEngine.CreateDeviceAuthBundle(uds, fwid);
 
+            //var popCert = DiceRiotEmulator.RIoTEngine.
+
             File.WriteAllText("AliasCert.PEM", bundle.AliasCredential.CertPem);
             File.WriteAllText("DeviceIDCert.PEM", bundle.DeviceIDCredential.CertPem);
             File.WriteAllText("DeviceIDSelfSignedCert.PEM", bundle.SelfSignedDeviceIDCredential.CertPem);

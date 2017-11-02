@@ -122,16 +122,22 @@ namespace DiceRiotEmulator
             CSR
         }
 
-        /*
-        public static DeviceAuthBundle CreateDeviceAuthBundle(byte[] UDS, byte[] FWID,
-                                                          String rCN, String dCN, String aCN)
+        /// <summary>
+        /// Creates a certificate using the vendor/root key containing the challengeCommonName as the 
+        /// subject.  Proof-of-possession of the vendor/root key is required to enroll a root certificate
+        /// with the Azure Device Provisioning Service.
+        /// </summary>
+        /// <param name="">The challenge common name "nonce"</param>
+        /// <returns>The signed challengeCommonName</returns>
+        public static string CreateDevIDPoP(DeviceAuthBundle bundle, string challengeCommonName)
         {
-            rRootCertSubjectName = rRootCertIssuerName = rDeviceCertIssuerName = rCN;   // Self-signed
-            rDeviceCertSubjectName = rAliasCertIssuerName = dCN;
-            rAliasCertSubjectName = aCN;
-            return CreateDeviceAuthBundle(UDS, FWID);
+            rDeviceCertSubject = new X509Name(challengeCommonName);
+            var rootKey = new AsymmetricCipherKeyPair(bundle.RootCredential.PubKey, bundle.RootCredential.PrivKey);
+            var rootSigningSeed = Hash(Hash(rR00t));
+            var challengePoPCert = CreateDeviceCert(rootKey, bundle.DeviceIDCredential.PubKey, rootSigningSeed);
+            var challengePoPCertPEM = DerToPem("CERTIFICATE", challengePoPCert);
+            return challengePoPCertPEM;
         }
-       */
 
         /// <summary>
         /// Create keys and certificates
@@ -189,7 +195,7 @@ namespace DiceRiotEmulator
             X509Certificate rootCert = CreateRootCert(rootKey, rootSeed);
 
             // Create the DeviceID certificate signed by the root vendor CA
-            X509Certificate devCert = CreateDeviceCert(rootKey, deviceID, rootSeed);
+            X509Certificate devCert = CreateDeviceCert(rootKey, deviceID.Public, rootSeed);
 
             // Create the self-signed DeviceID certificate
             X509Certificate devCertSelfSigned = CreateSelfSignedDeviceCert(deviceID, devIdSeed);
@@ -283,7 +289,7 @@ namespace DiceRiotEmulator
         /// <param name="deviceIdKey">The key being certified</param>
         /// <param name="signingSeed">Seed for the signing BRBG</param>
         /// <returns>The device certificate</returns>
-        private static X509Certificate CreateDeviceCert(AsymmetricCipherKeyPair rootKey, AsymmetricCipherKeyPair deviceIdKey, byte[] signingSeed)
+        private static X509Certificate CreateDeviceCert(AsymmetricCipherKeyPair rootKey, AsymmetricKeyParameter deviceIdKey, byte[] signingSeed)
         {
             var random = GetDrbg(signingSeed, SeedUsage.Signing);
 
@@ -294,7 +300,7 @@ namespace DiceRiotEmulator
             certGen.SetSubjectDN(rDeviceCertSubject);
             certGen.SetNotBefore(startTime);
             certGen.SetNotAfter(endTime);
-            certGen.SetPublicKey(deviceIdKey.Public);
+            certGen.SetPublicKey(deviceIdKey);
 
             // add the extensions
             certGen.AddExtension(X509Extensions.KeyUsage, true, new KeyUsage(KeyUsage.KeyCertSign));
@@ -306,7 +312,7 @@ namespace DiceRiotEmulator
             certGen.AddExtension(
                 X509Extensions.SubjectKeyIdentifier,
                 false,
-                new SubjectKeyIdentifier(SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(deviceIdKey.Public)));
+                new SubjectKeyIdentifier(SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(deviceIdKey)));
 
             // sign and return the device certificate
             ISignatureFactory signatureFactory = new Asn1SignatureFactory(rSigSch, rootKey.Private, random);

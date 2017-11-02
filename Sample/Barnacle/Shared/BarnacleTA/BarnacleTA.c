@@ -13,16 +13,19 @@ extern RNG_HandleTypeDef hrng;
 
 __attribute__((section(".PURW.Private"))) BARNACLE_IDENTITY_PRIVATE CompoundId;
 __attribute__((section(".PURW.Public"))) BARNACLE_CERTSTORE CertStore;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-braces"
 #ifdef AGENTPROJECT
 __attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{BARNACLEMAGIC, BARNACLEVERSION, sizeof(BARNACLE_AGENT_HDR)}, {AGENTNAME, AGENTVERSION, 0, AGENTTIMESTAMP, {0}}}, {{0}, {0}}, {0}};
 #else
 __attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{BARNACLEMAGIC, BARNACLEVERSION, sizeof(BARNACLE_AGENT_HDR)}, {0}}, {{0}, {0}}, {0}};
 #endif
+#pragma GCC diagnostic pop
 __attribute__((section(".AGENTCODE"))) const uint8_t* AgentCode;
 
-bool BarnacleFlashPages(void* dest, void* src, uint32_t size)
+boolean_t BarnacleFlashPages(void* dest, void* src, uint32_t size)
 {
-    bool result = true;
+    boolean_t result = true;
     uint32_t pageError = 0;
     FLASH_EraseInitTypeDef eraseInfo = {FLASH_TYPEERASE_PAGES,
                                         FLASH_BANK_1,
@@ -81,7 +84,7 @@ void BarnacleGetRandom(void* dest, uint32_t size)
     }
 }
 
-bool BarnacleNullCheck(void* dataPtr, uint32_t dataSize)
+boolean_t BarnacleNullCheck(void* dataPtr, uint32_t dataSize)
 {
     for(uint32_t n = 0; n < dataSize; n++)
     {

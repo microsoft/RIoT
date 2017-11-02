@@ -74,17 +74,17 @@
 		<link>
 			<name>Middlewares/Barnacle</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Shared/Barnacle</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/Shared/Barnacle</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/BarnacleTA</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Shared/BarnacleTA</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/Shared/BarnacleTA</locationURI>
 		</link>
 		<link>
-			<name>Middlewares/RIoT</name>
+			<name>Middlewares/CyReP</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Shared/RIoT</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/CyReP</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

@@ -30,10 +30,10 @@ char* BarnacleIssuedCertChain()
     return NULL;
 }
 
-bool BarnacleInitialProvision()
+boolean_t BarnacleInitialProvision()
 {
-    bool result = true;
-    bool generateCerts = false;
+    boolean_t result = true;
+    boolean_t generateCerts = false;
 
     // Check if the platform identity is already provisioned
     if(FwDeviceId.magic != BARNACLEMAGIC)
@@ -149,9 +149,9 @@ Cleanup:
     return result;
 }
 
-bool BarnacleVerifyAgent()
+boolean_t BarnacleVerifyAgent()
 {
-    bool result = true;
+    boolean_t result = true;
     uint8_t digest[SHA256_DIGEST_LENGTH];
     RIOT_ECC_SIGNATURE sig = {0};
 

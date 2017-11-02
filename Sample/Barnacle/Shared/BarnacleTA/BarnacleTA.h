@@ -72,9 +72,9 @@ extern BARNACLE_CERTSTORE CertStore;
 extern const BARNACLE_AGENT_HDR AgentHdr;
 extern const uint8_t* AgentCode;
 
-bool BarnacleFlashPages(void* dest, void* src, uint32_t size);
+boolean_t BarnacleFlashPages(void* dest, void* src, uint32_t size);
 void BarnacleGetRandom(void* dest, uint32_t size);
-bool BarnacleNullCheck(void* dataPtr, uint32_t dataSize);
+boolean_t BarnacleNullCheck(void* dataPtr, uint32_t dataSize);
 char* BarnacleCertChain();
 
 #endif /* BARNACLETA_H_ */

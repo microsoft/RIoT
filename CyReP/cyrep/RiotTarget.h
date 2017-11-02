@@ -33,9 +33,9 @@ typedef signed long long int64_t;     // 64-bit signed integer
 typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #endif
 #elif __GNUC__
+
 #if defined(CONFIG_CYREP_UBOOT_BUILD)
 #include "cyrep/CyrepCommon.h"
-#endif
 typedef signed char int8_t;           // 8-bit signed integer
 typedef unsigned char uint8_t;        // 8-bit unsigned integer
 typedef signed short int16_t;         // 16-bit signed integer
@@ -44,6 +44,14 @@ typedef signed int int32_t;           // 32-bit signed integer
 typedef unsigned int uint32_t;        // 32-bit unsigned integer
 typedef signed long long int64_t;     // 64-bit signed integer
 typedef unsigned long long uint64_t;  // 64-bit unsigned integer
+
+#elif defined(STM32L476xx)
+#include <string.h>
+#include <assert.h>
+#include "main.h"
+#include "stm32l4xx_hal.h"
+#endif
+
 #else
 #include <stdint.h>
 #define assert(expr)    ((void)0)

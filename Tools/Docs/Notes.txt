@@ -1,20 +1,7 @@
 
-TODO
+This solution contains tools and utilities for testing DICE/RIoT systems.
 
-If you run RIoT and RIoTDemo together, you get the update demo.
-
-In the version in the repo, the devices look at twin.targetProperties and updae and
-self-report.
-
-The version being worked here introduces a new deevice/twin called ControlDevice with a property VersionUmber
-that is uddated by the GUI app, and can be queried by the devices AND by the attestaion server to 
-have an authoritative check that the attestation data is good.
-
-This is just started on friday.
-
-
-Create chains given a CSR (and an alias cert)
--dir d:\tmp\Emulator -csr
-
-
--nogen -dir d:\tmp\Emulator -e2e
+DICETest - Command-line tool that checks certificates and certificate chains created by DICE/RIoT systems
+RIoT     - More in-depth certificate testing, including TLS tests
+RIoTDemo - (deprecated)
+TlsClient - (deprecated)

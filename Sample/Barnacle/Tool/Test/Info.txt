@@ -1,0 +1,1 @@
+SIGN BarnacleTA.hex -cf=AppAuthority.cer

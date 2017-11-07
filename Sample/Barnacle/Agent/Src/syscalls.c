@@ -48,6 +48,7 @@ extern int32_t errno;
 uint8_t *__env[1] = { 0 };
 uint8_t **environ = __env;
 
+#ifndef NDEBUG
 #define CPU_CORE_FREQUENCY_HZ 800000000 /* CPU core frequency in Hz */
 volatile int32_t ITM_RxBuffer;
 #define ENABLE_SWO_TRACE if(CoreDebug->DEMCR != CoreDebug_DEMCR_TRCENA_Msk) {SWO_Init(1, CPU_CORE_FREQUENCY_HZ);}
@@ -60,6 +61,7 @@ void SWO_Init(uint32_t portBits, uint32_t cpuCoreFreqHz)
     *((volatile unsigned *)(ITM_BASE + 0x01000)) = 0x400003FE; /* DWT_CTRL */
     *((volatile unsigned *)(ITM_BASE + 0x40304)) = 0x00000100; /* Formatter and Flush Control Register */
 }
+#endif
 
 /* Functions */
 void initialise_monitor_handles()
@@ -91,6 +93,7 @@ void _exit(int32_t status)
 
 int _write(int32_t file, uint8_t *ptr, int32_t len)
 {
+#ifndef NDEBUG
     if (file == 2) //STDERR
     {
         ENABLE_SWO_TRACE;
@@ -100,6 +103,7 @@ int _write(int32_t file, uint8_t *ptr, int32_t len)
         }
         return len;
     }
+#endif
     errno = ENOSYS;
     return -1;
 }
@@ -147,6 +151,7 @@ int _lseek(int32_t file, int32_t ptr, int32_t dir)
 
 int _read(int32_t file, uint8_t *ptr, int32_t len)
 {
+#ifndef NDEBUG
     if(file == 2)
     {
         ENABLE_SWO_TRACE;
@@ -160,6 +165,7 @@ int _read(int32_t file, uint8_t *ptr, int32_t len)
             return 0;
         }
     }
+#endif
     errno = ENOSYS;
     return -1;
 }

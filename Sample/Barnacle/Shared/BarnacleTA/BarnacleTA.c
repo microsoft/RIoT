@@ -23,9 +23,9 @@ __attribute__((section(".PURW.Public"))) BARNACLE_CERTSTORE CertStore;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-braces"
 #ifdef AGENTPROJECT
-__attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{BARNACLEMAGIC, BARNACLEVERSION, sizeof(BARNACLE_AGENT_HDR)}, {AGENTNAME, AGENTVERSION, 0, AGENTTIMESTAMP, {0}}}, {{0}, {0}}, {0}};
+__attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{{BARNACLEMAGIC, BARNACLEVERSION, sizeof(BARNACLE_AGENT_HDR)}, {AGENTNAME, AGENTVERSION, 0, AGENTTIMESTAMP, {0}}}, {{0}, {0}}}};
 #else
-__attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{BARNACLEMAGIC, BARNACLEVERSION, sizeof(BARNACLE_AGENT_HDR)}, {0}}, {{0}, {0}}, {0}};
+__attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{{BARNACLEMAGIC, BARNACLEVERSION, sizeof(BARNACLE_AGENT_HDR)}, {0}}, {{0}, {0}}}};
 #endif
 #pragma GCC diagnostic pop
 __attribute__((section(".AGENTCODE"))) const uint8_t* AgentCode;
@@ -98,19 +98,4 @@ bool BarnacleNullCheck(void* dataPtr, uint32_t dataSize)
         if(((uint8_t*)dataPtr)[n] != 0x00) return false;
     }
     return true;
-}
-
-char* BarnacleCertChain()
-{
-    if(CertStore.magic == BARNACLEMAGIC)
-    {
-        for(uint32_t n = 0; n < NUMELEM(CertStore.certTable); n++)
-        {
-            if((CertStore.certTable[n].start != 0) && (CertStore.certTable[n].size != 0))
-            {
-                return (char*)&CertStore.certBag[CertStore.certTable[n].start];
-            }
-        }
-    }
-    return NULL;
 }

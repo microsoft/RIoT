@@ -101,8 +101,8 @@ int main(void)
   MX_RNG_Init();
 
   /* USER CODE BEGIN 2 */
-  fprintf(stderr, "Trusted Agent(%u bytes): %s\r\n", (unsigned int)AgentHdr.sign.agent.size, AgentHdr.sign.agent.name);
-  fprintf(stderr, "Identity:\r\n%s\r\n", BarnacleCertChain());
+  swoPrint("Trusted Agent(%u bytes): %s\r\n", (unsigned int)AgentHdr.s.sign.agent.size, AgentHdr.s.sign.agent.name);
+  swoPrint("CertBag:\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -113,7 +113,7 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
       HAL_Delay(1000);
-      fprintf(stderr, "Hello World!\r\n");
+      swoPrint("Hello World!\r\n");
 
   }
   /* USER CODE END 3 */

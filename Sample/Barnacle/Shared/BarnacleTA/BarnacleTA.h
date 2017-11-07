@@ -15,31 +15,35 @@
 #define BARNACLETIMESTAMP           (0x59e7bd55)
 #define BARNACLEDIGESTLEN           (32)
 
-typedef struct
+typedef union
 {
-    struct
-    {
-        struct
-        {
-            uint32_t magic;
-            uint32_t version;
-            uint32_t size;
-        } hdr;
-        struct
-        {
-            char name[16];
-            uint32_t version;
-            uint32_t size;
-            uint32_t issued;
-            uint8_t digest[BARNACLEDIGESTLEN];
-        } agent;
-    } sign;
-    struct
-    {
-        uint8_t r[BARNACLEDIGESTLEN];
-        uint8_t s[BARNACLEDIGESTLEN];
-    } signature;
-    uint8_t unused[0x178];
+	struct
+	{
+		struct
+		{
+			struct
+			{
+				uint32_t magic;
+				uint32_t version;
+				uint32_t size;
+			} hdr;
+			struct
+			{
+				char name[16];
+				uint32_t version;
+				uint32_t size;
+				uint32_t issued;
+				uint8_t digest[BARNACLEDIGESTLEN];
+			} agent;
+		} sign;
+		struct
+		{
+			uint8_t r[BARNACLEDIGESTLEN];
+			uint8_t s[BARNACLEDIGESTLEN];
+		} signature;
+	} s;
+    uint8_t u8[0x800];
+    uint32_t u32[0x200];
 } BARNACLE_AGENT_HDR, *PBARNACLE_AGENT_HDR;
 
 typedef struct
@@ -48,11 +52,20 @@ typedef struct
     uint16_t size;
 } BARNACLE_CERT_INDEX, *PBARNACLE_CERT_INDEX;
 
+#define BARNACLE_CERTSTORE_ROOT     (3)
+#define BARNACLE_CERTSTORE_DEVICE   (2)
+#define BARNACLE_CERTSTORE_LOADER   (1)
+#define BARNACLE_CERTSTORE_AGENT    (0)
 typedef struct
 {
     uint32_t magic;
-    BARNACLE_CERT_INDEX certTable[7];
-    uint8_t certBag[0x1000 - (sizeof(uint32_t) + sizeof(BARNACLE_CERT_INDEX) * 7)];
+    BARNACLE_CERT_INDEX certTable[4];
+    uint32_t cursor;
+} BARNACLE_CERTSTORE_INFO, *PBARNACLE_CERTSTORE_INFO;
+typedef struct
+{
+	BARNACLE_CERTSTORE_INFO info;
+    uint8_t certBag[0x1000 - sizeof(BARNACLE_CERTSTORE_INFO)];
 } BARNACLE_CERTSTORE, *PBARNACLE_CERTSTORE;
 
 typedef struct
@@ -60,7 +73,12 @@ typedef struct
     uint32_t magic;
     RIOT_ECC_PUBLIC pubKey;
     RIOT_ECC_PRIVATE privKey;
-    uint8_t unused[0x800 - sizeof(uint32_t) - sizeof(RIOT_ECC_PUBLIC) - sizeof(RIOT_ECC_PRIVATE)];
+} BARNACLE_IDENTITY_PRIVATE_INFO, *PBARNACLE_IDENTITY_PRIVATE_INFO;
+typedef union
+{
+	BARNACLE_IDENTITY_PRIVATE_INFO info;
+    uint8_t u8[0x800];
+    uint32_t u32[0x200];
 } BARNACLE_IDENTITY_PRIVATE, *PBARNACLE_IDENTITY_PRIVATE;
 
 extern BARNACLE_IDENTITY_PRIVATE CompoundId;
@@ -71,6 +89,5 @@ extern const uint8_t* AgentCode;
 bool BarnacleFlashPages(void* dest, void* src, uint32_t size);
 void BarnacleGetRandom(void* dest, uint32_t size);
 bool BarnacleNullCheck(void* dataPtr, uint32_t dataSize);
-char* BarnacleCertChain();
 
 #endif /* BARNACLETA_H_ */

@@ -52,12 +52,14 @@
 
 /* Return USBD_OK if the Battery Charging Detection mode (BCD) is used, else USBD_FAIL */
 extern USBD_StatusTypeDef USBD_LL_BatteryCharging(USBD_HandleTypeDef *pdev);
+extern char* BarnacleGetDfuStr(void);
 /* USB Device Core handle declaration */
 USBD_HandleTypeDef hUsbDeviceFS;
 
-/* init function */				        
+/* init function */
 void MX_USB_DEVICE_Init(void)
 {
+  USBD_DFU_fops_FS.pStrDesc = (uint8_t*)BarnacleGetDfuStr();
   /* Init Device Library,Add Supported Class and Start the library*/
   USBD_Init(&hUsbDeviceFS, &FS_Desc, DEVICE_FS);
   USBD_RegisterClass(&hUsbDeviceFS, &USBD_DFU);

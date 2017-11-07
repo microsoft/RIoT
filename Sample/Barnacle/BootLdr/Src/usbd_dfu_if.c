@@ -71,7 +71,7 @@
 /** @defgroup USBD_DFU_Private_Defines
   * @{
   */ 
-#define FLASH_DESC_STR      "@Internal Flash   /0x08000000/03*016Ka,01*016Kg,01*064Kg,07*128Kg,04*016Kg,01*064Kg,07*128Kg"  
+#define FLASH_DESC_STR "@Barnacle   /0x080FE000/02*04Ka"
 /* USER CODE BEGIN PRIVATE_DEFINES */
 /* USER CODE END PRIVATE_DEFINES */
   
@@ -156,7 +156,7 @@ uint16_t MEM_If_Init_FS(void)
     {
         result = USBD_OK;
     }
-    fprintf(stderr, "%c", (result == USBD_OK) ? 'I' : 'i');
+    swoPrint("%c", (result == USBD_OK) ? 'I' : 'i');
     return result;
   /* USER CODE END 0 */ 
 }
@@ -175,7 +175,7 @@ uint16_t MEM_If_DeInit_FS(void)
     {
         result = USBD_OK;
     }
-    fprintf(stderr, "%c", (result == USBD_OK) ? 'D' : 'd');
+    swoPrint("%c\r\n", (result == USBD_OK) ? 'D' : 'd');
     return result;
   /* USER CODE END 1 */ 
 }
@@ -206,7 +206,7 @@ uint16_t MEM_If_Erase_FS(uint32_t Add)
     }
 
 Cleanup:
-    fprintf(stderr, "%c", (result == USBD_OK) ? 'E' : 'e');
+    swoPrint("%c", (result == USBD_OK) ? 'E' : 'e');
     return result;
   /* USER CODE END 2 */ 
 }
@@ -235,7 +235,7 @@ uint16_t MEM_If_Write_FS(uint8_t *src, uint8_t *dest, uint32_t Len)
     result = USBD_OK;
 
 Cleanup:
-    fprintf(stderr, "%c", (result == USBD_OK) ? 'W' : 'w');
+    swoPrint("%c", (result == USBD_OK) ? 'W' : 'w');
     return result;
   /* USER CODE END 3 */ 
 }
@@ -253,7 +253,7 @@ uint8_t *MEM_If_Read_FS (uint8_t *src, uint8_t *dest, uint32_t Len)
   /* Return a valid address to avoid HardFault */
   /* USER CODE BEGIN 4 */ 
 
-    fprintf(stderr, "R");
+	swoPrint("R");
     return src;
   /* USER CODE END 4 */ 
 }
@@ -286,7 +286,7 @@ uint16_t MEM_If_GetStatus_FS (uint32_t Add, uint8_t Cmd, uint8_t *buffer)
 
     break;
   }
-  fprintf(stderr, "S");
+  swoPrint("S");
   return  (USBD_OK);
   /* USER CODE END 5 */  
 }

@@ -19,7 +19,7 @@
 							<option id="com.atollic.truestudio.toolchain_options.mcu.551318525" name="Microcontroller" superClass="com.atollic.truestudio.toolchain_options.mcu" useByScannerDiscovery="false" value="STM32L476JG" valueType="string"/>
 							<option id="com.atollic.truestudio.toolchain_options.vendor.1090336290" name="Vendor name" superClass="com.atollic.truestudio.toolchain_options.vendor" useByScannerDiscovery="false" value="STMicroelectronics" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.atollic.truestudio.exe.debug.toolchain.platform.2054752829" isAbstract="false" name="Debug platform" superClass="com.atollic.truestudio.exe.debug.toolchain.platform"/>
-							<builder autoBuildTarget="" buildPath="${workspace_loc:/Barnacle}/Debug" cleanBuildTarget="" customBuilderProperties="toolChainpathType=1|toolChainpathString=C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for ARM 8.0.0\\ARMTools\\bin|" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" id="com.atollic.truestudio.mbs.builder1.1222194476" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" parallelBuildOn="false" superClass="com.atollic.truestudio.mbs.builder1">
+							<builder autoBuildTarget="" buildPath="${workspace_loc:/Barnacle}/Debug" cleanBuildTarget="" customBuilderProperties="toolChainpathType=1|toolChainpathString=C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for ARM 8.1.0\\ARMTools\\bin|" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" id="com.atollic.truestudio.mbs.builder1.1222194476" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" parallelBuildOn="false" superClass="com.atollic.truestudio.mbs.builder1">
 								<outputEntries>
 									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug"/>
 								</outputEntries>
@@ -125,11 +125,12 @@
 							<option id="com.atollic.truestudio.general.runtimelib.1260035977.700845027" name="Runtime Library" superClass="com.atollic.truestudio.general.runtimelib.1260035977"/>
 							<option id="com.atollic.truestudio.toolchain_options.mcu.551318525.4788857" name="Microcontroller" superClass="com.atollic.truestudio.toolchain_options.mcu.551318525"/>
 							<option id="com.atollic.truestudio.toolchain_options.vendor.1090336290.1683160183" name="Vendor name" superClass="com.atollic.truestudio.toolchain_options.vendor.1090336290"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.atollic.truestudio.exe.debug.toolchain.platform" isAbstract="false" name="Debug platform" osList="all" superClass="com.atollic.truestudio.exe.debug.toolchain.platform"/>
 							<tool id="com.atollic.truestudio.exe.debug.toolchain.as.94001410" name="Assembler" superClass="com.atollic.truestudio.exe.debug.toolchain.as.1545899283">
 								<inputType id="com.atollic.truestudio.as.input.1366711601" name="Input" superClass="com.atollic.truestudio.as.input"/>
 							</tool>
 							<tool id="com.atollic.truestudio.exe.debug.toolchain.gcc.1964423694" name="C Compiler" superClass="com.atollic.truestudio.exe.debug.toolchain.gcc.1836874447">
-								<option id="com.atollic.truestudio.gcc.directories.select.1456528101" superClass="com.atollic.truestudio.gcc.directories.select" useByScannerDiscovery="false" valueType="includePath">
+								<option id="com.atollic.truestudio.gcc.directories.select.1456528101" name="Include path" superClass="com.atollic.truestudio.gcc.directories.select" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../Inc"/>
 									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy"/>
@@ -181,7 +182,7 @@
 							<option id="com.atollic.truestudio.toolchain_options.mcu.1872963783" name="Microcontroller" superClass="com.atollic.truestudio.toolchain_options.mcu" useByScannerDiscovery="false" value="STM32L476JG" valueType="string"/>
 							<option id="com.atollic.truestudio.toolchain_options.vendor.699838520" name="Vendor name" superClass="com.atollic.truestudio.toolchain_options.vendor" useByScannerDiscovery="false" value="STMicroelectronics" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.atollic.truestudio.exe.release.toolchain.platform.2054752829" isAbstract="false" name="Release platform" superClass="com.atollic.truestudio.exe.release.toolchain.platform"/>
-							<builder buildPath="${workspace_loc:/Barnacle}/Release" customBuilderProperties="toolChainpathType=1|toolChainpathString=C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for ARM 8.0.0\\ARMTools\\bin|" id="com.atollic.truestudio.mbs.builder1.1222194476" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" superClass="com.atollic.truestudio.mbs.builder1">
+							<builder buildPath="${workspace_loc:/Barnacle}/Release" customBuilderProperties="toolChainpathType=1|toolChainpathString=C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for ARM 8.1.0\\ARMTools\\bin|" id="com.atollic.truestudio.mbs.builder1.1222194476" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" superClass="com.atollic.truestudio.mbs.builder1">
 								<outputEntries>
 									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Release"/>
 								</outputEntries>
@@ -209,11 +210,9 @@
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include"/>
 									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Core/Inc"/>
 									<listOptionValue builtIn="false" value="../Middlewares/ST/STM32_USB_Device_Library/Class/DFU/Inc"/>
-									<listOptionValue builtIn="false" value="../../Shared/RIoT"/>
-									<listOptionValue builtIn="false" value="../../Shared/RIoT/RIoTCrypt/include"/>
+									<listOptionValue builtIn="false" value="../../../../CyReP"/>
 									<listOptionValue builtIn="false" value="../../Shared/Barnacle"/>
 									<listOptionValue builtIn="false" value="../../Shared/BarnacleTA"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/CyReP}&quot;"/>
 								</option>
 								<option id="com.atollic.truestudio.gcc.symbols.defined.1670122205" name="Defined symbols" superClass="com.atollic.truestudio.gcc.symbols.defined" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__weak=__attribute__((weak))"/>
@@ -290,11 +289,12 @@
 							<option id="com.atollic.truestudio.general.runtimelib.907214297.1698574757" name="Runtime Library" superClass="com.atollic.truestudio.general.runtimelib.907214297"/>
 							<option id="com.atollic.truestudio.toolchain_options.mcu.1872963783.878006656" name="Microcontroller" superClass="com.atollic.truestudio.toolchain_options.mcu.1872963783"/>
 							<option id="com.atollic.truestudio.toolchain_options.vendor.699838520.309252685" name="Vendor name" superClass="com.atollic.truestudio.toolchain_options.vendor.699838520"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.atollic.truestudio.exe.release.toolchain.platform" isAbstract="false" name="release platform" superClass="com.atollic.truestudio.exe.release.toolchain.platform"/>
 							<tool id="com.atollic.truestudio.exe.release.toolchain.as.1142282484" name="Assembler" superClass="com.atollic.truestudio.exe.release.toolchain.as.1545899283">
 								<inputType id="com.atollic.truestudio.as.input.364966772" name="Input" superClass="com.atollic.truestudio.as.input"/>
 							</tool>
 							<tool id="com.atollic.truestudio.exe.release.toolchain.gcc.1887279454" name="C Compiler" superClass="com.atollic.truestudio.exe.release.toolchain.gcc.1836874447">
-								<option id="com.atollic.truestudio.gcc.directories.select.771963042" superClass="com.atollic.truestudio.gcc.directories.select" useByScannerDiscovery="false" valueType="includePath">
+								<option id="com.atollic.truestudio.gcc.directories.select.771963042" name="Include path" superClass="com.atollic.truestudio.gcc.directories.select" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../Inc"/>
 									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy"/>

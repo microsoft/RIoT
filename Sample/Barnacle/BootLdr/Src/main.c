@@ -46,6 +46,7 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
+#include "usbd_dfu_if.h"
 #include <cyrep/RiotTarget.h>
 #include <cyrep/RiotStatus.h>
 #include <cyrep/RiotSha256.h>
@@ -74,7 +75,7 @@ static void MX_RNG_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+extern USBD_DFU_MediaTypeDef USBD_DFU_fops_FS;
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -102,25 +103,27 @@ int main(void)
   MX_RNG_Init();
 
   /* USER CODE BEGIN 2 */
-  fprintf(stderr, "Barnacle BootLdr\r\n");
+  swoPrint("Barnacle BootLdr\r\n");
+  swoPrint("Barnacle BootLdr %u %c\r\n", 1, 'c');
   BarnacleInitialProvision();
 
   // If DFU connected we service that
   HAL_Delay(200);
   if(DFU_UsrStrDescr_requested)
   {
-      fprintf(stderr, "INFO: DFU connected\r\nReset to exit.\r\n");
+      swoPrint("INFO: DFU connected\r\nReset to exit.\r\n");
       for(;;);
   }
   else
   {
+      swoPrint("INFO: No DFU connection registered.\r\n");
       MX_USB_DEVICE_DeInit();
   }
 
   for(;;);
 
   // The point of no return: Launch the agent
-  fprintf(stderr, "INFO: Preparing for launching agent '%s'...\r\n", AgentHdr.sign.agent.name);
+  swoPrint("INFO: Preparing for launching agent '%s'...\r\n", AgentHdr.s.sign.agent.name);
   // Release the clock source
   HAL_RCC_DeInit();
   // Release the HAL
@@ -145,7 +148,7 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-  fprintf(stderr, "ERROR: How the hell did we get here?!?\r\n");
+  swoPrint("ERROR: How the hell did we get here?!?\r\n");
   HAL_Delay(1000);
 
   }

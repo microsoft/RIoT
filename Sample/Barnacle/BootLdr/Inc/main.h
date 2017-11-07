@@ -46,7 +46,11 @@
   /* Includes ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
-
+#ifndef NDEBUG
+#define swoPrint(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__);
+#else
+#define swoPrint(fmt, ...) ((void)0)
+#endif
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/

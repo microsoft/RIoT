@@ -62,14 +62,12 @@ void SignAgent(
             throw retVal;
         }
         std::vector<BYTE> image(GetImageSize(hHexFile), 0x00);
-        dfuImageElement.dwDataLength = image.size();
         dfuImageElement.Data = image.data();
         if ((retVal = GetImageElement(hHexFile, 0, &dfuImageElement)) != STDFUFILES_NOERROR)
         {
             printf("%s: GetImageElement failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
             throw retVal;
         }
-        dfuImageElement.dwDataLength = image.size();
         for (DWORD rank = 1; ; rank++)
         {
             DFUIMAGEELEMENT iterator = { 0 };
@@ -123,14 +121,27 @@ void SignAgent(
         if (codeAuth != NULL)
         {
             std::vector<BYTE> hdrDigest(BARNACLEDIGESTLEN, 0);
-            if ((retVal = BCryptHash(hSha256, NULL, 0, (PBYTE)&AgentHdr->s.sign, sizeof(AgentHdr->s.sign), hdrDigest.data(), hdrDigest.size())) != 0)
+            if ((retVal = BCryptHash(hSha256,
+                                     NULL,
+                                     0,
+                                     (PBYTE)&AgentHdr->s.sign,
+                                     sizeof(AgentHdr->s.sign),
+                                     hdrDigest.data(),
+                                     hdrDigest.size())) != 0)
             {
                 printf("%s: BCryptHash failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
                 throw retVal;
             }
             std::vector<BYTE> sig(32 * 2, 0);
             DWORD result;
-            if ((retVal = NCryptSignHash(codeAuth, NULL, hdrDigest.data(), hdrDigest.size(), sig.data(), sig.size(), &result, 0)) != 0)
+            if ((retVal = NCryptSignHash(codeAuth,
+                                         NULL,
+                                         hdrDigest.data(),
+                                         hdrDigest.size(),
+                                         sig.data(),
+                                         sig.size(),
+                                         &result,
+                                         0)) != 0)
             {
                 printf("%s: NCryptSignHash failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
                 throw retVal;
@@ -142,13 +153,27 @@ void SignAgent(
             ecc_signature riotSig = { 0 };
             BigIntToBigVal(&riotSig.r, AgentHdr->s.signature.r, sizeof(AgentHdr->s.signature.r));
             BigIntToBigVal(&riotSig.s, AgentHdr->s.signature.s, sizeof(AgentHdr->s.signature.s));
-            if ((retVal = NCryptExportKey(codeAuth, NULL, BCRYPT_ECCPUBLIC_BLOB, NULL, NULL, 0, &result, 0)) != 0)
+            if ((retVal = NCryptExportKey(codeAuth,
+                                          NULL,
+                                          BCRYPT_ECCPUBLIC_BLOB,
+                                          NULL,
+                                          NULL,
+                                          0,
+                                          &result,
+                                          0)) != 0)
             {
                 printf("%s: NCryptExportKey failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
                 throw retVal;
             }
             std::vector<BYTE> codeAuthKeyData(result, 0);
-            if ((retVal = NCryptExportKey(codeAuth, NULL, BCRYPT_ECCPUBLIC_BLOB, NULL, codeAuthKeyData.data(), codeAuthKeyData.size(), &result, 0)) != 0)
+            if ((retVal = NCryptExportKey(codeAuth,
+                                          NULL,
+                                          BCRYPT_ECCPUBLIC_BLOB,
+                                          NULL,
+                                          codeAuthKeyData.data(),
+                                          codeAuthKeyData.size(),
+                                          &result,
+                                          0)) != 0)
             {
                 printf("%s: NCryptExportKey failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
                 throw retVal;

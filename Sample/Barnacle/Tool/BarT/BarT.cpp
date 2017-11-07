@@ -95,19 +95,25 @@ void SignAgent(
         // Add the information about this image to the header
         PBARNACLE_AGENT_HDR AgentHdr;
         AgentHdr = (PBARNACLE_AGENT_HDR)image.data();
-        if ((AgentHdr->sign.hdr.magic != BARNACLEMAGIC) ||
-            (AgentHdr->sign.hdr.size != sizeof(BARNACLE_AGENT_HDR)) ||
-            (AgentHdr->sign.hdr.version != BARNACLEVERSION))
+        if ((AgentHdr->s.sign.hdr.magic != BARNACLEMAGIC) ||
+            (AgentHdr->s.sign.hdr.size != sizeof(BARNACLE_AGENT_HDR)) ||
+            (AgentHdr->s.sign.hdr.version != BARNACLEVERSION))
         {
             printf("%s: Bad agent image (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
             throw ERROR_INVALID_DATA;
         }
         
-        AgentHdr->sign.agent.size = image.size() - AgentHdr->sign.hdr.size;
-        AgentHdr->sign.agent.issued = GetTimeStamp();
+        AgentHdr->s.sign.agent.size = image.size() - AgentHdr->s.sign.hdr.size;
+        AgentHdr->s.sign.agent.issued = GetTimeStamp();
         hexFileName.resize(hexFileName.size() - 4);
-        strncpy_s(AgentHdr->sign.agent.name, hexFileName.c_str(), sizeof(AgentHdr->sign.agent.name));
-        if ((retVal = BCryptHash(hSha256, NULL, 0, (PBYTE)&image[AgentHdr->sign.hdr.size], AgentHdr->sign.agent.size, AgentHdr->sign.agent.digest, sizeof(AgentHdr->sign.agent.digest))) != 0)
+        strncpy_s(AgentHdr->s.sign.agent.name, hexFileName.c_str(), sizeof(AgentHdr->s.sign.agent.name));
+        if ((retVal = BCryptHash(hSha256,
+                                 NULL,
+                                 0,
+                                 (PBYTE)&image[AgentHdr->s.sign.hdr.size],
+                                 AgentHdr->s.sign.agent.size,
+                                 AgentHdr->s.sign.agent.digest,
+                                 sizeof(AgentHdr->s.sign.agent.digest))) != 0)
         {
             printf("%s: BCryptHash failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
             throw retVal;
@@ -117,7 +123,7 @@ void SignAgent(
         if (codeAuth != NULL)
         {
             std::vector<BYTE> hdrDigest(BARNACLEDIGESTLEN, 0);
-            if ((retVal = BCryptHash(hSha256, NULL, 0, (PBYTE)&AgentHdr->sign, sizeof(AgentHdr->sign), hdrDigest.data(), hdrDigest.size())) != 0)
+            if ((retVal = BCryptHash(hSha256, NULL, 0, (PBYTE)&AgentHdr->s.sign, sizeof(AgentHdr->s.sign), hdrDigest.data(), hdrDigest.size())) != 0)
             {
                 printf("%s: BCryptHash failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
                 throw retVal;
@@ -129,13 +135,13 @@ void SignAgent(
                 printf("%s: NCryptSignHash failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
                 throw retVal;
             }
-            memcpy(AgentHdr->signature.r, &sig[0], sizeof(AgentHdr->signature.r));
-            memcpy(AgentHdr->signature.s, &sig[sizeof(AgentHdr->signature.r)], sizeof(AgentHdr->signature.s));
+            memcpy(AgentHdr->s.signature.r, &sig[0], sizeof(AgentHdr->s.signature.r));
+            memcpy(AgentHdr->s.signature.s, &sig[sizeof(AgentHdr->s.signature.r)], sizeof(AgentHdr->s.signature.s));
 
             // Check the header signature
             ecc_signature riotSig = { 0 };
-            BigIntToBigVal(&riotSig.r, AgentHdr->signature.r, sizeof(AgentHdr->signature.r));
-            BigIntToBigVal(&riotSig.s, AgentHdr->signature.s, sizeof(AgentHdr->signature.s));
+            BigIntToBigVal(&riotSig.r, AgentHdr->s.signature.r, sizeof(AgentHdr->s.signature.r));
+            BigIntToBigVal(&riotSig.s, AgentHdr->s.signature.s, sizeof(AgentHdr->s.signature.s));
             if ((retVal = NCryptExportKey(codeAuth, NULL, BCRYPT_ECCPUBLIC_BLOB, NULL, NULL, 0, &result, 0)) != 0)
             {
                 printf("%s: NCryptExportKey failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
@@ -151,7 +157,7 @@ void SignAgent(
             ecc_publickey codeAuthPub = { 0 };
             BigIntToBigVal(&codeAuthPub.x, &codeAuthKeyData[sizeof(BCRYPT_ECCKEY_BLOB)], keyHdr->cbKey);
             BigIntToBigVal(&codeAuthPub.y, &codeAuthKeyData[sizeof(BCRYPT_ECCKEY_BLOB) + keyHdr->cbKey], keyHdr->cbKey);
-            if ((retVal = RIOT_DSAVerify((PBYTE)&AgentHdr->sign, sizeof(AgentHdr->sign), &riotSig, &codeAuthPub)) != RIOT_SUCCESS)
+            if ((retVal = RIOT_DSAVerify((PBYTE)&AgentHdr->s.sign, sizeof(AgentHdr->s.sign), &riotSig, &codeAuthPub)) != RIOT_SUCCESS)
             {
                 printf("%s: RiotCrypt_Verify failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
                 throw retVal;
@@ -160,7 +166,7 @@ void SignAgent(
         else
         {
             // Unsigned Image
-            memset(&AgentHdr->signature, 0x00, sizeof(AgentHdr->signature));
+            memset(&AgentHdr->s.signature, 0x00, sizeof(AgentHdr->s.signature));
         }
 
         // Write the image to a DFU

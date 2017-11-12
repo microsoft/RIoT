@@ -28,9 +28,14 @@ __attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{{BA
 __attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{{BARNACLEMAGIC, BARNACLEVERSION, sizeof(BARNACLE_AGENT_HDR)}, {0}}, {{0}, {0}}}};
 #endif
 #pragma GCC diagnostic pop
-__attribute__((section(".AGENTCODE"))) const uint8_t* AgentCode;
+#ifndef NDEBUG
+__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xDD800];
+#else
+__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xED800];
+#endif
 
-bool BarnacleFlashPages(void* dest, void* src, uint32_t size)
+
+bool BarnacleErasePages(void* dest, uint32_t size)
 {
     bool result = true;
     uint32_t pageError = 0;
@@ -42,8 +47,7 @@ bool BarnacleFlashPages(void* dest, void* src, uint32_t size)
     // Parameter check
     if(!(result = (((uint32_t)dest >= 0x08000000) &&
                    ((uint32_t)dest < 0x08100000) &&
-                   (((uint32_t)dest % 0x800) == 0) &&
-                   (((uint32_t)src % sizeof(uint32_t)) == 0))))
+                   ((uint32_t)dest % 0x800) == 0)))
     {
         goto Cleanup;
     }
@@ -57,6 +61,33 @@ bool BarnacleFlashPages(void* dest, void* src, uint32_t size)
     // Erase the necessary pages
     if(!(result = ((HAL_FLASHEx_Erase(&eraseInfo, &pageError) == HAL_OK) ||
                    (pageError != 0xffffffff))))
+    {
+        goto Cleanup;
+    }
+
+Cleanup:
+    HAL_FLASH_Lock();
+    return result;
+}
+
+bool BarnacleFlashPages(void* dest, void* src, uint32_t size)
+{
+    bool result = true;
+
+    // Parameter check
+    if(!(result = ((((uint32_t)src % sizeof(uint32_t)) == 0))))
+    {
+        goto Cleanup;
+    }
+
+    // Erase the required area
+    if(!(result = BarnacleErasePages(dest, size)))
+    {
+        goto Cleanup;
+    }
+
+    // Open the memory protection
+    if(!(result = (HAL_FLASH_Unlock() == HAL_OK)))
     {
         goto Cleanup;
     }
@@ -80,6 +111,18 @@ bool BarnacleFlashPages(void* dest, void* src, uint32_t size)
 Cleanup:
     HAL_FLASH_Lock();
     return result;
+}
+
+void BarnacleDumpCertStore(void)
+{
+    swoPrint("CertStore:\r\n");
+    for(uint32_t n = 0; n < NUMELEM(CertStore.info.certTable); n++)
+    {
+        if(CertStore.info.certTable[n].size > 0)
+        {
+            swoPrint("%s", (char*)&CertStore.certBag[CertStore.info.certTable[n].start]);
+        }
+    }
 }
 
 void BarnacleGetRandom(void* dest, uint32_t size)

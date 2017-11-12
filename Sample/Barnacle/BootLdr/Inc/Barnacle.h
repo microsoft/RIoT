@@ -17,8 +17,8 @@
 #define BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT (0x00000002)
 #define BARNACLE_ISSUEDFLAG_WRITELOCK          (0x00000004)
 
-#define BARNACLE_ISSUED_ROOT   (1)
-#define BARNACLE_ISSUED_DEVICE (2)
+#define BARNACLE_ISSUED_ROOT   (0)
+#define BARNACLE_ISSUED_DEVICE (1)
 
 typedef struct
 {
@@ -36,6 +36,7 @@ typedef struct
 
 typedef struct
 {
+    uint32_t magic;
     uint8_t agentHdrDigest[SHA256_DIGEST_LENGTH];
     uint32_t lastIssued;
     uint32_t lastVersion;
@@ -58,5 +59,7 @@ char* BarnacleGetDfuStr(void);
 bool BarnacleInitialProvision();
 void BarnacleDumpCertBag();
 bool BarnacleVerifyAgent();
+bool BarnacleFWViolation();
+bool BarnacleSecureFWData();
 
 #endif /* BARNACLE_H_ */

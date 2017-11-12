@@ -173,9 +173,9 @@ bool BarnacleVerifyAgent()
     }
 
     // Make sure the agent code starts where we expect it to start
-    if(AgentCode != &((uint8_t*)&AgentHdr)[AgentHdr.s.sign.hdr.size])
+    if(!(result = (AgentCode == &((uint8_t*)&AgentHdr)[AgentHdr.s.sign.hdr.size])))
     {
-        swoPrint("ERROR: Unexpected agent start.\r\n");
+        swoPrint("ERROR: Unexpected agent start address.\r\n");
         goto Cleanup;
     }
 
@@ -223,8 +223,9 @@ bool BarnacleVerifyAgent()
 		}
     }
 
-    // Is this the first launch after an update?
-    if(memcmp(digest, FwCache.info.agentHdrDigest, sizeof(digest)))
+    // Is this the first launch or the first l;aunch after an update?
+    if((FwCache.info.magic != BARNACLEMAGIC) ||
+       (memcmp(digest, FwCache.info.agentHdrDigest, sizeof(digest))))
     {
         RIOT_X509_TBS_DATA x509TBSData = { { 0 },
                                            "CyReP Device", "Microsoft", "US",
@@ -236,9 +237,10 @@ bool BarnacleVerifyAgent()
         RIOT_ECC_SIGNATURE  tbsSig = { 0 };
         BARNACLE_CACHED_DATA cache = {0};
 
-        // Detect rollback attack
-        if((FwCache.info.lastVersion >= AgentHdr.s.sign.agent.version) ||
-           (FwCache.info.lastIssued >= AgentHdr.s.sign.agent.issued))
+        // Detect rollback attack if this is not the first launch
+        if((FwCache.info.magic == BARNACLEMAGIC) &&
+           ((FwCache.info.lastVersion >= AgentHdr.s.sign.agent.version) ||
+            (FwCache.info.lastIssued >= AgentHdr.s.sign.agent.issued)))
         {
     		fprintf(stderr,
     				"ERROR: Roll-back attack detected. Issuance: %u < %u Version: %hu.%hu < %hu.%hu\r\n",
@@ -247,7 +249,11 @@ bool BarnacleVerifyAgent()
     		goto Cleanup;
         }
 
+        // Set the new cache policy
         memset(cache.cert, 0xff, sizeof(cache.cert));
+        cache.info.magic = BARNACLEMAGIC;
+        cache.info.lastIssued = AgentHdr.s.sign.agent.issued;
+        cache.info.lastVersion = AgentHdr.s.sign.agent.version;
         memcpy(cache.info.agentHdrDigest, digest, sizeof(digest));
 
         // Derive the agent compound key
@@ -315,9 +321,6 @@ bool BarnacleVerifyAgent()
         cache.info.compoundCertSize = length;
         cache.cert[cache.info.compoundCertSize] = '\0';
 
-        cache.info.lastIssued = AgentHdr.s.sign.agent.issued;
-        cache.info.lastVersion = AgentHdr.s.sign.agent.version;
-
         // Persist the new certBag in flash
         if(!(result = (BarnacleFlashPages((void*)&FwCache, (void*)&cache, sizeof(cache)))))
         {
@@ -378,6 +381,50 @@ bool BarnacleVerifyAgent()
 	CertStore.info.certTable[BARNACLE_CERTSTORE_LOADER].size = FwCache.info.compoundCertSize;
 	CertStore.info.cursor += FwCache.info.compoundCertSize;
 	CertStore.certBag[CertStore.info.cursor++] = '\0';
+
+Cleanup:
+    return result;
+}
+
+bool BarnacleFWViolation()
+{
+    bool result = (__HAL_RCC_GET_FLAG(RCC_FLAG_FWRST) != RESET);
+
+    if (result)
+    {
+        __HAL_RCC_CLEAR_RESET_FLAGS();
+    }
+    return result;
+}
+
+bool BarnacleSecureFWData()
+{
+    bool result = true;
+    FIREWALL_InitTypeDef fw_init = {0};
+
+    __HAL_RCC_SYSCFG_CLK_ENABLE();
+    fw_init.CodeSegmentStartAddress = 0;
+    fw_init.CodeSegmentLength = 0;
+    fw_init.NonVDataSegmentStartAddress = (uint32_t)&FwDeviceId;
+    fw_init.NonVDataSegmentLength = sizeof(FwDeviceId) + sizeof(FwCache);
+    fw_init.VDataSegmentStartAddress = 0;
+    fw_init.VDataSegmentLength = 0;
+    fw_init.VolatileDataExecution = FIREWALL_VOLATILEDATA_NOT_EXECUTABLE;
+    fw_init.VolatileDataShared = FIREWALL_VOLATILEDATA_NOT_SHARED;
+    if(HAL_FIREWALL_Config(&fw_init) != HAL_OK)
+    {
+        swoPrint("ERROR: HAL_FIREWALL_Config() failed.\r\n");
+        result = false;
+        goto Cleanup;
+    }
+    HAL_FIREWALL_EnableFirewall();
+    if(!__HAL_FIREWALL_IS_ENABLED())
+    {
+        swoPrint("ERROR: HAL_FIREWALL_EnableFirewall() had no effect.\r\n");
+        result = false;
+        goto Cleanup;
+    }
+    swoPrint("INFO: Firewall is UP!\r\n");
 
 Cleanup:
     return result;

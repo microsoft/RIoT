@@ -165,7 +165,7 @@ SECTIONS
     . = ALIGN(4);
   } >AGENTHDR
   
-    .agentcode (NOLOAD):
+  .agentcode (NOLOAD):
   {
     . = ALIGN(4);
     *(.AGENTCODE*);

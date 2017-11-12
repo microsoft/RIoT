@@ -198,12 +198,16 @@ uint16_t MEM_If_Erase_FS(uint32_t Add)
                                         FLASH_BANK_1,
                                         ((uint32_t)Add - 0x08000000) / 0x800,
                                         1};
-    if((HAL_FLASHEx_Erase(&eraseInfo, &pageError) == HAL_OK) &&
-       (pageError == 0xffffffff))
+    for(uint32_t n = 0; n < 2; n++)
     {
-        result = USBD_OK;
-        goto Cleanup;
+    	eraseInfo.Page += n; // DFU defines 4k pages
+		if((HAL_FLASHEx_Erase(&eraseInfo, &pageError) != HAL_OK) ||
+		   (pageError != 0xffffffff))
+		{
+			goto Cleanup;
+		}
     }
+	result = USBD_OK;
 
 Cleanup:
     swoPrint("%c", (result == USBD_OK) ? 'E' : 'e');
@@ -224,9 +228,9 @@ uint16_t MEM_If_Write_FS(uint8_t *src, uint8_t *dest, uint32_t Len)
   /* USER CODE BEGIN 3 */ 
     uint16_t result = USBD_FAIL;
 
-    for(uint32_t n = 0; n < Len; n += sizeof(uint32_t))
+    for(uint32_t n = 0; n < Len; n += sizeof(uint64_t))
     {
-        if((HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&dest[n], *((uint64_t*)&src[n])) != HAL_OK) ||
+    	if((HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&dest[n], *((uint64_t*)&src[n])) != HAL_OK) ||
            (*((uint64_t*)&src[n]) != *((uint64_t*)&dest[n])))
         {
             goto Cleanup;
@@ -253,8 +257,17 @@ uint8_t *MEM_If_Read_FS (uint8_t *src, uint8_t *dest, uint32_t Len)
   /* Return a valid address to avoid HardFault */
   /* USER CODE BEGIN 4 */ 
 
-	swoPrint("R");
-    return src;
+    // We never allow anybody to read our firewalled area
+    if(src > (uint8_t*)0x080FF000)
+    {
+        swoPrint("r");
+        return 0;
+    }
+    else
+    {
+        swoPrint("R");
+        return src;
+    }
   /* USER CODE END 4 */ 
 }
 

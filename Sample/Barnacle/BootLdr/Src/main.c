@@ -104,21 +104,48 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   swoPrint("Barnacle BootLdr\r\n");
-  swoPrint("Barnacle BootLdr %u %c\r\n", 1, 'c');
+
+  // If we got here because of a firewall violation tell the world
+  if(BarnacleFWViolation())
+  {
+      swoPrint("WARNING: Firewall violation detected.\r\n");
+  }
+
+  // Provision the device if this is the first launch
   BarnacleInitialProvision();
 
-  // If DFU connected we service that
-  HAL_Delay(200);
-  if(DFU_UsrStrDescr_requested)
+  // Briefly wait to see if DFU connects before we continue
+  if((DFU_UsrStrDescr_requested) || (AgentHdr.s.sign.hdr.magic != BARNACLEMAGIC))
   {
       swoPrint("INFO: DFU connected\r\nReset to exit.\r\n");
-      for(;;);
+      Error_Handler();
   }
   else
   {
-      swoPrint("INFO: No DFU connection registered.\r\n");
+      swoPrint("INFO: DFU closed.\r\n");
       MX_USB_DEVICE_DeInit();
   }
+
+  // Now that the door is firmly closed let's take a look at the agent
+  if(!BarnacleVerifyAgent())
+  {
+      // We didn't like that agent for some reason. We will wipe the Agent space
+      swoPrint("INFO: Wiping agent header.\r\n");
+      BarnacleErasePages((void*)&AgentHdr, sizeof(AgentHdr));
+
+      // Reboot so we can go straight to DFU mode next time
+      swoPrint("INFO: Rebooting device...\r\n");
+      NVIC_SystemReset();
+  }
+
+//  // Close all the hatches
+//  if(!BarnacleSecureFWData())
+//  {
+//      swoPrint("PANIC: The firewall did not engage.\r\n");
+//      Error_Handler();
+//  }
+
+  BarnacleDumpCertStore();
 
   for(;;);
 

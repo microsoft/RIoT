@@ -89,6 +89,7 @@ void SignAgent(
                 throw retVal;
             }
         }
+        dfuImageElement.dwDataLength = image.size();
 
         // Add the information about this image to the header
         PBARNACLE_AGENT_HDR AgentHdr;
@@ -116,6 +117,15 @@ void SignAgent(
             printf("%s: BCryptHash failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
             throw retVal;
         }
+
+        // Report binary info
+        printf("Agent:   %s\n", AgentHdr->s.sign.agent.name);
+        printf("Size:    %d bytes\n", AgentHdr->s.sign.agent.size);
+        printf("Version: %d.%d\n", AgentHdr->s.sign.agent.version >> 16, AgentHdr->s.sign.agent.version && 0x0000ffff);
+        printf("Issued:  0x%08x\n", AgentHdr->s.sign.agent.issued);
+        printf("Digest:  ");
+        for (uint32_t n = 0; n < sizeof(AgentHdr->s.sign.agent.digest); n++) printf("%02x", AgentHdr->s.sign.agent.digest[n]);
+        printf("\n");
 
         // Sign the header
         if (codeAuth != NULL)
@@ -337,14 +347,23 @@ int wmain(int argc, const wchar_t** argv)
 {
     bool result = true;
     std::unordered_map<std::wstring, std::wstring> param;
-    std::wstring cmd(argv[1]);
-    WSTR_TO_LOWER(cmd);
+    std::wstring cmd;
 
     if (!(result = LoadDfuSe()))
     {
         wprintf(TEXT("STDFUFiles.dll was not found.\n"));
         goto Cleanup;
     }
+
+    if(argc < 2)
+    {
+        PrintHelp();
+        goto Cleanup;
+    }
+
+    cmd = std::wstring(argv[1]);
+    WSTR_TO_LOWER(cmd);
+
 
     for (int n = 2; n < argc; n++)
     {

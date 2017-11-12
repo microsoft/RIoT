@@ -84,9 +84,15 @@ typedef union
 extern BARNACLE_IDENTITY_PRIVATE CompoundId;
 extern BARNACLE_CERTSTORE CertStore;
 extern const BARNACLE_AGENT_HDR AgentHdr;
-extern const uint8_t* AgentCode;
+#ifndef NDEBUG
+extern const uint8_t AgentCode[0xDD800];
+#else
+extern const uint8_t AgentCode[0xED800];
+#endif
 
+bool BarnacleErasePages(void* src, uint32_t size);
 bool BarnacleFlashPages(void* dest, void* src, uint32_t size);
+void BarnacleDumpCertStore(void);
 void BarnacleGetRandom(void* dest, uint32_t size);
 bool BarnacleNullCheck(void* dataPtr, uint32_t dataSize);
 

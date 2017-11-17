@@ -20,6 +20,15 @@
 
 extern RNG_HandleTypeDef hrng;
 
+__attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {0};
+#ifndef NDEBUG
+__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xDD800];
+#else
+__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xED800];
+#endif
+
+__attribute__((section(".PURW.Private"))) BARNACLE_IDENTITY_PRIVATE CompoundId;
+__attribute__((section(".PURW.Public"))) BARNACLE_CERTSTORE CertStore;
 __attribute__((section(".PURO"))) const BARNACLE_ISSUED_PUBLIC IssuedCerts;
 __attribute__((section(".FWRO"))) const BARNACLE_IDENTITY_PRIVATE FwDeviceId;
 __attribute__((section(".FWRW"))) const BARNACLE_CACHED_DATA FwCache;
@@ -173,7 +182,7 @@ bool BarnacleVerifyAgent()
     }
 
     // Make sure the agent code starts where we expect it to start
-    if(!(result = (AgentCode == &((uint8_t*)&AgentHdr)[AgentHdr.s.sign.hdr.size])))
+    if(!(result = (AGENTCODE == &((uint8_t*)&AgentHdr)[AgentHdr.s.sign.hdr.size])))
     {
         swoPrint("ERROR: Unexpected agent start address.\r\n");
         goto Cleanup;
@@ -182,7 +191,7 @@ bool BarnacleVerifyAgent()
     // Verify the agent code digest against the header
     if(!(result = (RiotCrypt_Hash(digest,
                                   sizeof(digest),
-                                  AgentCode,
+                                  AGENTCODE,
                                   AgentHdr.s.sign.agent.size) == RIOT_SUCCESS)))
     {
         swoPrint("ERROR: RiotCrypt_Hash failed.\r\n");
@@ -209,7 +218,6 @@ bool BarnacleVerifyAgent()
        (IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT) &&
        (!BarnacleNullCheck((void*)&IssuedCerts.info.codeAuthPubKey, sizeof(IssuedCerts.info.codeAuthPubKey))))
     {
-
 		//Re-hydrate the signature
 		BigIntToBigVal(&sig.r, AgentHdr.s.signature.r, sizeof(AgentHdr.s.signature.r));
 		BigIntToBigVal(&sig.s, AgentHdr.s.signature.s, sizeof(AgentHdr.s.signature.s));
@@ -223,7 +231,7 @@ bool BarnacleVerifyAgent()
 		}
     }
 
-    // Is this the first launch or the first l;aunch after an update?
+    // Is this the first launch or the first launch after an update?
     if((FwCache.info.magic != BARNACLEMAGIC) ||
        (memcmp(digest, FwCache.info.agentHdrDigest, sizeof(digest))))
     {
@@ -238,15 +246,24 @@ bool BarnacleVerifyAgent()
         BARNACLE_CACHED_DATA cache = {0};
 
         // Detect rollback attack if this is not the first launch
-        if((FwCache.info.magic == BARNACLEMAGIC) &&
-           ((FwCache.info.lastVersion >= AgentHdr.s.sign.agent.version) ||
-            (FwCache.info.lastIssued >= AgentHdr.s.sign.agent.issued)))
+        if(FwCache.info.magic == BARNACLEMAGIC)
         {
-    		fprintf(stderr,
-    				"ERROR: Roll-back attack detected. Issuance: %u < %u Version: %hu.%hu < %hu.%hu\r\n",
-					(unsigned int)FwCache.info.lastIssued, (unsigned int)AgentHdr.s.sign.agent.issued,
-					(short unsigned int)FwCache.info.lastVersion >> 16, (short unsigned int)FwCache.info.lastVersion & 0x0000ffff, (short unsigned int)AgentHdr.s.sign.agent.version >> 16, (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff);
-    		goto Cleanup;
+            if(FwCache.info.lastVersion >= AgentHdr.s.sign.agent.version)
+            {
+                fprintf(stderr,
+                        "ERROR: Roll-back attack detected. Version: %hu.%hu < %hu.%hu\r\n",
+                        (short unsigned int)FwCache.info.lastVersion >> 16, (short unsigned int)FwCache.info.lastVersion & 0x0000ffff, (short unsigned int)AgentHdr.s.sign.agent.version >> 16, (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff);
+    //          result = false;
+    //          goto Cleanup;
+            }
+            if(FwCache.info.lastIssued >= AgentHdr.s.sign.agent.issued)
+            {
+                fprintf(stderr,
+                        "ERROR: Roll-back attack detected. Issuance: %u < %u\r\n",
+                        (unsigned int)FwCache.info.lastIssued, (unsigned int)AgentHdr.s.sign.agent.issued);
+    //          result = false;
+    //          goto Cleanup;
+            }
         }
 
         // Set the new cache policy

@@ -82,7 +82,7 @@ extern USBD_DFU_MediaTypeDef USBD_DFU_fops_FS;
 
 /* USER CODE END 0 */
 
-int main(void)
+int ldr_main(void)
 {
 
   /* USER CODE BEGIN 1 */
@@ -115,6 +115,7 @@ int main(void)
   BarnacleInitialProvision();
 
   // Briefly wait to see if DFU connects before we continue
+  HAL_Delay(500);
   if((DFU_UsrStrDescr_requested) || (AgentHdr.s.sign.hdr.magic != BARNACLEMAGIC))
   {
       swoPrint("INFO: DFU connected\r\nReset to exit.\r\n");
@@ -145,25 +146,24 @@ int main(void)
 //      Error_Handler();
 //  }
 
-  BarnacleDumpCertStore();
-
-  for(;;);
-
   // The point of no return: Launch the agent
-  swoPrint("INFO: Preparing for launching agent '%s'...\r\n", AgentHdr.s.sign.agent.name);
+  swoPrint("INFO: Preparing to launch agent\r\n");
   // Release the clock source
   HAL_RCC_DeInit();
   // Release the HAL
   HAL_DeInit();
   // Redirect the vector table to the agent vector table
-  SCB->VTOR = ((uint32_t)AgentCode);
+//  SCB->VTOR = ((uint32_t)AgentCode);
+  SCB->VTOR = ((uint32_t)AGENTCODE);
   // Wipe all accessible RAM to make sure we didn't leave anything behind
-  memset((void*)RAMWIPESTART1, 0x00, RAMWIPESIZE1);
-  memset((void*)RAMWIPESTART2, 0x00, RAMWIPESIZE2);
+//  memset((void*)RAMWIPESTART1, 0x00, RAMWIPESIZE1);
+//  memset((void*)RAMWIPESTART2, 0x00, RAMWIPESIZE2);
   // Set the stack pointer to where the agent expects it
-  __set_MSP(*((uint32_t*)AgentCode));
+//  __set_MSP(*((uint32_t*)AgentCode));
+  __set_MSP(*((uint32_t*)AGENTCODE));
   // Jump into the abyss
-  ((void (*)(void)) *((uint32_t*)(((uint32_t)AgentCode) + sizeof(uint32_t))))();
+//  ((void (*)(void)) *((uint32_t*)(((uint32_t)AgentCode) + sizeof(uint32_t))))();
+  ((void (*)(void)) *((uint32_t*)(((uint32_t)AGENTCODE) + sizeof(uint32_t))))();
   // We will never return from this call!!
 
   /* USER CODE END 2 */

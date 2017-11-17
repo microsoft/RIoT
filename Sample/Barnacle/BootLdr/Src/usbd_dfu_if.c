@@ -156,7 +156,7 @@ uint16_t MEM_If_Init_FS(void)
     {
         result = USBD_OK;
     }
-    swoPrint("%c", (result == USBD_OK) ? 'I' : 'i');
+    swoPrint("%c\r\n", (result == USBD_OK) ? 'I' : 'i');
     return result;
   /* USER CODE END 0 */ 
 }

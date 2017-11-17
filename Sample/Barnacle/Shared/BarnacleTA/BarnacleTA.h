@@ -14,6 +14,7 @@
 #define BARNACLEVERSION             (0x00010000)
 #define BARNACLETIMESTAMP           (0x59e7bd55)
 #define BARNACLEDIGESTLEN           (32)
+#define AGENTCODE                   ((void*)0x08020800)
 
 typedef union
 {
@@ -81,14 +82,9 @@ typedef union
     uint32_t u32[0x200];
 } BARNACLE_IDENTITY_PRIVATE, *PBARNACLE_IDENTITY_PRIVATE;
 
-extern BARNACLE_IDENTITY_PRIVATE CompoundId;
-extern BARNACLE_CERTSTORE CertStore;
+extern PBARNACLE_IDENTITY_PRIVATE pCompoundId;
+extern PBARNACLE_CERTSTORE pCertStore;
 extern const BARNACLE_AGENT_HDR AgentHdr;
-#ifndef NDEBUG
-extern const uint8_t AgentCode[0xDD800];
-#else
-extern const uint8_t AgentCode[0xED800];
-#endif
 
 bool BarnacleErasePages(void* src, uint32_t size);
 bool BarnacleFlashPages(void* dest, void* src, uint32_t size);

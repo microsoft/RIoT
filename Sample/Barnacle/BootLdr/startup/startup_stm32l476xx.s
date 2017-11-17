@@ -7,7 +7,7 @@
   * @brief     STM32L476xx devices vector table GCC toolchain.
   *            This module performs:
   *                - Set the initial SP
-  *                - Set the initial PC == Reset_Handler,
+  *                - Set the initial PC == Ldr_Reset_Handler,
   *                - Set the vector table entries with the exceptions ISR address,
   *                - Configure the clock system  
   *                - Branches to main in the C library (which eventually
@@ -74,10 +74,10 @@ defined in linker script */
  * @retval : None
 */
 
-    .section	.text.Reset_Handler
-	.weak	Reset_Handler
-	.type	Reset_Handler, %function
-Reset_Handler:
+    .section	.text.Ldr_Reset_Handler
+	.weak	Ldr_Reset_Handler
+	.type	Ldr_Reset_Handler, %function
+Ldr_Reset_Handler:
   ldr   sp, =_estack    /* Atollic update: set stack pointer */
 
 /* Copy the data segment initializers from flash to SRAM */
@@ -113,12 +113,12 @@ LoopFillZerobss:
 /* Call static constructors */
     bl __libc_init_array
 /* Call the application's entry point.*/
-	bl	main
+	bl	ldr_main
 
 LoopForever:
     b LoopForever
     
-.size	Reset_Handler, .-Reset_Handler
+.size	Ldr_Reset_Handler, .-Ldr_Reset_Handler
 
 /**
  * @brief  This is the code that gets called when the processor receives an
@@ -147,7 +147,7 @@ Infinite_Loop:
 
 g_pfnVectors:
 	.word	_estack
-	.word	Reset_Handler
+	.word	Ldr_Reset_Handler
 	.word	NMI_Handler
 	.word	HardFault_Handler
 	.word	MemManage_Handler

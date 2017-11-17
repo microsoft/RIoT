@@ -18,22 +18,24 @@
 
 extern RNG_HandleTypeDef hrng;
 
-__attribute__((section(".PURW.Private"))) BARNACLE_IDENTITY_PRIVATE CompoundId;
-__attribute__((section(".PURW.Public"))) BARNACLE_CERTSTORE CertStore;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-braces"
-#ifdef AGENTPROJECT
 __attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{{BARNACLEMAGIC, BARNACLEVERSION, sizeof(BARNACLE_AGENT_HDR)}, {AGENTNAME, AGENTVERSION, 0, AGENTTIMESTAMP, {0}}}, {{0}, {0}}}};
-#else
-__attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{{BARNACLEMAGIC, BARNACLEVERSION, sizeof(BARNACLE_AGENT_HDR)}, {0}}, {{0}, {0}}}};
-#endif
 #pragma GCC diagnostic pop
+
 #ifndef NDEBUG
-__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xDD800];
+uint8_t* pAgentCode = ((uint8_t*)0x0802800);
+#define AgentSize  (0xDD800)
+//__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xDD800];
 #else
-__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xED800];
+uint8_t* pAgentCode = ((uint8_t*)0x0801800);
+#define AgentSize  (0xED800)
+//__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xED800];
 #endif
 
+#define RAM2START (0x10000000)
+PBARNACLE_IDENTITY_PRIVATE pCompoundId = (const PBARNACLE_IDENTITY_PRIVATE)RAM2START;
+PBARNACLE_CERTSTORE pCertStore = (const PBARNACLE_CERTSTORE)(RAM2START + sizeof(PBARNACLE_IDENTITY_PRIVATE));
 
 bool BarnacleErasePages(void* dest, uint32_t size)
 {
@@ -59,10 +61,13 @@ bool BarnacleErasePages(void* dest, uint32_t size)
     }
 
     // Erase the necessary pages
-    if(!(result = ((HAL_FLASHEx_Erase(&eraseInfo, &pageError) == HAL_OK) ||
-                   (pageError != 0xffffffff))))
+    for(uint32_t m = 0; m < 10; m++)
     {
-        goto Cleanup;
+        if((result = ((HAL_FLASHEx_Erase(&eraseInfo, &pageError) == HAL_OK) && (pageError == 0xffffffff))))
+        {
+            break;
+        }
+        swoPrint("WARNING: HAL_FLASHEx_Erase() retry %u.\r\n", (unsigned int)m);
     }
 
 Cleanup:
@@ -95,14 +100,21 @@ bool BarnacleFlashPages(void* dest, void* src, uint32_t size)
     // Flash the src buffer 8 byte at a time and verify
     for(uint32_t n = 0; n < ((size + sizeof(uint64_t) - 1) / sizeof(uint64_t)); n++)
     {
-        uint32_t progPtr = (uint32_t)&(((uint64_t*)dest)[n]);
-        uint64_t progData = ((uint64_t*)src)[n];
-        if((progData != *((uint64_t*)progPtr)) &&
-           !(result = (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, progPtr, progData) == HAL_OK)))
+        result = false;
+        for(uint32_t m = 0; m < 10; m++)
         {
-            goto Cleanup;
+            uint32_t progPtr = (uint32_t)&(((uint64_t*)dest)[n]);
+            uint64_t progData = ((uint64_t*)src)[n];
+            if((progData == *((uint64_t*)progPtr)) ||
+               ((result = (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, progPtr, progData) == HAL_OK)) &&
+                (progData == *((uint64_t*)progPtr))))
+            {
+                result = true;
+                break;
+            }
+            swoPrint("WARNING: HAL_FLASH_Program() retry %u.\r\n", (unsigned int)m);
         }
-        if(!(result = (progData == *((uint64_t*)progPtr))))
+        if(result == false)
         {
             goto Cleanup;
         }

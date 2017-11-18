@@ -38,6 +38,8 @@ PCCERT_CONTEXT CertFromFile(std::wstring fileName);
 std::vector<BYTE> CertThumbPrint(PCCERT_CONTEXT hCert);
 std::vector<BYTE> ReadHex(std::wstring strIn);
 std::vector<BYTE> ReadFromFile(std::wstring fileName);
+std::string ReadStrFromFile(std::wstring fileName);
 void WriteToFile(std::wstring fileName, std::vector<BYTE> data);
+void WriteToFile(std::wstring fileName, UINT32 data);
 
 // TODO: reference additional headers your program requires here

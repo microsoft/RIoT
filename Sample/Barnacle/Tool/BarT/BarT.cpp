@@ -5,7 +5,8 @@
 
 void SignAgent(
     std::wstring fileName,
-    PCCERT_CONTEXT appAuthCert
+    PCCERT_CONTEXT appAuthCert,
+    INT32 buildNo
 )
 {
     DWORD retVal = STDFUFILES_NOERROR;
@@ -104,6 +105,10 @@ void SignAgent(
         
         AgentHdr->s.sign.agent.size = image.size() - AgentHdr->s.sign.hdr.size;
         AgentHdr->s.sign.agent.issued = GetTimeStamp();
+        if (buildNo > 0)
+        {
+            AgentHdr->s.sign.agent.version = (AgentHdr->s.sign.agent.version & 0xffff0000) | (UINT16)buildNo;
+        }
         hexFileName.resize(hexFileName.size() - 4);
         strncpy_s(AgentHdr->s.sign.agent.name, hexFileName.c_str(), sizeof(AgentHdr->s.sign.agent.name));
         if ((retVal = BCryptHash(hSha256,
@@ -121,7 +126,7 @@ void SignAgent(
         // Report binary info
         printf("Agent:   %s\n", AgentHdr->s.sign.agent.name);
         printf("Size:    %d bytes\n", AgentHdr->s.sign.agent.size);
-        printf("Version: %d.%d\n", AgentHdr->s.sign.agent.version >> 16, AgentHdr->s.sign.agent.version && 0x0000ffff);
+        printf("Version: %d.%d\n", AgentHdr->s.sign.agent.version >> 16, AgentHdr->s.sign.agent.version & 0x0000ffff);
         printf("Issued:  0x%08x\n", AgentHdr->s.sign.agent.issued);
         printf("Digest:  ");
         for (uint32_t n = 0; n < sizeof(AgentHdr->s.sign.agent.digest); n++) printf("%02x", AgentHdr->s.sign.agent.digest[n]);
@@ -215,6 +220,10 @@ void SignAgent(
             printf("%s: SetImageName failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
             throw retVal;
         }
+
+        std::string verStr(16, '\0');
+        verStr.resize(sprintf_s((char*)verStr.c_str(), verStr.size(), "-%d.%d", AgentHdr->s.sign.agent.version >> 16, AgentHdr->s.sign.agent.version & 0x0000ffff));
+        hexFileName += verStr;
         hexFileName.append(".DFU");
         if ((retVal = CreateNewDFUFile((PSTR)hexFileName.c_str(), &hDfuFile, diceDeviceVid, diceDevicePid, diceDeviceVer)) != STDFUFILES_NOERROR)
         {
@@ -282,6 +291,7 @@ bool RunSignAgent(std::unordered_map<std::wstring, std::wstring> param)
     HCERTSTORE hStore = NULL;
     PCCERT_CONTEXT hCert = NULL;
     UINT32 timeStamp = -1;
+    INT32 buildNo = -1;
 
     try
     {
@@ -312,7 +322,20 @@ bool RunSignAgent(std::unordered_map<std::wstring, std::wstring> param)
                 throw GetLastError();
             }
         }
-        SignAgent(hexName, hCert);
+        if ((it = param.find(L"-bn")) != param.end())
+        {
+            try
+            {
+                buildNo = std::stoul(ReadStrFromFile(it->second));
+            }
+            catch (const std::exception& e)
+            {
+                UNREFERENCED_PARAMETER(e);
+                buildNo = 0;
+            }
+            WriteToFile(it->second, ++buildNo);
+        }
+        SignAgent(hexName, hCert, buildNo);
     }
     catch (const std::exception& e)
     {
@@ -339,7 +362,7 @@ bool RunIssueDeviceTrust(std::unordered_map<std::wstring, std::wstring> param)
 
 void PrintHelp(void)
 {
-    wprintf(L"SIGN [hexFileName] [-ct=CodeAuthCertTP | -cf=CodeAuthCertFile]\n");
+    wprintf(L"SIGN [hexFileName] [-ct=CodeAuthCertTP | -cf=CodeAuthCertFile] { -bn=BuildNo.h } \n");
     wprintf(L"ISSUE [dfuFileName] [-at=DevAuthCertTP | -af=DevAuthCertFile] { -ct=CodeAuthCertTP | -cf=CodeAuthCertFile }\n");
 }
 

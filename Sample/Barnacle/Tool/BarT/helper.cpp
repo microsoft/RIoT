@@ -40,6 +40,32 @@ void WriteToFile(std::wstring fileName, std::vector<BYTE> data)
     }
 }
 
+void WriteToFile(std::wstring fileName, UINT32 data)
+{
+    // http://stackoverflow.com/questions/14841396/stdunique-ptr-deleters-and-the-win32-api
+    std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)> hFile(::CreateFile(fileName.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL), &::CloseHandle);
+    DWORD bytesWritten = 0;
+    std::vector<byte> dataOut(16, 0);
+    dataOut.resize(sprintf_s((char*)dataOut.data(), dataOut.size(), "%ul", data) - 1);
+    if (!WriteFile(hFile.get(), dataOut.data(), dataOut.size(), &bytesWritten, NULL))
+    {
+        throw GetLastError();
+    }
+}
+
+std::string ReadStrFromFile(std::wstring fileName)
+{
+    // http://stackoverflow.com/questions/14841396/stdunique-ptr-deleters-and-the-win32-api
+    std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)> hFile(::CreateFile(fileName.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL), &::CloseHandle);
+    DWORD bytesRead = 0;
+    std::string data(GetFileSize(hFile.get(), NULL), '\0');
+    if (!ReadFile(hFile.get(), (LPVOID)data.c_str(), data.size(), &bytesRead, NULL))
+    {
+        throw GetLastError();
+    }
+    return data;
+}
+
 std::vector<BYTE> ReadFromFile(std::wstring fileName)
 {
     // http://stackoverflow.com/questions/14841396/stdunique-ptr-deleters-and-the-win32-api

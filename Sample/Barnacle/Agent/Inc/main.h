@@ -57,13 +57,6 @@
 #else
 #define swoPrint(fmt, ...) ((void)0)
 #endif
-
-#define AGENTPROJECT      (1)
-#define AGENTNAME         "BarnacleTA"
-#define AGENTVERSIONMAJOR (0x0001)
-#define AGENTVERSIONMINOR (0x0000)
-#define AGENTTIMESTAMP    (0x59EFA738)
-#define AGENTVERSION      (uint32_t)((AGENTVERSIONMAJOR << 16) | AGENTVERSIONMAJOR)
 /* USER CODE END Private defines */
 
 /**

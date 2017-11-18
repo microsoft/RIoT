@@ -85,7 +85,6 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
-    PBARNACLE_CERTSTORE store = (PBARNACLE_CERTSTORE)(0x10000000 + sizeof(BARNACLE_IDENTITY_PRIVATE));
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -103,16 +102,7 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   swoPrint("Trusted Agent(%u bytes): %s\r\n", (unsigned int)AgentHdr.s.sign.agent.size, AgentHdr.s.sign.agent.name);
-  swoPrint("CertBag:\r\n");
-  for(uint32_t n = 0; n < NUMELEM(store->info.certTable); n++)
-  {
-      char* ptr = (char*)&store->certBag[store->info.certTable[n].start];
-      uint32_t sze = store->info.certTable[n].size;
-      if(sze > 0)
-      {
-          swoPrint("%s", ptr);
-      }
-  }
+  BarnacleTADumpCertStore();
   /* USER CODE END 2 */
 
   /* Infinite loop */

@@ -20,11 +20,13 @@
 
 extern RNG_HandleTypeDef hrng;
 
-__attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {0};
+__attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr;
 #ifndef NDEBUG
-__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xDD800];
+//__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xDD800];
+uint8_t* AgentCode = (uint8_t*)0x08020800;
 #else
-__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xED800];
+//__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xED800];
+uint8_t* AgentCode = (uint8_t*)0x08010800;
 #endif
 
 __attribute__((section(".PURW.Private"))) BARNACLE_IDENTITY_PRIVATE CompoundId;
@@ -47,6 +49,124 @@ char* BarnacleGetDfuStr(void)
 	}
 	cursor += sprintf(&dfuString[cursor], "01*04K%c", (IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_WRITELOCK) ? 'a' : 'g');
 	return dfuString;
+}
+
+bool BarnacleErasePages(void* dest, uint32_t size)
+{
+    bool result = true;
+    uint32_t pageError = 0;
+    FLASH_EraseInitTypeDef eraseInfo = {FLASH_TYPEERASE_PAGES,
+                                        FLASH_BANK_1,
+                                        ((uint32_t)dest - 0x08000000) / 0x800,
+                                        (size + 0x7ff) / 0x800};
+
+    // Parameter check
+    if(!(result = (((uint32_t)dest >= 0x08000000) &&
+                   ((uint32_t)dest < 0x08100000) &&
+                   ((uint32_t)dest % 0x800) == 0)))
+    {
+        goto Cleanup;
+    }
+
+    // Open the memory protection
+    if(!(result = (HAL_FLASH_Unlock() == HAL_OK)))
+    {
+        goto Cleanup;
+    }
+
+    // Erase the necessary pages
+    for(uint32_t m = 0; m < 10; m++)
+    {
+        if((result = ((HAL_FLASHEx_Erase(&eraseInfo, &pageError) == HAL_OK) && (pageError == 0xffffffff))))
+        {
+            break;
+        }
+        swoPrint("WARNING: HAL_FLASHEx_Erase() retry %u.\r\n", (unsigned int)m);
+    }
+
+Cleanup:
+    HAL_FLASH_Lock();
+    return result;
+}
+
+bool BarnacleFlashPages(void* dest, void* src, uint32_t size)
+{
+    bool result = true;
+
+    // Parameter check
+    if(!(result = ((((uint32_t)src % sizeof(uint32_t)) == 0))))
+    {
+        goto Cleanup;
+    }
+
+    // Erase the required area
+    if(!(result = BarnacleErasePages(dest, size)))
+    {
+        goto Cleanup;
+    }
+
+    // Open the memory protection
+    if(!(result = (HAL_FLASH_Unlock() == HAL_OK)))
+    {
+        goto Cleanup;
+    }
+
+    // Flash the src buffer 8 byte at a time and verify
+    for(uint32_t n = 0; n < ((size + sizeof(uint64_t) - 1) / sizeof(uint64_t)); n++)
+    {
+        result = false;
+        for(uint32_t m = 0; m < 10; m++)
+        {
+            uint32_t progPtr = (uint32_t)&(((uint64_t*)dest)[n]);
+            uint64_t progData = ((uint64_t*)src)[n];
+            if((progData == *((uint64_t*)progPtr)) ||
+               ((result = (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, progPtr, progData) == HAL_OK)) &&
+                (progData == *((uint64_t*)progPtr))))
+            {
+                result = true;
+                break;
+            }
+            swoPrint("WARNING: HAL_FLASH_Program() retry %u.\r\n", (unsigned int)m);
+        }
+        if(result == false)
+        {
+            goto Cleanup;
+        }
+    }
+
+Cleanup:
+    HAL_FLASH_Lock();
+    return result;
+}
+
+void BarnacleDumpCertStore(void)
+{
+    swoPrint("CertStore:\r\n");
+    for(uint32_t n = 0; n < NUMELEM(CertStore.info.certTable); n++)
+    {
+        if(CertStore.info.certTable[n].size > 0)
+        {
+            swoPrint("%s", (char*)&CertStore.certBag[CertStore.info.certTable[n].start]);
+        }
+    }
+}
+
+void BarnacleGetRandom(void* dest, uint32_t size)
+{
+    for(uint32_t n = 0; n < size; n += sizeof(uint32_t))
+    {
+        uint32_t entropy = HAL_RNG_GetRandomNumber(&hrng);
+        memcpy(&(((uint8_t*)dest)[n]), (uint8_t*)&entropy, MIN(sizeof(entropy), size - n));
+    }
+}
+
+bool BarnacleNullCheck(void* dataPtr, uint32_t dataSize)
+{
+    for(uint32_t n = 0; n < dataSize; n++)
+    {
+        if(((uint8_t*)dataPtr)[n] != 0x00) return false;
+    }
+    return true;
 }
 
 bool BarnacleInitialProvision()
@@ -182,7 +302,7 @@ bool BarnacleVerifyAgent()
     }
 
     // Make sure the agent code starts where we expect it to start
-    if(!(result = (AGENTCODE == &((uint8_t*)&AgentHdr)[AgentHdr.s.sign.hdr.size])))
+    if(!(result = (AgentCode == &((uint8_t*)&AgentHdr)[AgentHdr.s.sign.hdr.size])))
     {
         swoPrint("ERROR: Unexpected agent start address.\r\n");
         goto Cleanup;
@@ -191,7 +311,7 @@ bool BarnacleVerifyAgent()
     // Verify the agent code digest against the header
     if(!(result = (RiotCrypt_Hash(digest,
                                   sizeof(digest),
-                                  AGENTCODE,
+								  AgentCode,
                                   AgentHdr.s.sign.agent.size) == RIOT_SUCCESS)))
     {
         swoPrint("ERROR: RiotCrypt_Hash failed.\r\n");
@@ -235,6 +355,7 @@ bool BarnacleVerifyAgent()
     if((FwCache.info.magic != BARNACLEMAGIC) ||
        (memcmp(digest, FwCache.info.agentHdrDigest, sizeof(digest))))
     {
+        swoPrint("INFO: Generating and caching agent identity.\r\n");
         RIOT_X509_TBS_DATA x509TBSData = { { 0 },
                                            "CyReP Device", "Microsoft", "US",
                                            "170101000000Z", "370101000000Z",
@@ -248,23 +369,21 @@ bool BarnacleVerifyAgent()
         // Detect rollback attack if this is not the first launch
         if(FwCache.info.magic == BARNACLEMAGIC)
         {
-            if(FwCache.info.lastVersion >= AgentHdr.s.sign.agent.version)
+            if(!(result = (FwCache.info.lastVersion < AgentHdr.s.sign.agent.version)))
             {
-                fprintf(stderr,
-                        "ERROR: Roll-back attack detected. Version: %hu.%hu < %hu.%hu\r\n",
-                        (short unsigned int)FwCache.info.lastVersion >> 16, (short unsigned int)FwCache.info.lastVersion & 0x0000ffff, (short unsigned int)AgentHdr.s.sign.agent.version >> 16, (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff);
-    //          result = false;
-    //          goto Cleanup;
+                swoPrint("ERROR: Version Roll-back detected.\r\n");
+                goto Cleanup;
             }
-            if(FwCache.info.lastIssued >= AgentHdr.s.sign.agent.issued)
+            if(!(result = (FwCache.info.lastIssued < AgentHdr.s.sign.agent.issued)))
             {
-                fprintf(stderr,
-                        "ERROR: Roll-back attack detected. Issuance: %u < %u\r\n",
-                        (unsigned int)FwCache.info.lastIssued, (unsigned int)AgentHdr.s.sign.agent.issued);
-    //          result = false;
-    //          goto Cleanup;
+                swoPrint("ERROR: Issuance Roll-back detected.\r\n");
+                goto Cleanup;
             }
         }
+        swoPrint("INFO: Agent upgrade to Version %d.%d Issued 0x%08x detected.\r\n",
+                 (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
+                 (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff,
+                 (unsigned int)AgentHdr.s.sign.agent.issued);
 
         // Set the new cache policy
         memset(cache.cert, 0xff, sizeof(cache.cert));
@@ -344,6 +463,10 @@ bool BarnacleVerifyAgent()
             swoPrint("ERROR: BarnacleFlashPages failed.\r\n");
             goto Cleanup;
         }
+    }
+    else
+    {
+        swoPrint("INFO: Using cached agent identity.\r\n");
     }
 
     // Copy the cached identity and cert to the cert store

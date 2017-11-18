@@ -137,6 +137,7 @@ int ldr_main(void)
       // Reboot so we can go straight to DFU mode next time
       swoPrint("INFO: Rebooting device...\r\n");
       NVIC_SystemReset();
+      Error_Handler();
   }
 
 //  // Close all the hatches
@@ -147,23 +148,26 @@ int ldr_main(void)
 //  }
 
   // The point of no return: Launch the agent
-  swoPrint("INFO: Preparing to launch agent\r\n");
+#ifndef NDEBUG
+  swoPrint("INFO: Launching agent...\r\n");
+  HAL_Delay(1);
+#endif
   // Release the clock source
   HAL_RCC_DeInit();
   // Release the HAL
   HAL_DeInit();
   // Redirect the vector table to the agent vector table
-//  SCB->VTOR = ((uint32_t)AgentCode);
-  SCB->VTOR = ((uint32_t)AGENTCODE);
+  SCB->VTOR = ((uint32_t)AgentCode);
+//  SCB->VTOR = ((uint32_t)AGENTCODE);
   // Wipe all accessible RAM to make sure we didn't leave anything behind
 //  memset((void*)RAMWIPESTART1, 0x00, RAMWIPESIZE1);
 //  memset((void*)RAMWIPESTART2, 0x00, RAMWIPESIZE2);
   // Set the stack pointer to where the agent expects it
-//  __set_MSP(*((uint32_t*)AgentCode));
-  __set_MSP(*((uint32_t*)AGENTCODE));
+  __set_MSP(*((uint32_t*)AgentCode));
+//  __set_MSP(*((uint32_t*)AGENTCODE));
   // Jump into the abyss
-//  ((void (*)(void)) *((uint32_t*)(((uint32_t)AgentCode) + sizeof(uint32_t))))();
-  ((void (*)(void)) *((uint32_t*)(((uint32_t)AGENTCODE) + sizeof(uint32_t))))();
+  ((void (*)(void)) *((uint32_t*)(((uint32_t)AgentCode) + sizeof(uint32_t))))();
+//  ((void (*)(void)) *((uint32_t*)(((uint32_t)AGENTCODE) + sizeof(uint32_t))))();
   // We will never return from this call!!
 
   /* USER CODE END 2 */

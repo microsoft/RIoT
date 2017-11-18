@@ -44,7 +44,7 @@ RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 96K
 RAM2 (xrw)     : ORIGIN = 0x10000000, LENGTH = 32K
 FLASH (rx)     : ORIGIN = 0x08000000, LENGTH = 128K
 AGENTHDR (rx)  : ORIGIN = 0x08020000, LENGTH = 2K
-/*AGENTCODE (rx) : ORIGIN = 0x08020800, LENGTH = 886K*/
+AGENTCODE (rx) : ORIGIN = 0x08020800, LENGTH = 886K
 PURO (rw)      : ORIGIN = 0x080FE000, LENGTH = 4K
 FWRO (rw)      : ORIGIN = 0x080FF000, LENGTH = 2K
 FWRW (rw)      : ORIGIN = 0x080FF800, LENGTH = 2K
@@ -165,14 +165,13 @@ SECTIONS
     . = ALIGN(4);
   } >AGENTHDR
   
-/*
   .agentcode (NOLOAD):
   {
     . = ALIGN(4);
     *(.AGENTCODE*);
     . = ALIGN(4);
   } >AGENTCODE
-*/
+  
   .puro (NOLOAD):
   {
     . = ALIGN(4);

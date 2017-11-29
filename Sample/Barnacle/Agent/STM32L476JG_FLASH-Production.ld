@@ -44,7 +44,7 @@ RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 96K
 RAM2 (xrw)      : ORIGIN = 0x10000000, LENGTH = 32K
 AGENTHDR (rx)   : ORIGIN = 0x08010000, LENGTH = 2K
 FLASH (rx)      : ORIGIN = 0x08010800, LENGTH = 980K
-PURO (rw)       : ORIGIN = 0x080FE000, LENGTH = 4K
+PURO (rw)       : ORIGIN = 0x080FF000, LENGTH = 4K
 }
 
 /* Define output sections */

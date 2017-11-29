@@ -46,6 +46,7 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
+#include <time.h>
 #include <cyrep/RiotTarget.h>
 #include <cyrep/RiotStatus.h>
 #include "cyrep/RiotSha256.h"
@@ -101,7 +102,17 @@ int main(void)
   MX_RNG_Init();
 
   /* USER CODE BEGIN 2 */
-  swoPrint("Trusted Agent(%u bytes): %s\r\n", (unsigned int)AgentHdr.s.sign.agent.size, AgentHdr.s.sign.agent.name);
+  char* dateStr = asctime(localtime((time_t*)&AgentHdr.s.sign.agent.issued));
+  dateStr[24] = '\0';
+  swoPrint("================\r\n"
+           " Barnacle Agent\r\n"
+           "================\r\n"
+           "%s (%u bytes, V%d.%d, %s)\r\n",
+           AgentHdr.s.sign.agent.name,
+           (unsigned int)AgentHdr.s.sign.agent.size,
+           (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
+           (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff,
+           dateStr);
   BarnacleTADumpCertStore();
   /* USER CODE END 2 */
 
@@ -109,11 +120,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+      uint32_t trigger = HAL_RNG_GetRandomNumber(&hrng);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-      HAL_Delay(1000);
-      swoPrint("Hello World!\r\n");
+      HAL_Delay(3000);
+      swoPrint("Hello World! (0x%08x)\r\n", (unsigned int)trigger);
+      if((trigger & 0x0000000f) == 0x0f)
+      {
+          uint32_t* pAttack = (uint32_t*)0x080fe000;
+          swoPrint("Simulating Attack...\r\n");
+          HAL_Delay(1);
+          trigger = *pAttack;
+      }
 
   }
   /* USER CODE END 3 */

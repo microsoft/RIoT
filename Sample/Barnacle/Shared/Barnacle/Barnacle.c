@@ -4,7 +4,7 @@
  *  Created on: Oct 18, 2017
  *      Author: stefanth
  */
-
+#include <time.h>
 #include "main.h"
 #include "stm32l4xx_hal.h"
 #include "usbd_dfu_if.h"
@@ -65,12 +65,25 @@ bool BarnacleErasePages(void* dest, uint32_t size)
                    ((uint32_t)dest < 0x08100000) &&
                    ((uint32_t)dest % 0x800) == 0)))
     {
+        swoPrint("ERROR: BarnacleErasePages() bad parameter.\r\n");
         goto Cleanup;
     }
 
     // Open the memory protection
-    if(!(result = (HAL_FLASH_Unlock() == HAL_OK)))
+    for(uint32_t m = 0; m < 10; m++)
     {
+        if((result = (HAL_FLASH_Unlock() == HAL_OK)) != false)
+        {
+            break;
+        }
+        swoPrint("WARNING: HAL_FLASH_Unlock() retry %u.\r\n", (unsigned int)m);
+        // Bring the flash subsystem into a defined state.
+        HAL_FLASH_Lock();
+        HAL_Delay(1);
+    }
+    if(!result)
+    {
+        swoPrint("ERROR: HAL_FLASH_Unlock() failed.\r\n");
         goto Cleanup;
     }
 
@@ -82,6 +95,11 @@ bool BarnacleErasePages(void* dest, uint32_t size)
             break;
         }
         swoPrint("WARNING: HAL_FLASHEx_Erase() retry %u.\r\n", (unsigned int)m);
+    }
+    if(!result)
+    {
+        swoPrint("ERROR: HAL_FLASHEx_Erase() failed.\r\n");
+        goto Cleanup;
     }
 
 Cleanup:
@@ -175,8 +193,10 @@ bool BarnacleInitialProvision()
     bool generateCerts = false;
 
     // Check if the platform identity is already provisioned
-    if(FwDeviceId.info.magic != BARNACLEMAGIC)
+    if(generateCerts ||
+       (FwDeviceId.info.magic != BARNACLEMAGIC))
     {
+        swoPrint("INFO: Generating and persisting new device identity.\r\n");
         uint8_t cdi[SHA256_DIGEST_LENGTH] = {0};
         BARNACLE_IDENTITY_PRIVATE newId = {0};
 
@@ -218,6 +238,7 @@ bool BarnacleInitialProvision()
         uint32_t length = 0;
         RIOT_ECC_SIGNATURE  tbsSig = { 0 };
 
+        swoPrint("INFO: Generating and persisting new device certificate.\r\n");
         // Make sure we don't flash unwritten space in the cert bag
         newCertBag.info.magic = BARNACLEMAGIC;
         memset(newCertBag.certBag, 0xff, sizeof(newCertBag.certBag) - 1);
@@ -281,6 +302,13 @@ bool BarnacleInitialProvision()
             swoPrint("ERROR: BarnacleFlashPages failed.\r\n");
             goto Cleanup;
         }
+        generateCerts = true;
+    }
+
+    if(!generateCerts)
+    {
+        swoPrint("INFO: Device already provisioned.\r\n");
+
     }
 
 Cleanup:
@@ -371,19 +399,28 @@ bool BarnacleVerifyAgent()
         {
             if(!(result = (FwCache.info.lastVersion < AgentHdr.s.sign.agent.version)))
             {
-                swoPrint("ERROR: Version Roll-back detected.\r\n");
+                swoPrint("ERROR: Version Roll-back detected to %d.%d.\r\n",
+                         (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
+                         (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff);
                 goto Cleanup;
             }
             if(!(result = (FwCache.info.lastIssued < AgentHdr.s.sign.agent.issued)))
             {
-                swoPrint("ERROR: Issuance Roll-back detected.\r\n");
+                char* dateStr = asctime(localtime((time_t*)&AgentHdr.s.sign.agent.issued));
+                dateStr[24] = '\0';
+                swoPrint("ERROR: Issuance Roll-back detected to %s.\r\n", dateStr);
                 goto Cleanup;
             }
         }
-        swoPrint("INFO: Agent upgrade to Version %d.%d Issued 0x%08x detected.\r\n",
-                 (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
-                 (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff,
-                 (unsigned int)AgentHdr.s.sign.agent.issued);
+
+        {
+            char* dateStr = asctime(localtime((time_t*)&AgentHdr.s.sign.agent.issued));
+            dateStr[24] = '\0';
+            swoPrint("INFO: Agent upgrade to Version %d.%d, issued %s.\r\n",
+                     (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
+                     (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff,
+                     dateStr);
+        }
 
         // Set the new cache policy
         memset(cache.cert, 0xff, sizeof(cache.cert));
@@ -466,7 +503,12 @@ bool BarnacleVerifyAgent()
     }
     else
     {
-        swoPrint("INFO: Using cached agent identity.\r\n");
+        char* dateStr = asctime(localtime((time_t*)&AgentHdr.s.sign.agent.issued));
+        dateStr[24] = '\0';
+        swoPrint("INFO: Using cached agent identity Version %d.%d, issued %s.\r\n",
+                 (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
+                 (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff,
+                 dateStr);
     }
 
     // Copy the cached identity and cert to the cert store
@@ -537,20 +579,20 @@ bool BarnacleFWViolation()
     return result;
 }
 
+FIREWALL_InitTypeDef fw_init =
+{
+    0, 0,
+//    (uint32_t)&FwDeviceId, sizeof(FwDeviceId) + sizeof(FwCache),
+    (uint32_t)&FwDeviceId, sizeof(FwDeviceId) + sizeof(FwCache),
+    0, 0,
+    FIREWALL_VOLATILEDATA_NOT_EXECUTABLE,
+    FIREWALL_VOLATILEDATA_NOT_SHARED
+};
 bool BarnacleSecureFWData()
 {
     bool result = true;
-    FIREWALL_InitTypeDef fw_init = {0};
 
     __HAL_RCC_SYSCFG_CLK_ENABLE();
-    fw_init.CodeSegmentStartAddress = 0;
-    fw_init.CodeSegmentLength = 0;
-    fw_init.NonVDataSegmentStartAddress = (uint32_t)&FwDeviceId;
-    fw_init.NonVDataSegmentLength = sizeof(FwDeviceId) + sizeof(FwCache);
-    fw_init.VDataSegmentStartAddress = 0;
-    fw_init.VDataSegmentLength = 0;
-    fw_init.VolatileDataExecution = FIREWALL_VOLATILEDATA_NOT_EXECUTABLE;
-    fw_init.VolatileDataShared = FIREWALL_VOLATILEDATA_NOT_SHARED;
     if(HAL_FIREWALL_Config(&fw_init) != HAL_OK)
     {
         swoPrint("ERROR: HAL_FIREWALL_Config() failed.\r\n");

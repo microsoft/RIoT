@@ -64,7 +64,7 @@ RNG_HandleTypeDef hrng;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-volatile uint8_t DFU_UsrStrDescr_requested = 0;
+volatile unsigned char DFU_UsrStrDescr_requested = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -103,7 +103,10 @@ int ldr_main(void)
   MX_RNG_Init();
 
   /* USER CODE BEGIN 2 */
-  swoPrint("Barnacle BootLdr\r\n");
+  swoPrint("\r\n\r\n"
+           "================\n\r"
+           "Barnacle BootLdr\r\n"
+           "================\n\r");
 
   // If we got here because of a firewall violation tell the world
   if(BarnacleFWViolation())
@@ -112,13 +115,17 @@ int ldr_main(void)
   }
 
   // Provision the device if this is the first launch
-  BarnacleInitialProvision();
+  if(!BarnacleInitialProvision())
+  {
+      swoPrint("PANIC: Device Provisioning failed.\r\n");
+      Error_Handler();
+  }
 
   // Briefly wait to see if DFU connects before we continue
   HAL_Delay(500);
   if((DFU_UsrStrDescr_requested) || (AgentHdr.s.sign.hdr.magic != BARNACLEMAGIC))
   {
-      swoPrint("INFO: DFU connected\r\nReset to exit.\r\n");
+      swoPrint("INFO: DFU connected.\r\n");
       Error_Handler();
   }
   else
@@ -140,12 +147,12 @@ int ldr_main(void)
       Error_Handler();
   }
 
-//  // Close all the hatches
-//  if(!BarnacleSecureFWData())
-//  {
-//      swoPrint("PANIC: The firewall did not engage.\r\n");
-//      Error_Handler();
-//  }
+  // Close all the hatches
+  if(!BarnacleSecureFWData())
+  {
+      swoPrint("PANIC: The firewall did not engage.\r\n");
+      Error_Handler();
+  }
 
   // The point of no return: Launch the agent
 #ifndef NDEBUG

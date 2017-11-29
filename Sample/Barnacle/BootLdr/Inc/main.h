@@ -56,7 +56,7 @@
 /* Private define ------------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
-
+extern volatile unsigned char DFU_UsrStrDescr_requested;
 /* USER CODE END Private defines */
 
 /**

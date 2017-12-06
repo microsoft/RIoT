@@ -156,7 +156,7 @@ uint16_t MEM_If_Init_FS(void)
     {
         result = USBD_OK;
     }
-    swoPrint("%c\r\n", (result == USBD_OK) ? 'I' : 'i');
+    dbgPrint("%c\r\n", (result == USBD_OK) ? 'I' : 'i');
     return result;
   /* USER CODE END 0 */ 
 }
@@ -175,7 +175,7 @@ uint16_t MEM_If_DeInit_FS(void)
     {
         result = USBD_OK;
     }
-    swoPrint("%c\r\n", (result == USBD_OK) ? 'D' : 'd');
+    dbgPrint("%c\r\n", (result == USBD_OK) ? 'D' : 'd');
     return result;
   /* USER CODE END 1 */ 
 }
@@ -210,7 +210,7 @@ uint16_t MEM_If_Erase_FS(uint32_t Add)
 	result = USBD_OK;
 
 Cleanup:
-    swoPrint("%c", (result == USBD_OK) ? 'E' : 'e');
+    dbgPrint("%c", (result == USBD_OK) ? 'E' : 'e');
     return result;
   /* USER CODE END 2 */ 
 }
@@ -239,7 +239,7 @@ uint16_t MEM_If_Write_FS(uint8_t *src, uint8_t *dest, uint32_t Len)
     result = USBD_OK;
 
 Cleanup:
-    swoPrint("%c", (result == USBD_OK) ? 'W' : 'w');
+    dbgPrint("%c", (result == USBD_OK) ? 'W' : 'w');
     return result;
   /* USER CODE END 3 */ 
 }
@@ -260,12 +260,12 @@ uint8_t *MEM_If_Read_FS (uint8_t *src, uint8_t *dest, uint32_t Len)
     // We never allow anybody to read our firewalled area
     if(src > (uint8_t*)0x080FF000)
     {
-        swoPrint("r");
+        dbgPrint("r");
         return 0;
     }
     else
     {
-        swoPrint("R");
+        dbgPrint("R");
         return src;
     }
   /* USER CODE END 4 */ 
@@ -299,7 +299,7 @@ uint16_t MEM_If_GetStatus_FS (uint32_t Add, uint8_t Cmd, uint8_t *buffer)
 
     break;
   }
-  swoPrint("S");
+  dbgPrint("S");
   return  (USBD_OK);
   /* USER CODE END 5 */  
 }

@@ -245,8 +245,8 @@ Base64Encode(
     // Calculate required output buffer length in bytes
     reqSize = (Length == 0) ? (0) : ((((Length - 1) / 3) + 1) * 4);
 
-    // Plus trailing NULL
-    reqSize += 1;
+    // Plus trailing CR&NL
+    reqSize += 3;
 
     // Validate length of output buffer
     if (OutLen && (*OutLen < reqSize)) {
@@ -298,8 +298,9 @@ Base64Encode(
         Output[dstPos++] = '=';
     }
 
-    // Add NL termination
-    Output[dstPos] = '\n';
+    // Add CR&NL termination
+    Output[dstPos++] = '\r';
+    Output[dstPos++] = '\n';
 
     // Output buffer length
     if (OutLen) {

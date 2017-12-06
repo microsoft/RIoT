@@ -558,10 +558,10 @@ typedef struct
 
 // We only have a small subset of potential PEM encodings
 const PEMHeadersFooters PEMhf[LAST_CERT_TYPE] = {
-    {28, 26, "-----BEGIN CERTIFICATE-----\n", "-----END CERTIFICATE-----\n"},
-    {27, 25, "-----BEGIN PUBLIC KEY-----\n", "-----END PUBLIC KEY-----\n\0"},
-    {31, 29, "-----BEGIN EC PRIVATE KEY-----\n", "-----END EC PRIVATE KEY-----\n"},
-    {36, 34, "-----BEGIN CERTIFICATE REQUEST-----\n", "-----END CERTIFICATE REQUEST-----\n"}
+    {29, 27, "-----BEGIN CERTIFICATE-----\r\n", "-----END CERTIFICATE-----\r\n"},
+    {28, 26, "-----BEGIN PUBLIC KEY-----\r\n", "-----END PUBLIC KEY-----\r\n"},
+    {32, 30, "-----BEGIN EC PRIVATE KEY-----\r\n", "-----END EC PRIVATE KEY-----\r\n"},
+    {37, 35, "-----BEGIN CERTIFICATE REQUEST-----\r\n", "-----END CERTIFICATE REQUEST-----\r\n"}
 };
 
 int

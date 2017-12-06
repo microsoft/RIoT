@@ -65,7 +65,7 @@ bool BarnacleErasePages(void* dest, uint32_t size)
                    ((uint32_t)dest < 0x08100000) &&
                    ((uint32_t)dest % 0x800) == 0)))
     {
-        swoPrint("ERROR: BarnacleErasePages() bad parameter.\r\n");
+        dbgPrint("ERROR: BarnacleErasePages() bad parameter.\r\n");
         goto Cleanup;
     }
 
@@ -76,14 +76,14 @@ bool BarnacleErasePages(void* dest, uint32_t size)
         {
             break;
         }
-        swoPrint("WARNING: HAL_FLASH_Unlock() retry %u.\r\n", (unsigned int)m);
+        dbgPrint("WARNING: HAL_FLASH_Unlock() retry %u.\r\n", (unsigned int)m);
         // Bring the flash subsystem into a defined state.
         HAL_FLASH_Lock();
         HAL_Delay(1);
     }
     if(!result)
     {
-        swoPrint("ERROR: HAL_FLASH_Unlock() failed.\r\n");
+        dbgPrint("ERROR: HAL_FLASH_Unlock() failed.\r\n");
         goto Cleanup;
     }
 
@@ -94,11 +94,11 @@ bool BarnacleErasePages(void* dest, uint32_t size)
         {
             break;
         }
-        swoPrint("WARNING: HAL_FLASHEx_Erase() retry %u.\r\n", (unsigned int)m);
+        dbgPrint("WARNING: HAL_FLASHEx_Erase() retry %u.\r\n", (unsigned int)m);
     }
     if(!result)
     {
-        swoPrint("ERROR: HAL_FLASHEx_Erase() failed.\r\n");
+        dbgPrint("ERROR: HAL_FLASHEx_Erase() failed.\r\n");
         goto Cleanup;
     }
 
@@ -144,7 +144,7 @@ bool BarnacleFlashPages(void* dest, void* src, uint32_t size)
                 result = true;
                 break;
             }
-            swoPrint("WARNING: HAL_FLASH_Program() retry %u.\r\n", (unsigned int)m);
+            dbgPrint("WARNING: HAL_FLASH_Program() retry %u.\r\n", (unsigned int)m);
         }
         if(result == false)
         {
@@ -159,12 +159,12 @@ Cleanup:
 
 void BarnacleDumpCertStore(void)
 {
-    swoPrint("CertStore:\r\n");
+    dbgPrint("CertStore:\r\n");
     for(uint32_t n = 0; n < NUMELEM(CertStore.info.certTable); n++)
     {
         if(CertStore.info.certTable[n].size > 0)
         {
-            swoPrint("%s", (char*)&CertStore.certBag[CertStore.info.certTable[n].start]);
+            dbgPrint("%s", (char*)&CertStore.certBag[CertStore.info.certTable[n].start]);
         }
     }
 }
@@ -187,6 +187,79 @@ bool BarnacleNullCheck(void* dataPtr, uint32_t dataSize)
     return true;
 }
 
+bool BarnacleWriteLockLoader()
+{
+    bool result = true;
+    FLASH_OBProgramInitTypeDef ob = {0};
+
+    HAL_FLASHEx_OBGetConfig(&ob);
+
+    if(ob.RDPLevel == OB_RDP_LEVEL_0)
+    {
+        dbgPrint("INFO: Device not yet locked down.\r\n");
+        memset(&ob, 0x00, sizeof(ob));
+        ob.OptionType = OPTIONBYTE_WRP | OPTIONBYTE_RDP;
+        ob.WRPArea = OB_WRPAREA_BANK1_AREAA;
+        ob.WRPStartOffset = 0x00000000;
+#ifndef NDEBUG
+        ob.WRPEndOffset = 0x0000003f;
+#else
+        ob.WRPEndOffset = 0x0000001f;
+#endif
+#ifdef IRREVERSIBLELOCKDOWN
+        ob.RDPLevel = OB_RDP_LEVEL_2;
+#else
+        ob.RDPLevel = OB_RDP_LEVEL_1;
+        ob.PCROPConfig = OB_PCROP_RDP_ERASE;
+#endif
+        if(HAL_FLASH_Unlock() != HAL_OK)
+        {
+            result = false;
+            dbgPrint("PANIC: HAL_FLASH_Unlock() failed.\r\n");
+            goto Cleanup;
+        }
+
+        __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_OPTVERR);
+
+        if(HAL_FLASH_OB_Unlock() != HAL_OK)
+        {
+            result = false;
+            dbgPrint("PANIC: HAL_FLASH_OB_Unlock() failed.\r\n");
+            goto Cleanup;
+        }
+#ifdef TOUCHOPTIONBYTES
+        if(HAL_FLASHEx_OBProgram(&ob) != HAL_OK)
+        {
+            result = false;
+            dbgPrint("PANIC: HAL_FLASHEx_OBProgram() failed.\r\n");
+            goto Cleanup;
+        }
+        dbgPrint("INFO: Option bytes written. Generating System Reset to load the new option byte values.\r\n");
+        HAL_FLASH_OB_Launch();
+#else
+        dbgPrint("WARNING: Writing option bytes is disabled.\r\n");
+#endif
+    }
+    else if(ob.RDPLevel == OB_RDP_LEVEL_1)
+    {
+        dbgPrint("WARNING: Non-permanent device lock down detected.\r\n");
+    }
+    else if(ob.RDPLevel == OB_RDP_LEVEL_2)
+    {
+        dbgPrint("INFO: Device permanently locked down.\r\n");
+    }
+    else
+    {
+        result = false;
+        dbgPrint("PANIC: Undefined OB_RDP_LEVEL\r\n");
+    }
+
+Cleanup:
+    HAL_FLASH_OB_Lock();
+    HAL_FLASH_Lock();
+    return result;
+}
+
 bool BarnacleInitialProvision()
 {
     bool result = true;
@@ -196,7 +269,7 @@ bool BarnacleInitialProvision()
     if(generateCerts ||
        (FwDeviceId.info.magic != BARNACLEMAGIC))
     {
-        swoPrint("INFO: Generating and persisting new device identity.\r\n");
+        dbgPrint("INFO: Generating and persisting new device identity.\r\n");
         uint8_t cdi[SHA256_DIGEST_LENGTH] = {0};
         BARNACLE_IDENTITY_PRIVATE newId = {0};
 
@@ -209,14 +282,14 @@ bool BarnacleInitialProvision()
                                              (const uint8_t *)RIOT_LABEL_IDENTITY,
                                              lblSize(RIOT_LABEL_IDENTITY)) == RIOT_SUCCESS)))
         {
-            swoPrint("ERROR: RiotCrypt_DeriveEccKey failed.\r\n");
+            dbgPrint("ERROR: RiotCrypt_DeriveEccKey failed.\r\n");
             goto Cleanup;
         }
 
         // Persist the identity
         if(!(result = (BarnacleFlashPages((void*)&FwDeviceId, (void*)&newId, sizeof(newId)))))
         {
-            swoPrint("ERROR: BarnacleFlashPages failed.\r\n");
+            dbgPrint("ERROR: BarnacleFlashPages failed.\r\n");
             goto Cleanup;
         }
 
@@ -238,7 +311,7 @@ bool BarnacleInitialProvision()
         uint32_t length = 0;
         RIOT_ECC_SIGNATURE  tbsSig = { 0 };
 
-        swoPrint("INFO: Generating and persisting new device certificate.\r\n");
+        dbgPrint("INFO: Generating and persisting new device certificate.\r\n");
         // Make sure we don't flash unwritten space in the cert bag
         newCertBag.info.magic = BARNACLEMAGIC;
         memset(newCertBag.certBag, 0xff, sizeof(newCertBag.certBag) - 1);
@@ -253,7 +326,7 @@ bool BarnacleInitialProvision()
                                      lblSize(RIOT_LABEL_SERIAL),
                                      sizeof(digest)) == RIOT_SUCCESS)))
         {
-            swoPrint("ERROR: RiotCrypt_Kdf failed.\r\n");
+            dbgPrint("ERROR: RiotCrypt_Kdf failed.\r\n");
             goto Cleanup;
         }
         digest[0] &= 0x7F; // Ensure that the serial number is positive
@@ -263,9 +336,9 @@ bool BarnacleInitialProvision()
                                            &x509TBSData,
                                            (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
                                            (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
-                                           1) == 0)))
+                                           2) == 0)))
         {
-            swoPrint("ERROR: X509GetDeviceCertTBS failed.\r\n");
+            dbgPrint("ERROR: X509GetDeviceCertTBS failed.\r\n");
             goto Cleanup;
         }
 
@@ -275,12 +348,12 @@ bool BarnacleInitialProvision()
                                       derCtx.Position,
                                       (RIOT_ECC_PRIVATE*)&FwDeviceId.info.privKey) == RIOT_SUCCESS)))
         {
-            swoPrint("ERROR: RiotCrypt_Sign failed.\r\n");
+            dbgPrint("ERROR: RiotCrypt_Sign failed.\r\n");
             goto Cleanup;
         }
         if(!(result = (X509MakeDeviceCert(&derCtx, &tbsSig) == 0)))
         {
-            swoPrint("ERROR: X509MakeDeviceCert failed.\r\n");
+            dbgPrint("ERROR: X509MakeDeviceCert failed.\r\n");
             goto Cleanup;
         }
 
@@ -288,7 +361,7 @@ bool BarnacleInitialProvision()
         length = sizeof(newCertBag.certBag) - newCertBag.info.cursor;
         if(!(result = (DERtoPEM(&derCtx, CERT_TYPE, (char*)&newCertBag.certBag[newCertBag.info.cursor], &length) == 0)))
         {
-            swoPrint("ERROR: DERtoPEM failed.\r\n");
+            dbgPrint("ERROR: DERtoPEM failed.\r\n");
             goto Cleanup;
         }
         newCertBag.info.certTable[NUMELEM(newCertBag.info.certTable) - 1].start = newCertBag.info.cursor;
@@ -299,7 +372,7 @@ bool BarnacleInitialProvision()
         // Persist the new certBag in flash
         if(!(result = (BarnacleFlashPages((void*)&IssuedCerts, (void*)&newCertBag, sizeof(newCertBag)))))
         {
-            swoPrint("ERROR: BarnacleFlashPages failed.\r\n");
+            dbgPrint("ERROR: BarnacleFlashPages failed.\r\n");
             goto Cleanup;
         }
         generateCerts = true;
@@ -307,8 +380,7 @@ bool BarnacleInitialProvision()
 
     if(!generateCerts)
     {
-        swoPrint("INFO: Device already provisioned.\r\n");
-
+        dbgPrint("INFO: Device already provisioned.\r\n");
     }
 
 Cleanup:
@@ -325,14 +397,14 @@ bool BarnacleVerifyAgent()
     if(!(result = ((AgentHdr.s.sign.hdr.magic == BARNACLEMAGIC) &&
                    (AgentHdr.s.sign.hdr.version <= BARNACLEVERSION))))
     {
-        swoPrint("ERROR: Invalid agent present.\r\n");
+        dbgPrint("ERROR: Invalid agent present.\r\n");
         goto Cleanup;
     }
 
     // Make sure the agent code starts where we expect it to start
     if(!(result = (AgentCode == &((uint8_t*)&AgentHdr)[AgentHdr.s.sign.hdr.size])))
     {
-        swoPrint("ERROR: Unexpected agent start address.\r\n");
+        dbgPrint("ERROR: Unexpected agent start address.\r\n");
         goto Cleanup;
     }
 
@@ -342,12 +414,12 @@ bool BarnacleVerifyAgent()
 								  AgentCode,
                                   AgentHdr.s.sign.agent.size) == RIOT_SUCCESS)))
     {
-        swoPrint("ERROR: RiotCrypt_Hash failed.\r\n");
+        dbgPrint("ERROR: RiotCrypt_Hash failed.\r\n");
         goto Cleanup;
     }
     if(!(result = (memcmp(digest, AgentHdr.s.sign.agent.digest, sizeof(digest)) == 0)))
     {
-        swoPrint("ERROR: Agent digest mismatch.\r\n");
+        dbgPrint("ERROR: Agent digest mismatch.\r\n");
         goto Cleanup;
     }
 
@@ -357,7 +429,7 @@ bool BarnacleVerifyAgent()
 								  (const void*)&AgentHdr.s.sign,
 								  sizeof(AgentHdr.s.sign)) == RIOT_SUCCESS)))
 	{
-		swoPrint("ERROR: RiotCrypt_Hash failed.\r\n");
+		dbgPrint("ERROR: RiotCrypt_Hash failed.\r\n");
 		goto Cleanup;
 	}
 
@@ -374,7 +446,7 @@ bool BarnacleVerifyAgent()
 											   &sig,
 											   &IssuedCerts.info.codeAuthPubKey) == RIOT_SUCCESS)))
 		{
-			swoPrint("ERROR: RiotCrypt_Verify failed.\r\n");
+			dbgPrint("ERROR: RiotCrypt_Verify failed.\r\n");
 			goto Cleanup;
 		}
     }
@@ -383,7 +455,7 @@ bool BarnacleVerifyAgent()
     if((FwCache.info.magic != BARNACLEMAGIC) ||
        (memcmp(digest, FwCache.info.agentHdrDigest, sizeof(digest))))
     {
-        swoPrint("INFO: Generating and caching agent identity.\r\n");
+        dbgPrint("INFO: Generating and caching agent identity.\r\n");
         RIOT_X509_TBS_DATA x509TBSData = { { 0 },
                                            "CyReP Device", "Microsoft", "US",
                                            "170101000000Z", "370101000000Z",
@@ -399,7 +471,7 @@ bool BarnacleVerifyAgent()
         {
             if(!(result = (FwCache.info.lastVersion < AgentHdr.s.sign.agent.version)))
             {
-                swoPrint("ERROR: Version Roll-back detected to %d.%d.\r\n",
+                dbgPrint("ERROR: Version Roll-back detected to %d.%d.\r\n",
                          (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
                          (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff);
                 goto Cleanup;
@@ -408,7 +480,7 @@ bool BarnacleVerifyAgent()
             {
                 char* dateStr = asctime(localtime((time_t*)&AgentHdr.s.sign.agent.issued));
                 dateStr[24] = '\0';
-                swoPrint("ERROR: Issuance Roll-back detected to %s.\r\n", dateStr);
+                dbgPrint("ERROR: Issuance Roll-back detected to %s.\r\n", dateStr);
                 goto Cleanup;
             }
         }
@@ -416,7 +488,7 @@ bool BarnacleVerifyAgent()
         {
             char* dateStr = asctime(localtime((time_t*)&AgentHdr.s.sign.agent.issued));
             dateStr[24] = '\0';
-            swoPrint("INFO: Agent upgrade to Version %d.%d, issued %s.\r\n",
+            dbgPrint("INFO: Agent upgrade to Version %d.%d, issued %s.\r\n",
                      (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
                      (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff,
                      dateStr);
@@ -429,6 +501,17 @@ bool BarnacleVerifyAgent()
         cache.info.lastVersion = AgentHdr.s.sign.agent.version;
         memcpy(cache.info.agentHdrDigest, digest, sizeof(digest));
 
+        if(!(result = (RiotCrypt_Hash2(digest,
+                                       sizeof(digest),
+                                       cache.info.agentHdrDigest,
+                                       sizeof(cache.info.agentHdrDigest),
+                                       &FwDeviceId.info.privKey,
+                                       sizeof(FwDeviceId.info.privKey)))) == RIOT_SUCCESS)
+        {
+            dbgPrint("ERROR: RiotCrypt2_Hash failed.\r\n");
+            goto Cleanup;
+        }
+
         // Derive the agent compound key
         if(!(result = (RiotCrypt_DeriveEccKey(&cache.info.compoundPubKey,
                                               &cache.info.compoundPrivKey,
@@ -436,7 +519,7 @@ bool BarnacleVerifyAgent()
                                               (const uint8_t *)RIOT_LABEL_IDENTITY,
                                               lblSize(RIOT_LABEL_IDENTITY)) == RIOT_SUCCESS)))
         {
-            swoPrint("ERROR: RiotCrypt_DeriveEccKey failed.\r\n");
+            dbgPrint("ERROR: RiotCrypt_DeriveEccKey failed.\r\n");
             goto Cleanup;
         }
 
@@ -449,7 +532,7 @@ bool BarnacleVerifyAgent()
                                      lblSize(RIOT_LABEL_SERIAL),
                                      sizeof(digest)) == RIOT_SUCCESS)))
         {
-            swoPrint("ERROR: RiotCrypt_Kdf failed.\r\n");
+            dbgPrint("ERROR: RiotCrypt_Kdf failed.\r\n");
             goto Cleanup;
         }
         digest[0] &= 0x7F; // Ensure that the serial number is positive
@@ -463,7 +546,7 @@ bool BarnacleVerifyAgent()
                                            sizeof(AgentHdr.s.sign.agent.digest),
                                            1) == 0)))
         {
-            swoPrint("ERROR: X509GetAliasCertTBS failed.\r\n");
+            dbgPrint("ERROR: X509GetAliasCertTBS failed.\r\n");
             goto Cleanup;
         }
 
@@ -473,14 +556,14 @@ bool BarnacleVerifyAgent()
                                       derCtx.Position,
                                       &FwDeviceId.info.privKey) == RIOT_SUCCESS)))
         {
-            swoPrint("ERROR: RiotCrypt_Sign failed.\r\n");
+            dbgPrint("ERROR: RiotCrypt_Sign failed.\r\n");
             goto Cleanup;
         }
 
         // Generate compound key Certificate
         if(!(result = (X509MakeAliasCert(&derCtx, &tbsSig) == 0)))
         {
-            swoPrint("ERROR: X509MakeAliasCert failed.\r\n");
+            dbgPrint("ERROR: X509MakeAliasCert failed.\r\n");
             goto Cleanup;
         }
 
@@ -488,7 +571,7 @@ bool BarnacleVerifyAgent()
         length = sizeof(cache.cert);
         if(!(result = (DERtoPEM(&derCtx, CERT_TYPE, (char*)cache.cert, &length) == 0)))
         {
-            swoPrint("ERROR: DERtoPEM failed.\r\n");
+            dbgPrint("ERROR: DERtoPEM failed.\r\n");
             goto Cleanup;
         }
         cache.info.compoundCertSize = length;
@@ -497,7 +580,7 @@ bool BarnacleVerifyAgent()
         // Persist the new certBag in flash
         if(!(result = (BarnacleFlashPages((void*)&FwCache, (void*)&cache, sizeof(cache)))))
         {
-            swoPrint("ERROR: BarnacleFlashPages failed.\r\n");
+            dbgPrint("ERROR: BarnacleFlashPages failed.\r\n");
             goto Cleanup;
         }
     }
@@ -505,7 +588,7 @@ bool BarnacleVerifyAgent()
     {
         char* dateStr = asctime(localtime((time_t*)&AgentHdr.s.sign.agent.issued));
         dateStr[24] = '\0';
-        swoPrint("INFO: Using cached agent identity Version %d.%d, issued %s.\r\n",
+        dbgPrint("INFO: Using cached agent identity Version %d.%d, issued %s.\r\n",
                  (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
                  (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff,
                  dateStr);
@@ -521,7 +604,7 @@ bool BarnacleVerifyAgent()
     // Issued Root
     if((CertStore.info.cursor + IssuedCerts.info.certTable[BARNACLE_ISSUED_ROOT].size) >  sizeof(CertStore.certBag))
     {
-        swoPrint("ERROR: Certstore overflow BARNACLE_ISSUED_ROOT.\r\n");
+        dbgPrint("ERROR: Certstore overflow BARNACLE_ISSUED_ROOT.\r\n");
         goto Cleanup;
     }
     if((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_PROVISIONIED) &&
@@ -539,7 +622,7 @@ bool BarnacleVerifyAgent()
     // Issued or generated device
     if((CertStore.info.cursor + IssuedCerts.info.certTable[BARNACLE_ISSUED_DEVICE].size) >  sizeof(CertStore.certBag))
     {
-        swoPrint("ERROR: Certstore overflow BARNACLE_ISSUED_DEVICE.\r\n");
+        dbgPrint("ERROR: Certstore overflow BARNACLE_ISSUED_DEVICE.\r\n");
         goto Cleanup;
     }
 	memcpy(&CertStore.certBag[CertStore.info.cursor],
@@ -550,17 +633,17 @@ bool BarnacleVerifyAgent()
 	CertStore.info.cursor += IssuedCerts.info.certTable[BARNACLE_ISSUED_DEVICE].size;
 	CertStore.certBag[CertStore.info.cursor++] = '\0';
 
-	// Cached loader
+	// Cached agent
     if((CertStore.info.cursor + FwCache.info.compoundCertSize) >  sizeof(CertStore.certBag))
     {
-        swoPrint("ERROR: Certstore overflow BARNACLE_CERTSTORE_LOADER.\r\n");
+        dbgPrint("ERROR: Certstore overflow BARNACLE_CERTSTORE_AGENT.\r\n");
         goto Cleanup;
     }
 	memcpy(&CertStore.certBag[CertStore.info.cursor],
 		   FwCache.cert,
 		   FwCache.info.compoundCertSize);
-	CertStore.info.certTable[BARNACLE_CERTSTORE_LOADER].start = CertStore.info.cursor;
-	CertStore.info.certTable[BARNACLE_CERTSTORE_LOADER].size = FwCache.info.compoundCertSize;
+	CertStore.info.certTable[BARNACLE_CERTSTORE_AGENT].start = CertStore.info.cursor;
+	CertStore.info.certTable[BARNACLE_CERTSTORE_AGENT].size = FwCache.info.compoundCertSize;
 	CertStore.info.cursor += FwCache.info.compoundCertSize;
 	CertStore.certBag[CertStore.info.cursor++] = '\0';
 
@@ -595,18 +678,18 @@ bool BarnacleSecureFWData()
     __HAL_RCC_SYSCFG_CLK_ENABLE();
     if(HAL_FIREWALL_Config(&fw_init) != HAL_OK)
     {
-        swoPrint("ERROR: HAL_FIREWALL_Config() failed.\r\n");
+        dbgPrint("ERROR: HAL_FIREWALL_Config() failed.\r\n");
         result = false;
         goto Cleanup;
     }
     HAL_FIREWALL_EnableFirewall();
     if(!__HAL_FIREWALL_IS_ENABLED())
     {
-        swoPrint("ERROR: HAL_FIREWALL_EnableFirewall() had no effect.\r\n");
+        dbgPrint("ERROR: HAL_FIREWALL_EnableFirewall() had no effect.\r\n");
         result = false;
         goto Cleanup;
     }
-    swoPrint("INFO: Firewall is UP!\r\n");
+    dbgPrint("INFO: Firewall is UP!\r\n");
 
 Cleanup:
     return result;

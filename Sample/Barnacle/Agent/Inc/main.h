@@ -53,9 +53,9 @@
 
 /* USER CODE BEGIN Private defines */
 #ifndef NDEBUG
-#define swoPrint(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__);
+#define dbgPrint(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__);
 #else
-#define swoPrint(fmt, ...) ((void)0)
+#define dbgPrint(fmt, ...) ((void)0)
 #endif
 /* USER CODE END Private defines */
 

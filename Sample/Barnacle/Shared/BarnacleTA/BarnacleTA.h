@@ -54,8 +54,8 @@ typedef struct
 
 #define BARNACLE_CERTSTORE_ROOT     (3)
 #define BARNACLE_CERTSTORE_DEVICE   (2)
-#define BARNACLE_CERTSTORE_LOADER   (1)
-#define BARNACLE_CERTSTORE_AGENT    (0)
+#define BARNACLE_CERTSTORE_AGENT    (1)
+#define BARNACLE_CERTSTORE_POLICY   (0)
 typedef struct
 {
     uint32_t magic;
@@ -86,5 +86,6 @@ extern PBARNACLE_CERTSTORE pCertStore;
 extern const BARNACLE_AGENT_HDR AgentHdr;
 
 void BarnacleTADumpCertStore(void);
+bool BarnacleDerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySize);
 
 #endif /* BARNACLETA_H_ */

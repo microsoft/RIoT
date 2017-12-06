@@ -61,6 +61,10 @@
 /* Private variables ---------------------------------------------------------*/
 RNG_HandleTypeDef hrng;
 
+#ifdef SERIALDEBUGPRINT
+UART_HandleTypeDef huart2;
+#endif
+
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
@@ -71,6 +75,9 @@ void SystemClock_Config(void);
 void Error_Handler(void);
 static void MX_GPIO_Init(void);
 static void MX_RNG_Init(void);
+#ifdef SERIALDEBUGPRINT
+static void MX_USART2_UART_Init(void);
+#endif
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -85,7 +92,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  char agentPolicy[] = "This is the agent policy.\r\n";
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -100,12 +107,15 @@ int main(void)
   MX_GPIO_Init();
   MX_USB_DEVICE_Init();
   MX_RNG_Init();
+#ifdef SERIALDEBUGPRINT
+  MX_USART2_UART_Init();
+#endif
 
   /* USER CODE BEGIN 2 */
   char* dateStr = asctime(localtime((time_t*)&AgentHdr.s.sign.agent.issued));
   dateStr[24] = '\0';
-  swoPrint("================\r\n"
-           " Barnacle Agent\r\n"
+  dbgPrint("================\r\n"
+           "Barnacle Agent\r\n"
            "================\r\n"
            "%s (%u bytes, V%d.%d, %s)\r\n",
            AgentHdr.s.sign.agent.name,
@@ -113,6 +123,14 @@ int main(void)
            (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
            (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff,
            dateStr);
+
+  // Issue policy based end cert
+  dbgPrint("INFO: Generating policy cert.\r\n");
+  if(!BarnacleDerivePolicyIdentity((uint8_t*)agentPolicy, sizeof(agentPolicy)))
+  {
+      dbgPrint("ERROR: BarnacleDerivePolicyIdentity failed.\r\n");
+      Error_Handler();
+  }
   BarnacleTADumpCertStore();
   /* USER CODE END 2 */
 
@@ -125,11 +143,11 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
       HAL_Delay(3000);
-      swoPrint("Hello World! (0x%08x)\r\n", (unsigned int)trigger);
+      dbgPrint("Hello World! (0x%08x)\r\n", (unsigned int)trigger);
       if((trigger & 0x0000000f) == 0x0f)
       {
           uint32_t* pAttack = (uint32_t*)0x080fe000;
-          swoPrint("Simulating Attack...\r\n");
+          dbgPrint("Simulating Attack...\r\n");
           HAL_Delay(1);
           trigger = *pAttack;
       }
@@ -180,7 +198,9 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_RNG;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USB
+                              |RCC_PERIPHCLK_RNG;
+  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLLSAI1;
   PeriphClkInit.RngClockSelection = RCC_RNGCLKSOURCE_PLLSAI1;
   PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_MSI;
@@ -226,6 +246,28 @@ static void MX_RNG_Init(void)
 
 }
 
+/* USART2 init function */
+#ifdef SERIALDEBUGPRINT
+static void MX_USART2_UART_Init(void)
+{
+
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+#endif
 /** Configure pins as 
         * Analog 
         * Input 

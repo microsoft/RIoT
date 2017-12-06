@@ -18,6 +18,7 @@ void SignAgent(
     DFUIMAGEELEMENT dfuImageElement = { 0 };
     BCRYPT_ALG_HANDLE hSha256 = NULL;
     std::exception_ptr pendingException = NULL;
+    UINT32 agentSize = 0;
 
     try
     {
@@ -62,13 +63,16 @@ void SignAgent(
             printf("%s: ImageFromFile failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
             throw retVal;
         }
-        std::vector<BYTE> image(GetImageSize(hHexFile), 0x00);
+        agentSize = GetImageSize(hHexFile);
+        std::vector<BYTE> image((((agentSize + 0x7ff) / 0x800) * 0x800), 0x00);
+        printf("IN-Size: %d (allocated 0x%08x)\n", agentSize, image.size());
         dfuImageElement.Data = image.data();
         if ((retVal = GetImageElement(hHexFile, 0, &dfuImageElement)) != STDFUFILES_NOERROR)
         {
             printf("%s: GetImageElement failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
             throw retVal;
         }
+        printf("IN-Rank[0]: 0x%08x-0x%08x (%d)\n", dfuImageElement.dwAddress, dfuImageElement.dwAddress + dfuImageElement.dwDataLength, dfuImageElement.dwDataLength);
         for (DWORD rank = 1; ; rank++)
         {
             DFUIMAGEELEMENT iterator = { 0 };
@@ -76,6 +80,7 @@ void SignAgent(
             {
                 break;
             }
+            printf("IN-Rank[%d]: 0x%08x-0x%08x (%d)\n", rank, iterator.dwAddress,iterator.dwAddress + iterator.dwDataLength, iterator.dwDataLength);
             std::vector<BYTE> fragment(iterator.dwDataLength, 0x00);
             iterator.Data = fragment.data();
             if ((retVal = GetImageElement(hHexFile, rank, &iterator)) != STDFUFILES_NOERROR)
@@ -84,11 +89,6 @@ void SignAgent(
                 throw retVal;
             }
             memcpy(&image[iterator.dwAddress - dfuImageElement.dwAddress], fragment.data(), fragment.size());
-            if ((retVal = DestroyImageElement(hHexFile, rank)) != STDFUFILES_NOERROR)
-            {
-                printf("%s: DestroyImageElement failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
-                throw retVal;
-            }
         }
         dfuImageElement.dwDataLength = image.size();
 
@@ -103,7 +103,7 @@ void SignAgent(
             throw ERROR_INVALID_DATA;
         }
         
-        AgentHdr->s.sign.agent.size = image.size() - AgentHdr->s.sign.hdr.size;
+        AgentHdr->s.sign.agent.size = agentSize - AgentHdr->s.sign.hdr.size;
         AgentHdr->s.sign.agent.issued = GetTimeStamp();
         if (buildNo > 0)
         {
@@ -209,10 +209,10 @@ void SignAgent(
             memset(&AgentHdr->s.signature, 0x00, sizeof(AgentHdr->s.signature));
         }
 
-        // Write the image to a DFU
-        if ((retVal = SetImageElement(hHexFile, 0, FALSE, dfuImageElement)) != STDFUFILES_NOERROR)
+        hHexFile = NULL;
+        if ((retVal = CreateImage(&hHexFile, 0)) != STDFUFILES_NOERROR)
         {
-            printf("%s: SetImageElement failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            printf("%s: CreateImage failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
             throw retVal;
         }
         if ((retVal = SetImageName(hHexFile, (PSTR)hexFileName.c_str())) != STDFUFILES_NOERROR)
@@ -220,6 +220,12 @@ void SignAgent(
             printf("%s: SetImageName failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
             throw retVal;
         }
+        if ((retVal = SetImageElement(hHexFile, 0, TRUE, dfuImageElement)) != STDFUFILES_NOERROR)
+        {
+            printf("%s: SetImageElement failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            throw retVal;
+        }
+        printf("OUT-Rank[0](%s): 0x%08x-0x%08x (%d)\n", hexFileName.c_str(), dfuImageElement.dwAddress, dfuImageElement.dwAddress + dfuImageElement.dwDataLength, dfuImageElement.dwDataLength);
 
         std::string verStr(16, '\0');
         verStr.resize(sprintf_s((char*)verStr.c_str(), verStr.size(), "-%d.%d", AgentHdr->s.sign.agent.version >> 16, AgentHdr->s.sign.agent.version & 0x0000ffff));

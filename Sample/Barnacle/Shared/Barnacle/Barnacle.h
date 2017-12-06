@@ -70,6 +70,7 @@ bool BarnacleFlashPages(void* dest, void* src, uint32_t size);
 void BarnacleDumpCertStore(void);
 void BarnacleGetRandom(void* dest, uint32_t size);
 bool BarnacleNullCheck(void* dataPtr, uint32_t dataSize);
+bool BarnacleWriteLockLoader();
 bool BarnacleInitialProvision();
 void BarnacleDumpCertBag();
 bool BarnacleVerifyAgent();

@@ -62,6 +62,8 @@
 /* Private variables ---------------------------------------------------------*/
 RNG_HandleTypeDef hrng;
 
+UART_HandleTypeDef huart2;
+
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 volatile unsigned char DFU_UsrStrDescr_requested = 0;
@@ -72,6 +74,9 @@ void SystemClock_Config(void);
 void Error_Handler(void);
 static void MX_GPIO_Init(void);
 static void MX_RNG_Init(void);
+#ifdef SERIALDEBUGPRINT
+static void MX_USART2_UART_Init(void);
+#endif
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -101,36 +106,50 @@ int ldr_main(void)
   MX_GPIO_Init();
   MX_USB_DEVICE_Init();
   MX_RNG_Init();
+#ifdef SERIALDEBUGPRINT
+  MX_USART2_UART_Init();
+#endif
 
   /* USER CODE BEGIN 2 */
-  swoPrint("\r\n\r\n"
-           "================\n\r"
+  dbgPrint("\r\n\r\n"
+           "================\r\n"
            "Barnacle BootLdr\r\n"
-           "================\n\r");
+           "================\r\n");
 
   // If we got here because of a firewall violation tell the world
   if(BarnacleFWViolation())
   {
-      swoPrint("WARNING: Firewall violation detected.\r\n");
+      dbgPrint("WARNING: Firewall violation detected.\r\n");
+  }
+
+  if(!BarnacleWriteLockLoader())
+  {
+      dbgPrint("PANIC: Write protection for BootLdr failed.\r\n");
+      Error_Handler();
   }
 
   // Provision the device if this is the first launch
   if(!BarnacleInitialProvision())
   {
-      swoPrint("PANIC: Device Provisioning failed.\r\n");
+      dbgPrint("PANIC: Device Provisioning failed.\r\n");
       Error_Handler();
   }
 
   // Briefly wait to see if DFU connects before we continue
   HAL_Delay(500);
-  if((DFU_UsrStrDescr_requested) || (AgentHdr.s.sign.hdr.magic != BARNACLEMAGIC))
+  if(AgentHdr.s.sign.hdr.magic != BARNACLEMAGIC)
   {
-      swoPrint("INFO: DFU connected.\r\n");
+      dbgPrint("INFO: Waiting for DFU connection.\r\n");
+      Error_Handler();
+  }
+  else if(DFU_UsrStrDescr_requested)
+  {
+      dbgPrint("INFO: DFU connected.\r\n");
       Error_Handler();
   }
   else
   {
-      swoPrint("INFO: DFU closed.\r\n");
+      dbgPrint("INFO: DFU closed.\r\n");
       MX_USB_DEVICE_DeInit();
   }
 
@@ -138,11 +157,11 @@ int ldr_main(void)
   if(!BarnacleVerifyAgent())
   {
       // We didn't like that agent for some reason. We will wipe the Agent space
-      swoPrint("INFO: Wiping agent header.\r\n");
+      dbgPrint("INFO: Wiping agent header.\r\n");
       BarnacleErasePages((void*)&AgentHdr, sizeof(AgentHdr));
 
       // Reboot so we can go straight to DFU mode next time
-      swoPrint("INFO: Rebooting device...\r\n");
+      dbgPrint("INFO: Rebooting device...\r\n");
       NVIC_SystemReset();
       Error_Handler();
   }
@@ -150,13 +169,13 @@ int ldr_main(void)
   // Close all the hatches
   if(!BarnacleSecureFWData())
   {
-      swoPrint("PANIC: The firewall did not engage.\r\n");
+      dbgPrint("PANIC: The firewall did not engage.\r\n");
       Error_Handler();
   }
 
   // The point of no return: Launch the agent
 #ifndef NDEBUG
-  swoPrint("INFO: Launching agent...\r\n");
+  dbgPrint("INFO: Launching agent...\r\n");
   HAL_Delay(1);
 #endif
   // Release the clock source
@@ -186,7 +205,7 @@ int ldr_main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-  swoPrint("ERROR: How the hell did we get here?!?\r\n");
+  dbgPrint("ERROR: How the hell did we get here?!?\r\n");
   HAL_Delay(1000);
 
   }
@@ -205,8 +224,7 @@ void SystemClock_Config(void)
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_MSI;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_8;
@@ -236,9 +254,9 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_USB
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USB
                               |RCC_PERIPHCLK_RNG;
-  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLLSAI1;
   PeriphClkInit.RngClockSelection = RCC_RNGCLKSOURCE_PLLSAI1;
   PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_MSI;
@@ -284,6 +302,28 @@ static void MX_RNG_Init(void)
 
 }
 
+/* USART2 init function */
+#ifdef SERIALDEBUGPRINT
+static void MX_USART2_UART_Init(void)
+{
+
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+#endif
 /** Configure pins as 
         * Analog 
         * Input 
@@ -295,12 +335,12 @@ static void MX_GPIO_Init(void)
 {
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
 }
 
 /* USER CODE BEGIN 4 */
-
 /* USER CODE END 4 */
 
 /**

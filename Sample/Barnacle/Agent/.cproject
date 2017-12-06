@@ -49,6 +49,7 @@
 									<listOptionValue builtIn="false" value="__packed=__attribute__((__packed__))"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="STM32L476xx"/>
+									<listOptionValue builtIn="false" value="SERIALDEBUGPRINT"/>
 								</option>
 								<option id="com.atollic.truestudio.common_options.target.endianess.1854274048" name="Endianess" superClass="com.atollic.truestudio.common_options.target.endianess" useByScannerDiscovery="false" value="com.atollic.truestudio.common_options.target.endianess.little" valueType="enumerated"/>
 								<option id="com.atollic.truestudio.common_options.target.mcpu.191909026" name="Microcontroller" superClass="com.atollic.truestudio.common_options.target.mcpu" useByScannerDiscovery="false" value="STM32L476JG" valueType="enumerated"/>
@@ -223,7 +224,7 @@
 								<option id="com.atollic.truestudio.common_options.target.endianess.662778612" name="Endianess" superClass="com.atollic.truestudio.common_options.target.endianess" useByScannerDiscovery="false" value="com.atollic.truestudio.common_options.target.endianess.little" valueType="enumerated"/>
 								<option id="com.atollic.truestudio.common_options.target.mcpu.35700531" name="Microcontroller" superClass="com.atollic.truestudio.common_options.target.mcpu" useByScannerDiscovery="false" value="STM32L476JG" valueType="enumerated"/>
 								<option id="com.atollic.truestudio.common_options.target.instr_set.566688004" name="Instruction set" superClass="com.atollic.truestudio.common_options.target.instr_set" useByScannerDiscovery="false" value="com.atollic.truestudio.common_options.target.instr_set.thumb2" valueType="enumerated"/>
-								<option id="com.atollic.truestudio.ld.general.scriptfile.1350476438" name="Linker script" superClass="com.atollic.truestudio.ld.general.scriptfile" useByScannerDiscovery="false" value="../STM32L476JG_FLASH-Production.ld" valueType="string"/>
+								<option id="com.atollic.truestudio.ld.general.scriptfile.1350476438" name="Linker script" superClass="com.atollic.truestudio.ld.general.scriptfile" useByScannerDiscovery="false" value="../STM32L476JG_FLASH-Release.ld" valueType="string"/>
 								<option id="com.atollic.truestudio.ld.optimization.do_garbage.1816004776" name="Dead code removal " superClass="com.atollic.truestudio.ld.optimization.do_garbage" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="com.atollic.truestudio.ld.libraries.list.848669414" name="Libraries" superClass="com.atollic.truestudio.ld.libraries.list" useByScannerDiscovery="false"/>
 								<option id="com.atollic.truestudio.ld.libraries.searchpath.1273009461" name="Library search path" superClass="com.atollic.truestudio.ld.libraries.searchpath" useByScannerDiscovery="false"/>
@@ -317,7 +318,7 @@
 	</storageModule>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug">
-			<resource resourceType="PROJECT" workspacePath="/BarnacleTA"/>
+			<resource resourceType="PROJECT" workspacePath="BarnacleTA"/>
 		</configuration>
 		<configuration configurationName="Release">
 			<resource resourceType="PROJECT" workspacePath="/BarnacleTA"/>

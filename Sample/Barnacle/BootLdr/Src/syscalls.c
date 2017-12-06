@@ -49,6 +49,9 @@ uint8_t *__env[1] = { 0 };
 uint8_t **environ = __env;
 
 #ifndef NDEBUG
+#ifdef SERIALDEBUGPRINT
+extern UART_HandleTypeDef huart2;
+#else
 #define CPU_CORE_FREQUENCY_HZ 800000000 /* CPU core frequency in Hz */
 volatile int32_t ITM_RxBuffer;
 #define ENABLE_SWO_TRACE if(CoreDebug->DEMCR != CoreDebug_DEMCR_TRCENA_Msk) {SWO_Init(1, CPU_CORE_FREQUENCY_HZ);}
@@ -61,6 +64,7 @@ void SWO_Init(uint32_t portBits, uint32_t cpuCoreFreqHz)
     *((volatile unsigned *)(ITM_BASE + 0x01000)) = 0x400003FE; /* DWT_CTRL */
     *((volatile unsigned *)(ITM_BASE + 0x40304)) = 0x00000100; /* Formatter and Flush Control Register */
 }
+#endif
 #endif
 
 /* Functions */
@@ -96,11 +100,15 @@ int _write(int32_t file, uint8_t *ptr, int32_t len)
 #ifndef NDEBUG
     if (file == 2) //STDERR
     {
+#ifdef SERIALDEBUGPRINT
+        HAL_UART_Transmit(&huart2, ptr, len, HAL_MAX_DELAY);
+#else
         ENABLE_SWO_TRACE;
         for(uint32_t n = 0; n < len; n++)
         {
             ITM_SendChar(ptr[n]);
         }
+#endif
         return len;
     }
 #endif
@@ -151,21 +159,6 @@ int _lseek(int32_t file, int32_t ptr, int32_t dir)
 
 int _read(int32_t file, uint8_t *ptr, int32_t len)
 {
-#ifndef NDEBUG
-    if(file == 2)
-    {
-        ENABLE_SWO_TRACE;
-        if(ITM_CheckChar())
-        {
-            ptr[0] = ITM_ReceiveChar();
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-#endif
     errno = ENOSYS;
     return -1;
 }

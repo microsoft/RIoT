@@ -102,15 +102,18 @@ X509AddExtensions(
         CHK(        DERPopNesting(Tbs));
         CHK(    DERPopNesting(Tbs));
     }
-    CHK(        DERStartSequenceOrSet(Tbs, true));
-    CHK(            DERAddOID(Tbs, extKeyUsageOID));
-    CHK(            DERAddBoolean(Tbs, true));
-    CHK(            DERStartEnvelopingOctetString(Tbs));
-    CHK(                DERStartSequenceOrSet(Tbs, true));
-    CHK(                    DERAddOID(Tbs, clientAuthOID));
-    CHK(                DERPopNesting(Tbs));
-    CHK(            DERPopNesting(Tbs));
-    CHK(        DERPopNesting(Tbs));
+    else
+    {
+        CHK(        DERStartSequenceOrSet(Tbs, true));
+        CHK(            DERAddOID(Tbs, extKeyUsageOID));
+        CHK(            DERAddBoolean(Tbs, true));
+        CHK(            DERStartEnvelopingOctetString(Tbs));
+        CHK(                DERStartSequenceOrSet(Tbs, true));
+        CHK(                    DERAddOID(Tbs, clientAuthOID));
+        CHK(                DERPopNesting(Tbs));
+        CHK(            DERPopNesting(Tbs));
+        CHK(        DERPopNesting(Tbs));
+    }
     CHK(        DERStartSequenceOrSet(Tbs, true));
     CHK(            DERAddOID(Tbs, riotOID));
     CHK(            DERStartEnvelopingOctetString(Tbs));
@@ -154,18 +157,24 @@ X509AddX501Name(
     CHK(                DERAddUTF8String(Context, CommonName));
     CHK(            DERPopNesting(Context));
     CHK(        DERPopNesting(Context));
-    CHK(        DERStartSequenceOrSet(Context, false));
-    CHK(            DERStartSequenceOrSet(Context, true));
-    CHK(                DERAddOID(Context, countryNameOID));
-    CHK(                DERAddUTF8String(Context, CountryName));
-    CHK(            DERPopNesting(Context));
-    CHK(        DERPopNesting(Context));
-    CHK(        DERStartSequenceOrSet(Context, false));
-    CHK(            DERStartSequenceOrSet(Context, true));
-    CHK(                DERAddOID(Context, orgNameOID));
-    CHK(                DERAddUTF8String(Context, OrgName));
-    CHK(            DERPopNesting(Context));
-    CHK(        DERPopNesting(Context));
+    if(CountryName != NULL)
+    {
+        CHK(        DERStartSequenceOrSet(Context, false));
+        CHK(            DERStartSequenceOrSet(Context, true));
+        CHK(                DERAddOID(Context, countryNameOID));
+        CHK(                DERAddUTF8String(Context, CountryName));
+        CHK(            DERPopNesting(Context));
+        CHK(        DERPopNesting(Context));
+    }
+    if(OrgName != NULL)
+    {
+        CHK(        DERStartSequenceOrSet(Context, false));
+        CHK(            DERStartSequenceOrSet(Context, true));
+        CHK(                DERAddOID(Context, orgNameOID));
+        CHK(                DERAddUTF8String(Context, OrgName));
+        CHK(            DERPopNesting(Context));
+        CHK(        DERPopNesting(Context));
+    }
     CHK(    DERPopNesting(Context));
 
     return 0;

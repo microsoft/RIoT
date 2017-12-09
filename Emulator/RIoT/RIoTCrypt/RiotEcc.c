@@ -1632,7 +1632,7 @@ BigValToBigInt(void *out, const bigval_t *src)
     for (i = ((BIGLEN - 1) * 4) - 1; i >= 0; i--) 
     {
         *intermediate = (uint8_t)(src->data[i / 4] >> (8 * (i % 4)));
-        *(intermediate)++;
+        *(intermediate) += 1;
     }
 }
 

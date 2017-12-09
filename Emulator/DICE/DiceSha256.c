@@ -111,23 +111,23 @@
 #if BYTE_ORDER == LITTLE_ENDIAN
 #if !defined(ALIGNED_ACCESS_REQUIRED)
 #define REVERSE32(w,x)  { \
-    sha2_word32 tmp = (w); \
+    dice_sha2_word32 tmp = (w); \
     tmp = (tmp >> 16) | (tmp << 16); \
     (x) = ((tmp & 0xff00ff00UL) >> 8) | ((tmp & 0x00ff00ffUL) << 8); \
 }
 #else
 #define REVERSE32(w,x) { \
-    sha2_uint8_t *b = (sha2_uint8_t*) &w; \
-    sha2_word32 tmp = 0; \
-    tmp = ((sha2_word32)*b++); \
-    tmp = (tmp << 8) | ((sha2_word32)*b++); \
-    tmp = (tmp << 8) | ((sha2_word32)*b++); \
-    tmp = (tmp << 8) | ((sha2_word32)*b++); \
+    dice_sha2_uint8_t *b = (sha2_uint8_t*) &w; \
+    dice_sha2_word32 tmp = 0; \
+    tmp = ((dice_sha2_word32)*b++); \
+    tmp = (tmp << 8) | ((dice_sha2_word32)*b++); \
+    tmp = (tmp << 8) | ((dice_sha2_word32)*b++); \
+    tmp = (tmp << 8) | ((dice_sha2_word32)*b++); \
     (x) = tmp; \
 }
 #endif /* ALIGNED_ACCESS_REQUIRED */
 #define REVERSE64(w,x)  { \
-    sha2_word64 tmp = (w); \
+    dice_sha2_word64 tmp = (w); \
     tmp = (tmp >> 32) | (tmp << 32); \
     tmp = ((tmp & 0xff00ff00ff00ff00ULL) >> 8) | \
           ((tmp & 0x00ff00ff00ff00ffULL) << 8); \
@@ -142,7 +142,7 @@
  * 64-bit words):
  */
 #define ADDINC128(w,n)  { \
-    (w)[0] += (sha2_word64)(n); \
+    (w)[0] += (dice_sha2_word64)(n); \
     if ((w)[0] < (n)) { \
         (w)[1]++; \
     } \
@@ -205,11 +205,11 @@
  * library -- they are intended for private internal visibility/use
  * only.
  */
-static void SHA256_Transform(DICE_SHA256_CONTEXT *, const sha2_word32 *);
+static void SHA256_Transform(DICE_SHA256_CONTEXT *, const dice_sha2_word32 *);
 
 /*** SHA-XYZ INITIAL HASH VALUES AND CONSTANTS ************************/
 /* Hash constant words K for SHA-256: */
-static const sha2_word32 K256[64] = {
+static const dice_sha2_word32 K256[64] = {
     0x428a2f98UL, 0x71374491UL, 0xb5c0fbcfUL, 0xe9b5dba5UL,
     0x3956c25bUL, 0x59f111f1UL, 0x923f82a4UL, 0xab1c5ed5UL,
     0xd807aa98UL, 0x12835b01UL, 0x243185beUL, 0x550c7dc3UL,
@@ -229,7 +229,7 @@ static const sha2_word32 K256[64] = {
 };
 
 /* Initial hash value H for SHA-256: */
-static const sha2_word32 sha256_initial_hash_value[8] = {
+static const dice_sha2_word32 sha256_initial_hash_value[8] = {
     0x6a09e667UL,
     0xbb67ae85UL,
     0x3c6ef372UL,
@@ -258,13 +258,13 @@ void DICE_SHA256_Init(DICE_SHA256_CONTEXT *context)
     context->bitcount = 0;
 }
 
-static void SHA256_Transform(DICE_SHA256_CONTEXT *context, const sha2_word32 *data)
+static void SHA256_Transform(DICE_SHA256_CONTEXT *context, const dice_sha2_word32 *data)
 {
-    sha2_word32 a, b, c, d, e, f, g, h, s0, s1;
-    sha2_word32 T1, T2, *W256;
+    dice_sha2_word32 a, b, c, d, e, f, g, h, s0, s1;
+    dice_sha2_word32 T1, T2, *W256;
     int     j;
 
-    W256 = (sha2_word32 *)context->buffer;
+    W256 = (dice_sha2_word32 *)context->buffer;
 
     /* Initialize registers with the prev. intermediate value */
     a = context->state[0];
@@ -337,7 +337,7 @@ static void SHA256_Transform(DICE_SHA256_CONTEXT *context, const sha2_word32 *da
     a = b = c = d = e = f = g = h = T1 = T2 = 0;
 }
 
-void DICE_SHA256_Update(DICE_SHA256_CONTEXT *context, const sha2_uint8_t *data, size_t len)
+void DICE_SHA256_Update(DICE_SHA256_CONTEXT *context, const dice_sha2_uint8_t *data, size_t len)
 {
     unsigned int    freespace, usedspace;
 
@@ -357,7 +357,7 @@ void DICE_SHA256_Update(DICE_SHA256_CONTEXT *context, const sha2_uint8_t *data, 
             context->bitcount += freespace << 3;
             len -= freespace;
             data += freespace;
-            SHA256_Transform(context, (sha2_word32 *)context->buffer);
+            SHA256_Transform(context, (dice_sha2_word32 *)context->buffer);
         } else {
             /* The buffer is not yet full */
             MEMCPY_BCOPY(&context->buffer[usedspace], data, len);
@@ -369,7 +369,7 @@ void DICE_SHA256_Update(DICE_SHA256_CONTEXT *context, const sha2_uint8_t *data, 
     }
     while (len >= SHA256_BLOCK_LENGTH) {
         /* Process as many complete blocks as we can */
-        SHA256_Transform(context, (sha2_word32 *)data);
+        SHA256_Transform(context, (dice_sha2_word32 *)data);
         context->bitcount += SHA256_BLOCK_LENGTH << 3;
         len -= SHA256_BLOCK_LENGTH;
         data += SHA256_BLOCK_LENGTH;
@@ -383,13 +383,13 @@ void DICE_SHA256_Update(DICE_SHA256_CONTEXT *context, const sha2_uint8_t *data, 
     usedspace = freespace = 0;
 }
 
-void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context, sha2_uint8_t *digest)
+void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context, dice_sha2_uint8_t *digest)
 {
-    sha2_word32 *d = (sha2_word32 *)digest;
+    dice_sha2_word32 *d = (dice_sha2_word32 *)digest;
     unsigned int    usedspace;
 
     /* If no digest buffer is passed, we don't bother doing this: */
-    if (digest != (sha2_uint8_t *)0) {
+    if (digest != (dice_sha2_uint8_t *)0) {
         usedspace = (context->bitcount >> 3) % SHA256_BLOCK_LENGTH;
 #if BYTE_ORDER == LITTLE_ENDIAN
         /* Convert FROM host uint8_t order */
@@ -407,7 +407,7 @@ void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context, sha2_uint8_t *digest)
                     MEMSET_BZERO(&context->buffer[usedspace], SHA256_BLOCK_LENGTH - usedspace);
                 }
                 /* Do second-to-last transform: */
-                SHA256_Transform(context, (sha2_word32 *)context->buffer);
+                SHA256_Transform(context, (dice_sha2_word32 *)context->buffer);
 
                 /* And set-up for the last transform: */
                 MEMSET_BZERO(context->buffer, SHA256_SHORT_BLOCK_LENGTH);
@@ -420,10 +420,10 @@ void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context, sha2_uint8_t *digest)
             *context->buffer = 0x80;
         }
         /* Set the bit count: */
-        *(sha2_word64 *)&context->buffer[SHA256_SHORT_BLOCK_LENGTH] = context->bitcount;
+        *(dice_sha2_word64 *)&context->buffer[SHA256_SHORT_BLOCK_LENGTH] = context->bitcount;
 
         /* Final transform: */
-        SHA256_Transform(context, (sha2_word32 *)context->buffer);
+        SHA256_Transform(context, (dice_sha2_word32 *)context->buffer);
 
 #if BYTE_ORDER == LITTLE_ENDIAN
         {

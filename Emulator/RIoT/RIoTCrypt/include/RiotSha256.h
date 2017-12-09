@@ -35,8 +35,6 @@
 
 #include "RiotTarget.h"
 
-typedef int asb;
-
 typedef uint8_t  sha2_uint8_t;  // Exactly 1 byte
 typedef uint32_t sha2_word32;   // Exactly 4 bytes
 typedef uint64_t sha2_word64;   // Exactly 8 bytes

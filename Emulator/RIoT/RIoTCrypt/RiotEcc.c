@@ -1628,11 +1628,12 @@ BigValToBigInt(void *out, const bigval_t *src)
     // Start with the most significant word and work down.
     // Initialize i with the number of bytes to move - 1.
 
+    uint8_t unused;
     uint8_t* intermediate = (uint8_t*)out;
     for (i = ((BIGLEN - 1) * 4) - 1; i >= 0; i--) 
     {
         *intermediate = (uint8_t)(src->data[i / 4] >> (8 * (i % 4)));
-        *(intermediate)++;
+        unused = *(intermediate)++;
     }
 }
 

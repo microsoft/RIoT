@@ -23,10 +23,10 @@ extern RNG_HandleTypeDef hrng;
 __attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr;
 #ifndef NDEBUG
 //__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xDD800];
-uint8_t* AgentCode = (uint8_t*)0x08020800;
+const uint8_t* AgentCode = (uint8_t*)0x08020800;
 #else
-//__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xED800];
-uint8_t* AgentCode = (uint8_t*)0x08010800;
+//__attribute__((section(".AGENTCODE"))) const uint8_t AgentCode[0xF4800];
+const uint8_t* AgentCode = (uint8_t*)0x08009800;
 #endif
 
 __attribute__((section(".PURW.Private"))) BARNACLE_IDENTITY_PRIVATE CompoundId;
@@ -665,7 +665,6 @@ bool BarnacleFWViolation()
 FIREWALL_InitTypeDef fw_init =
 {
     0, 0,
-//    (uint32_t)&FwDeviceId, sizeof(FwDeviceId) + sizeof(FwCache),
     (uint32_t)&FwDeviceId, sizeof(FwDeviceId) + sizeof(FwCache),
     0, 0,
     FIREWALL_VOLATILEDATA_NOT_EXECUTABLE,

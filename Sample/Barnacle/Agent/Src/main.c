@@ -114,24 +114,23 @@ int main(void)
   /* USER CODE BEGIN 2 */
   char* dateStr = asctime(localtime((time_t*)&AgentHdr.s.sign.agent.issued));
   dateStr[24] = '\0';
-  dbgPrint("================\r\n"
-           "Barnacle Agent\r\n"
-           "================\r\n"
-           "%s (%u bytes, V%d.%d, %s)\r\n",
-           AgentHdr.s.sign.agent.name,
-           (unsigned int)AgentHdr.s.sign.agent.size,
-           (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
-           (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff,
-           dateStr);
+  fprintf(stderr, "================\r\n"
+                  "Barnacle Agent\r\n"
+                  "================\r\n"
+                  "%s (%u bytes, V%d.%d, %s)\r\n",
+                  AgentHdr.s.sign.agent.name,
+                  (unsigned int)AgentHdr.s.sign.agent.size,
+                  (short unsigned int)AgentHdr.s.sign.agent.version >> 16,
+                  (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff,
+                  dateStr);
 
   // Issue policy based end cert
-  dbgPrint("INFO: Generating policy cert.\r\n");
-  if(!BarnacleDerivePolicyIdentity((uint8_t*)agentPolicy, sizeof(agentPolicy)))
+  if(!BarnacleTADerivePolicyIdentity((uint8_t*)agentPolicy, sizeof(agentPolicy)))
   {
       dbgPrint("ERROR: BarnacleDerivePolicyIdentity failed.\r\n");
       Error_Handler();
   }
-  BarnacleTADumpCertStore();
+  BarnacleTAPrintCertStore();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -143,11 +142,11 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
       HAL_Delay(3000);
-      dbgPrint("Hello World! (0x%08x)\r\n", (unsigned int)trigger);
+      fprintf(stderr, "Hello World! (0x%08x)\r\n", (unsigned int)trigger);
       if((trigger & 0x0000000f) == 0x0f)
       {
           uint32_t* pAttack = (uint32_t*)0x080fe000;
-          dbgPrint("Simulating Attack...\r\n");
+          fprintf(stderr, "Simulating Attack...\r\n");
           HAL_Delay(1);
           trigger = *pAttack;
       }

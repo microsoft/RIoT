@@ -30,7 +30,7 @@ typedef struct
 } BARNACLE_ISSUED_PUBLIC_INFO, *PBARNACLE_ISSUED_PUBLIC_INFO;
 typedef struct
 {
-	BARNACLE_ISSUED_PUBLIC_INFO info;
+    BARNACLE_ISSUED_PUBLIC_INFO info;
     uint8_t certBag[0x1000 - sizeof(BARNACLE_ISSUED_PUBLIC_INFO)];
 } BARNACLE_ISSUED_PUBLIC, *PBARNACLE_ISSUED_PUBLIC;
 
@@ -47,18 +47,18 @@ typedef struct
 
 typedef struct
 {
-	BARNACLE_CACHED_DATA_INFO info;
-	uint8_t cert[0x800 - sizeof(BARNACLE_CACHED_DATA_INFO)];
+    BARNACLE_CACHED_DATA_INFO info;
+    uint8_t cert[0x800 - sizeof(BARNACLE_CACHED_DATA_INFO)];
 } BARNACLE_CACHED_DATA, *PBARNACLE_CACHED_DATA;
 
 extern BARNACLE_IDENTITY_PRIVATE CompoundId;
 extern BARNACLE_CERTSTORE CertStore;
 extern const BARNACLE_AGENT_HDR AgentHdr;
-extern uint8_t* AgentCode;
+extern const uint8_t* AgentCode;
 #ifndef NDEBUG
 #define AgentCodeMaxSize (0xDD800)
 #else
-#define AgentCodeMaxSize (0xED800)
+#define AgentCodeMaxSize (0xF4800)
 #endif
 extern const BARNACLE_ISSUED_PUBLIC IssuedCerts;
 extern const BARNACLE_IDENTITY_PRIVATE FwDeviceId;

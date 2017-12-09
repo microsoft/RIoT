@@ -85,7 +85,7 @@ extern PBARNACLE_IDENTITY_PRIVATE pCompoundId;
 extern PBARNACLE_CERTSTORE pCertStore;
 extern const BARNACLE_AGENT_HDR AgentHdr;
 
-void BarnacleTADumpCertStore(void);
-bool BarnacleDerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySize);
+void BarnacleTAPrintCertStore(void);
+bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySize);
 
 #endif /* BARNACLETA_H_ */

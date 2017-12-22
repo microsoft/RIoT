@@ -11,8 +11,8 @@ Confidential Information
 extern "C" {
 #endif
 
-#define DER_MAX_PEM     0x400
-#define DER_MAX_TBS     0x300
+#define DER_MAX_PEM     0x500
+#define DER_MAX_TBS     0x400
 #define DER_MAX_NESTED  0x10
 
 //

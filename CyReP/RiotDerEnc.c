@@ -34,7 +34,7 @@ Confidential Information
 // additions. CHECK_SPACE2 when larger objects are being added (and the length
 // is known.)
 #define CHECK_SPACE(_X)      if((_X->Length-_X->Position)<32)        {goto Error;}
-#define CHECK_SPACE2(_X, _N) if(((_X->Length-_X->Position)+(_N))<32) {goto Error;}
+#define CHECK_SPACE2(_X, _N) if((_X->Length-_X->Position)<(_N)) {goto Error;}
 
 static int
 GetIntEncodedNumBytes(

@@ -33,6 +33,25 @@
     <ClCompile Include="..\CyReP\RiotX509Bldr.c">
       <Filter>CyReP</Filter>
     </ClCompile>
+    <ClCompile Include="TcpsId.cpp" />
+    <ClCompile Include="..\External\tinycbor\src\cborencoder.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\tinycbor\src\cborencoder_close_container_checked.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\tinycbor\src\cborerrorstrings.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\tinycbor\src\cborparser.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\tinycbor\src\cborparser_dup_string.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\tinycbor\src\cborpretty.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -70,10 +89,17 @@
     <ClInclude Include="..\CyReP\CyReP\RiotX509Bldr.h">
       <Filter>CyReP</Filter>
     </ClInclude>
+    <ClInclude Include="TcpsId.h" />
+    <ClInclude Include="..\External\tinycbor\src\cbor.h">
+      <Filter>TinyCBOR</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CyReP">
       <UniqueIdentifier>{290a1e25-ea08-4077-b0fd-ead96f0ea839}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TinyCBOR">
+      <UniqueIdentifier>{a9459869-10c0-4921-9181-529ab3b4c650}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -117,6 +117,8 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
                                        (RIOT_ECC_PUBLIC*)&pCompoundId->info.pubKey,
                                        (uint8_t*)digest,
                                        sizeof(digest),
+                                       NULL,
+                                       0,
                                        0) == 0)))
     {
         dbgPrint("ERROR: X509GetAliasCertTBS failed.\r\n");

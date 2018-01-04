@@ -38,17 +38,17 @@ __attribute__((section(".FWRW"))) const BARNACLE_CACHED_DATA FwCache;
 char dfuString[128] = {0};
 char* BarnacleGetDfuStr(void)
 {
-	uint32_t cursor = 0;
-	int32_t agentArea = ((uint32_t)&IssuedCerts - (uint32_t)&AgentHdr) / 4096;
-	cursor += sprintf(&dfuString[cursor], "@Barnacle /0x%08x/", (unsigned int)&AgentHdr);
-	while(agentArea > 0)
-	{
-		uint32_t iteration = MIN(agentArea, 99);
-		cursor += sprintf(&dfuString[cursor], "%02u*004Kf,", (unsigned int)iteration);
-		agentArea -= iteration;
-	}
-	cursor += sprintf(&dfuString[cursor], "01*04K%c", (IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_WRITELOCK) ? 'a' : 'g');
-	return dfuString;
+    uint32_t cursor = 0;
+    int32_t agentArea = ((uint32_t)&IssuedCerts - (uint32_t)&AgentHdr) / 4096;
+    cursor += sprintf(&dfuString[cursor], "@Barnacle /0x%08x/", (unsigned int)&AgentHdr);
+    while(agentArea > 0)
+    {
+        uint32_t iteration = MIN(agentArea, 99);
+        cursor += sprintf(&dfuString[cursor], "%02u*004Kf,", (unsigned int)iteration);
+        agentArea -= iteration;
+    }
+    cursor += sprintf(&dfuString[cursor], "01*04K%c", (IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_WRITELOCK) ? 'a' : 'g');
+    return dfuString;
 }
 
 bool BarnacleErasePages(void* dest, uint32_t size)
@@ -336,6 +336,8 @@ bool BarnacleInitialProvision()
                                            &x509TBSData,
                                            (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
                                            (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                           NULL,
+                                           0,
                                            2) == 0)))
         {
             dbgPrint("ERROR: X509GetDeviceCertTBS failed.\r\n");
@@ -411,7 +413,7 @@ bool BarnacleVerifyAgent()
     // Verify the agent code digest against the header
     if(!(result = (RiotCrypt_Hash(digest,
                                   sizeof(digest),
-								  AgentCode,
+                                  AgentCode,
                                   AgentHdr.s.sign.agent.size) == RIOT_SUCCESS)))
     {
         dbgPrint("ERROR: RiotCrypt_Hash failed.\r\n");
@@ -423,32 +425,32 @@ bool BarnacleVerifyAgent()
         goto Cleanup;
     }
 
-	// Calculate the header signature
-	if(!(result = (RiotCrypt_Hash(digest,
-								  sizeof(digest),
-								  (const void*)&AgentHdr.s.sign,
-								  sizeof(AgentHdr.s.sign)) == RIOT_SUCCESS)))
-	{
-		dbgPrint("ERROR: RiotCrypt_Hash failed.\r\n");
-		goto Cleanup;
-	}
+    // Calculate the header signature
+    if(!(result = (RiotCrypt_Hash(digest,
+                                  sizeof(digest),
+                                  (const void*)&AgentHdr.s.sign,
+                                  sizeof(AgentHdr.s.sign)) == RIOT_SUCCESS)))
+    {
+        dbgPrint("ERROR: RiotCrypt_Hash failed.\r\n");
+        goto Cleanup;
+    }
 
-	// If authenticated boot is provisioned and enabled
+    // If authenticated boot is provisioned and enabled
     if((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_PROVISIONIED) &&
        (IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT) &&
        (!BarnacleNullCheck((void*)&IssuedCerts.info.codeAuthPubKey, sizeof(IssuedCerts.info.codeAuthPubKey))))
     {
-		//Re-hydrate the signature
-		BigIntToBigVal(&sig.r, AgentHdr.s.signature.r, sizeof(AgentHdr.s.signature.r));
-		BigIntToBigVal(&sig.s, AgentHdr.s.signature.s, sizeof(AgentHdr.s.signature.s));
-		if(!(result = (RiotCrypt_VerifyDigest(digest,
-											   sizeof(digest),
-											   &sig,
-											   &IssuedCerts.info.codeAuthPubKey) == RIOT_SUCCESS)))
-		{
-			dbgPrint("ERROR: RiotCrypt_Verify failed.\r\n");
-			goto Cleanup;
-		}
+        //Re-hydrate the signature
+        BigIntToBigVal(&sig.r, AgentHdr.s.signature.r, sizeof(AgentHdr.s.signature.r));
+        BigIntToBigVal(&sig.s, AgentHdr.s.signature.s, sizeof(AgentHdr.s.signature.s));
+        if(!(result = (RiotCrypt_VerifyDigest(digest,
+                                               sizeof(digest),
+                                               &sig,
+                                               &IssuedCerts.info.codeAuthPubKey) == RIOT_SUCCESS)))
+        {
+            dbgPrint("ERROR: RiotCrypt_Verify failed.\r\n");
+            goto Cleanup;
+        }
     }
 
     // Is this the first launch or the first launch after an update?
@@ -544,6 +546,8 @@ bool BarnacleVerifyAgent()
                                            (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
                                            (uint8_t*)AgentHdr.s.sign.agent.digest,
                                            sizeof(AgentHdr.s.sign.agent.digest),
+                                           NULL,
+                                           0,
                                            1) == 0)))
         {
             dbgPrint("ERROR: X509GetAliasCertTBS failed.\r\n");

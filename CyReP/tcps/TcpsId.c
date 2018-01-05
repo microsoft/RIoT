@@ -4,7 +4,10 @@ Microsoft Copyright 2017
 Confidential Information
 
 */
-#include "TcpsId.h"
+#include <RiotTarget.h>
+#include <RiotStatus.h>
+#include <RiotEcc.h>
+#include <TcpsId.h>
 #include <cbor.h>
 #include <stdlib.h>
 #include <RiotCrypt.h>

@@ -15,10 +15,12 @@
 #include <cyrep/RiotCrypt.h>
 #include <cyrep/RiotDerEnc.h>
 #include <cyrep/RiotX509Bldr.h>
+#include <tcps/TcpsId.h>
 #include <BarnacleTA.h>
 #include <Barnacle.h>
 
 extern RNG_HandleTypeDef hrng;
+extern const char DeviceBuildId[32];
 
 __attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr;
 #ifndef NDEBUG
@@ -310,6 +312,8 @@ bool BarnacleInitialProvision()
         uint8_t digest[SHA256_DIGEST_LENGTH] = { 0 };
         uint32_t length = 0;
         RIOT_ECC_SIGNATURE  tbsSig = { 0 };
+        uint8_t* tcps = NULL;
+        uint32_t tcpsLen = 0;
 
         dbgPrint("INFO: Generating and persisting new device certificate.\r\n");
         // Make sure we don't flash unwritten space in the cert bag
@@ -332,13 +336,29 @@ bool BarnacleInitialProvision()
         digest[0] &= 0x7F; // Ensure that the serial number is positive
         digest[0] |= 0x01; // Ensure that the serial is not null
         memcpy(x509TBSData.SerialNum, digest, sizeof(x509TBSData.SerialNum));
-        if(!(result = (X509GetDeviceCertTBS(&derCtx,
-                                           &x509TBSData,
-                                           (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
-                                           (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
-                                           NULL,
-                                           0,
-                                           2) == 0)))
+
+        if(!(result = (BuildTCPSDeviceIdentity((RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                               (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                               (uint8_t*)DeviceBuildId,
+                                               sizeof(DeviceBuildId),
+                                               &tcps,
+                                               &tcpsLen) == RIOT_SUCCESS)))
+        {
+            dbgPrint("ERROR: BuildTCPSDeviceIdentity failed.\r\n");
+            goto Cleanup;
+        }
+
+        result = (X509GetDeviceCertTBS(&derCtx,
+                                       &x509TBSData,
+                                       (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                       (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                       tcps,
+                                       tcpsLen,
+                                       2) == 0);
+        FreeTCPSId(tcps);
+        tcps = NULL;
+        tcpsLen = 0;
+        if(!result)
         {
             dbgPrint("ERROR: X509GetDeviceCertTBS failed.\r\n");
             goto Cleanup;
@@ -467,6 +487,8 @@ bool BarnacleVerifyAgent()
         uint32_t length = 0;
         RIOT_ECC_SIGNATURE  tbsSig = { 0 };
         BARNACLE_CACHED_DATA cache = {0};
+        uint8_t* tcps = NULL;
+        uint32_t tcpsLen = 0;
 
         // Detect rollback attack if this is not the first launch
         if(FwCache.info.magic == BARNACLEMAGIC)
@@ -540,15 +562,30 @@ bool BarnacleVerifyAgent()
         digest[0] &= 0x7F; // Ensure that the serial number is positive
         digest[0] |= 0x01; // Ensure that the serial is not null
         memcpy(x509TBSData.SerialNum, digest, sizeof(x509TBSData.SerialNum));
-        if(!(result = (X509GetAliasCertTBS(&derCtx,
-                                           &x509TBSData,
-                                           (RIOT_ECC_PUBLIC*)&cache.info.compoundPubKey,
-                                           (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
-                                           (uint8_t*)AgentHdr.s.sign.agent.digest,
-                                           sizeof(AgentHdr.s.sign.agent.digest),
-                                           NULL,
-                                           0,
-                                           1) == 0)))
+
+        if(!(result = (BuildTCPSAliasIdentity((RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                              (uint8_t*)AgentHdr.s.sign.agent.digest,
+                                              sizeof(AgentHdr.s.sign.agent.digest),
+                                              &tcps,
+                                              &tcpsLen) == RIOT_SUCCESS)))
+        {
+            dbgPrint("ERROR: BuildTCPSAliasIdentity failed.\r\n");
+            goto Cleanup;
+        }
+
+        result = (X509GetAliasCertTBS(&derCtx,
+                                      &x509TBSData,
+                                      (RIOT_ECC_PUBLIC*)&cache.info.compoundPubKey,
+                                      (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                      (uint8_t*)AgentHdr.s.sign.agent.digest,
+                                      sizeof(AgentHdr.s.sign.agent.digest),
+                                      tcps,
+                                      tcpsLen,
+                                      1) == 0);
+        FreeTCPSId(tcps);
+        tcps = NULL;
+        tcpsLen = 0;
+        if(!result)
         {
             dbgPrint("ERROR: X509GetAliasCertTBS failed.\r\n");
             goto Cleanup;
@@ -604,6 +641,7 @@ bool BarnacleVerifyAgent()
     memcpy(&CompoundId.info.privKey, &FwCache.info.compoundPrivKey, sizeof(CompoundId.info.privKey));
     memset(&CertStore, 0x00, sizeof(CertStore));
     CertStore.info.magic = BARNACLEMAGIC;
+    memcpy(&CertStore.info.devicePubKey, &FwDeviceId.info.pubKey, sizeof(CertStore.info.devicePubKey));
 
     // Issued Root
     if((CertStore.info.cursor + IssuedCerts.info.certTable[BARNACLE_ISSUED_ROOT].size) >  sizeof(CertStore.certBag))

@@ -59,6 +59,7 @@ typedef struct
 typedef struct
 {
     uint32_t magic;
+    RIOT_ECC_PUBLIC devicePubKey;
     BARNACLE_CERT_INDEX certTable[4];
     uint32_t cursor;
 } BARNACLE_CERTSTORE_INFO, *PBARNACLE_CERTSTORE_INFO;

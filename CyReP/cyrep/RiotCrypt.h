@@ -135,6 +135,13 @@ RiotCrypt_ExportEccPub(
     uint32_t            *s      // OUT: TODO
 );
 
+int
+RiotCrypt_ImportEccPub(
+    uint8_t             *b,     // IN:  TODO
+    uint32_t            s,      // IN:  TODO
+    ecc_publickey       *a      // OUT: TODO
+);
+
 RIOT_STATUS
 RiotCrypt_Sign(
     RIOT_ECC_SIGNATURE     *sig,        // OUT: TODO

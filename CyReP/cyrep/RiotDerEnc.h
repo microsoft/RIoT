@@ -34,12 +34,12 @@ typedef struct
 } DERBuilderContext;
 
 // We only have a small subset of potential PEM encodings
-enum CertType {
-    CERT_TYPE = 0,
-    PUBLICKEY_TYPE,
-    ECC_PRIVATEKEY_TYPE,
-    CERT_REQ_TYPE,
-    LAST_CERT_TYPE
+enum RiotCertType {
+    R_CERT_TYPE = 0,
+    R_PUBLICKEY_TYPE,
+    R_ECC_PRIVATEKEY_TYPE,
+    R_CERT_REQ_TYPE,
+    R_LAST_CERT_TYPE
 };
 
 void

@@ -109,6 +109,19 @@ X509MakeRootCert(
     RIOT_ECC_SIGNATURE  *TbsSig
 );
 
+int
+X509GetEccPub(
+    DERBuilderContext   *Context,
+    ecc_publickey       *Pub
+);
+
+int
+X509GetEccPrv(
+    DERBuilderContext   *Context,
+    ecc_publickey       *Pub,
+    ecc_privatekey      *Prv
+);
+
 #ifdef __cplusplus
 }
 #endif

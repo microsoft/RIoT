@@ -557,7 +557,7 @@ typedef struct
 } PEMHeadersFooters;
 
 // We only have a small subset of potential PEM encodings
-const PEMHeadersFooters PEMhf[LAST_CERT_TYPE] = {
+const PEMHeadersFooters PEMhf[R_LAST_CERT_TYPE] = {
     {29, 27, "-----BEGIN CERTIFICATE-----\r\n", "-----END CERTIFICATE-----\r\n"},
     {28, 26, "-----BEGIN PUBLIC KEY-----\r\n", "-----END PUBLIC KEY-----\r\n"},
     {32, 30, "-----BEGIN EC PRIVATE KEY-----\r\n", "-----END EC PRIVATE KEY-----\r\n"},
@@ -577,7 +577,7 @@ DERtoPEM(
     uint32_t    b64Len, reqLen;
 
     // Parameter validation
-    if (!(Context) || !(Type < LAST_CERT_TYPE) || !(PEM)) {
+    if (!(Context) || !(Type < R_LAST_CERT_TYPE) || !(PEM)) {
         return -1;
     }
 

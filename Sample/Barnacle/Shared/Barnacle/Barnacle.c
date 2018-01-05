@@ -41,15 +41,19 @@ char dfuString[128] = {0};
 char* BarnacleGetDfuStr(void)
 {
     uint32_t cursor = 0;
-    int32_t agentArea = ((uint32_t)&IssuedCerts - (uint32_t)&AgentHdr) / 4096;
+    int32_t agentArea = ((uint32_t)&FwDeviceId - (uint32_t)&AgentHdr) / 4096;
     cursor += sprintf(&dfuString[cursor], "@Barnacle /0x%08x/", (unsigned int)&AgentHdr);
     while(agentArea > 0)
     {
         uint32_t iteration = MIN(agentArea, 99);
-        cursor += sprintf(&dfuString[cursor], "%02u*004Kf,", (unsigned int)iteration);
+        cursor += sprintf(&dfuString[cursor], "%02u*004Kf", (unsigned int)iteration);
         agentArea -= iteration;
+        if(agentArea > 0)
+        {
+            cursor += sprintf(&dfuString[cursor], ",");
+        }
     }
-    cursor += sprintf(&dfuString[cursor], "01*04K%c", (IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_WRITELOCK) ? 'a' : 'g');
+    cursor += sprintf(&dfuString[cursor], "/0x%08x/01*04K%c", (unsigned int)&IssuedCerts, ((IssuedCerts.info.magic != BARNACLEMAGIC) || !(IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_WRITELOCK)) ? 'g' : 'a' );
     return dfuString;
 }
 
@@ -214,6 +218,7 @@ bool BarnacleWriteLockLoader()
         ob.RDPLevel = OB_RDP_LEVEL_1;
         ob.PCROPConfig = OB_PCROP_RDP_ERASE;
 #endif
+        HAL_FLASH_Lock();
         if(HAL_FLASH_Unlock() != HAL_OK)
         {
             result = false;
@@ -386,8 +391,8 @@ bool BarnacleInitialProvision()
             dbgPrint("ERROR: DERtoPEM failed.\r\n");
             goto Cleanup;
         }
-        newCertBag.info.certTable[NUMELEM(newCertBag.info.certTable) - 1].start = newCertBag.info.cursor;
-        newCertBag.info.certTable[NUMELEM(newCertBag.info.certTable) - 1].size = (uint16_t)length;
+        newCertBag.info.certTable[BARNACLE_ISSUED_DEVICE].start = newCertBag.info.cursor;
+        newCertBag.info.certTable[BARNACLE_ISSUED_DEVICE].size = (uint16_t)length;
         newCertBag.info.cursor += length;
         newCertBag.certBag[newCertBag.info.cursor++] = '\0';
 
@@ -403,6 +408,23 @@ bool BarnacleInitialProvision()
     if(!generateCerts)
     {
         dbgPrint("INFO: Device already provisioned.\r\n");
+    }
+
+    dbgPrint("INFO: DevCert is %s and %s\r\n", ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_PROVISIONIED) ? "ISSUED" : "SELFSIGNED"),
+                                               ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_WRITELOCK) ? "WRITELOCKED" : "WRITEABLE"));
+    dbgPrint("%s", (char*)&IssuedCerts.certBag[IssuedCerts.info.certTable[BARNACLE_ISSUED_DEVICE].start]);
+    if(IssuedCerts.info.certTable[BARNACLE_ISSUED_ROOT].size != 0)
+    {
+        dbgPrint("%s", (char*)&IssuedCerts.certBag[IssuedCerts.info.certTable[BARNACLE_ISSUED_ROOT].start]);
+    }
+    dbgPrint("INFO: CodeAuth is %s", ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT) ? "LOCKED to 0x" : "UNLOCKED\r\n"));
+    if(IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT)
+    {
+        uint8_t codeAuthPub[64] = {0};
+        BigValToBigInt(&codeAuthPub[0], &IssuedCerts.info.codeAuthPubKey.x);
+        BigValToBigInt(&codeAuthPub[32], &IssuedCerts.info.codeAuthPubKey.y);
+        for(uint32_t n = 0; n < sizeof(codeAuthPub); n++) dbgPrint("%02x", codeAuthPub[n]);
+        dbgPrint("\r\n");
     }
 
 Cleanup:

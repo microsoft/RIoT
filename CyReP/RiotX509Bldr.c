@@ -700,7 +700,7 @@ X509GetEccPub(
     CHK(        DERAddOID(Context, ecPublicKeyOID));
     CHK(        DERAddOID(Context, prime256v1OID));
     CHK(    DERPopNesting(Context));
-            DERExportEccPub(Pub, encBuffer, &encBufferLen);
+            RiotCrypt_ExportEccPub(Pub, encBuffer, &encBufferLen);
     CHK(    DERAddBitString(Context, encBuffer, encBufferLen * 8));
     CHK(DERPopNesting(Context));
 
@@ -727,7 +727,7 @@ X509GetEccPrv(
     CHK(    DERStartExplicit(Context, 0));
     CHK(        DERAddOID(Context, prime256v1OID));
     CHK(    DERPopNesting(Context));
-            DERExportEccPub(Pub, encBuffer, &encBufferLen);
+            RiotCrypt_ExportEccPub(Pub, encBuffer, &encBufferLen);
     CHK(    DERStartExplicit(Context, 1));
     CHK(        DERAddBitString(Context, encBuffer, encBufferLen * 8));
     CHK(    DERPopNesting(Context));

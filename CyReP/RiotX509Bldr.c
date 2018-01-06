@@ -729,7 +729,7 @@ X509GetEccPrv(
     CHK(    DERPopNesting(Context));
             RiotCrypt_ExportEccPub(Pub, encBuffer, &encBufferLen);
     CHK(    DERStartExplicit(Context, 1));
-    CHK(        DERAddBitString(Context, encBuffer, encBufferLen * 8));
+    CHK(        DERAddBitString(Context, encBuffer, encBufferLen));
     CHK(    DERPopNesting(Context));
     CHK(DERPopNesting(Context));
 

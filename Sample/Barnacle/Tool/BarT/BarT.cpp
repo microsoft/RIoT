@@ -351,12 +351,209 @@ bool RunSignAgent(std::unordered_map<std::wstring, std::wstring> param)
     return result;
 }
 
+void IssueDeviceTrust(
+    std::wstring fileName,
+    PCCERT_CONTEXT devAuthCert,
+    PCCERT_CONTEXT appAuthCert
+)
+{
+    DWORD retVal = STDFUFILES_NOERROR;
+    std::exception_ptr pendingException = NULL;
+    BCRYPT_ALG_HANDLE hRng = NULL;
+    std::string dfuFileName;
+    HANDLE hDfuFile = INVALID_HANDLE_VALUE;
+    WORD pid, vid, bcd;
+    BYTE nbImages;
+    HANDLE hImage = INVALID_HANDLE_VALUE;
+    DWORD result;
+    BCRYPT_KEY_HANDLE codeAuth = NULL;
+
+    try
+    {
+        dfuFileName.resize(fileName.size());
+        if (!WideCharToMultiByte(CP_UTF8,
+            WC_ERR_INVALID_CHARS,
+            fileName.c_str(),
+            fileName.size(),
+            (LPSTR)dfuFileName.c_str(),
+            dfuFileName.size(),
+            NULL,
+            NULL))
+        {
+            printf("%s: WideCharToMultiByte failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            throw GetLastError();
+        }
+
+        if ((retVal = BCryptOpenAlgorithmProvider(&hRng, BCRYPT_RNG_ALGORITHM, NULL, 0)) != 0)
+        {
+            printf("%s: BCryptOpenAlgorithmProvider failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            throw retVal;
+        }
+
+        // Open the image in the DFU file
+        if ((retVal = OpenExistingDFUFile((PSTR)dfuFileName.c_str(), &hDfuFile, &pid, &vid, &bcd, &nbImages)) != STDFUFILES_NOERROR)
+        {
+            printf("%s: OpenExistingDFUFile failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            throw retVal;
+        }
+        if ((retVal = ReadImageFromDFUFile(hDfuFile, 0, &hImage)) != STDFUFILES_NOERROR)
+        {
+            printf("%s: ReadImageFromDFUFile failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            throw retVal;
+        }
+        std::vector<BYTE> image(GetImageSize(hImage), 0x00);
+        DFUIMAGEELEMENT imageElement = { 0, image.size(), image.data() };
+        if ((retVal = GetImageElement(hImage, 0, &imageElement)) != STDFUFILES_NOERROR)
+        {
+            printf("%s: GetImageElement failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            throw retVal;
+        }
+        PBARNACLE_ISSUED_PUBLIC devData = (PBARNACLE_ISSUED_PUBLIC)imageElement.Data;
+        if ((retVal = CloseDFUFile(hDfuFile)) != STDFUFILES_NOERROR)
+        {
+            printf("%s: CloseDFUFile failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            throw retVal;
+        }
+        devData->info.flags |= BARNACLE_ISSUEDFLAG_PROVISIONIED;
+
+        // Are we locking the device down?
+        if (appAuthCert != NULL)
+        {
+            devData->info.flags |= BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT | BARNACLE_ISSUEDFLAG_WRITELOCK;
+            if (!CryptImportPublicKeyInfoEx2(X509_ASN_ENCODING, &appAuthCert->pCertInfo->SubjectPublicKeyInfo, 0, NULL, &codeAuth))
+            {
+                throw GetLastError();
+            }
+            if ((retVal = BCryptExportKey(codeAuth, NULL, BCRYPT_ECCPUBLIC_BLOB, NULL, 0, &result, 0)) != 0)
+            {
+                throw retVal;
+            }
+            std::vector<BYTE> codeAuthPub(result, 0);
+            if ((retVal = BCryptExportKey(codeAuth, NULL, BCRYPT_ECCPUBLIC_BLOB, codeAuthPub.data(), codeAuthPub.size(), &result, 0)) != 0)
+            {
+                throw retVal;
+            }
+            BCRYPT_ECCKEY_BLOB* keyHdr = (BCRYPT_ECCKEY_BLOB*)codeAuthPub.data();
+            BigIntToBigVal(&devData->info.codeAuthPubKey.x, &codeAuthPub[sizeof(BCRYPT_ECCKEY_BLOB)], keyHdr->cbKey);
+            BigIntToBigVal(&devData->info.codeAuthPubKey.y, &codeAuthPub[sizeof(BCRYPT_ECCKEY_BLOB) + keyHdr->cbKey], keyHdr->cbKey);
+            devData->info.codeAuthPubKey.infinity = 0;
+        }
+
+        dfuFileName = std::string("Issued-") + dfuFileName;
+        if ((retVal = CreateNewDFUFile((PSTR)dfuFileName.c_str(), &hDfuFile, pid, vid, bcd)) != STDFUFILES_NOERROR)
+        {
+            printf("%s: CreateNewDFUFile failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            throw retVal;
+        }
+
+        if ((retVal = SetImageElement(hImage, 0, false, imageElement)) != STDFUFILES_NOERROR)
+        {
+            printf("%s: SetImageElement failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            throw retVal;
+        }
+
+        if ((retVal = AppendImageToDFUFile(hDfuFile, hImage)) != STDFUFILES_NOERROR)
+        {
+            printf("%s: SetImageElement failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            throw retVal;
+        }
+
+        if ((retVal = CloseDFUFile(hDfuFile)) != STDFUFILES_NOERROR)
+        {
+            printf("%s: CloseDFUFile failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+            throw retVal;
+        }
+    }
+    catch (const std::exception& e)
+    {
+        UNREFERENCED_PARAMETER(e);
+        pendingException = std::current_exception();
+    }
+
+    // Cleanup
+    if (hRng)
+    {
+        BCryptCloseAlgorithmProvider(hRng, 0);
+    }
+
+    if (codeAuth)
+    {
+        BCryptDestroyKey(codeAuth);
+    }
+
+    if (pendingException != NULL)
+    {
+        std::rethrow_exception(pendingException);
+    }
+
+}
+
 bool RunIssueDeviceTrust(std::unordered_map<std::wstring, std::wstring> param)
 {
     bool result = true;
+    std::unordered_map<std::wstring, std::wstring>::iterator it;
+    std::wstring dfuName(param.find(L"00")->second);
+    HCERTSTORE hStore = NULL;
+    PCCERT_CONTEXT hDevAuthCert = NULL;
+    PCCERT_CONTEXT hCodeAuthCert = NULL;
+
     try
     {
-
+        if (((it = param.find(L"-at")) != param.end()) || ((it = param.find(L"-af")) != param.end()))
+        {
+            std::vector<BYTE> certThumbPrint;
+            if ((it = param.find(L"-at")) != param.end())
+            {
+                // Get NCrypt Handle to certificate private key pointed to by CertThumbPrint
+                certThumbPrint = ReadHex(it->second);
+            }
+            if ((it = param.find(L"-af")) != param.end())
+            {
+                // Get NCrypt Handle to certificate private key pointed to by Certificate file
+                PCCERT_CONTEXT hCert = CertFromFile(it->second);
+                certThumbPrint = CertThumbPrint(hCert);
+                CertFreeCertificateContext(hCert);
+            }
+            CRYPT_HASH_BLOB findTP = { certThumbPrint.size(), certThumbPrint.data() };
+            if ((hStore = CertOpenSystemStore(NULL, TEXT("MY"))) == NULL)
+            {
+                printf("%s: CertOpenSystemStore failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+                throw GetLastError();
+            }
+            if ((hDevAuthCert = CertFindCertificateInStore(hStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, CERT_FIND_HASH, &findTP, NULL)) == NULL)
+            {
+                printf("%s: CertFindCertificateInStore failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+                throw GetLastError();
+            }
+        }
+        if (((it = param.find(L"-ct")) != param.end()) || ((it = param.find(L"-cf")) != param.end()))
+        {
+            std::vector<BYTE> certThumbPrint;
+            if ((it = param.find(L"-ct")) != param.end())
+            {
+                // Get NCrypt Handle to certificate private key pointed to by CertThumbPrint
+                certThumbPrint = ReadHex(it->second);
+            }
+            if ((it = param.find(L"-cf")) != param.end())
+            {
+                // Get NCrypt Handle to certificate private key pointed to by Certificate file
+                PCCERT_CONTEXT hCert = CertFromFile(it->second);
+                certThumbPrint = CertThumbPrint(hCert);
+                CertFreeCertificateContext(hCert);
+            }
+            CRYPT_HASH_BLOB findTP = { certThumbPrint.size(), certThumbPrint.data() };
+            if ((hStore == NULL) && ((hStore = CertOpenSystemStore(NULL, TEXT("MY"))) == NULL))
+            {
+                printf("%s: CertOpenSystemStore failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+                throw GetLastError();
+            }
+            if ((hCodeAuthCert = CertFindCertificateInStore(hStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, CERT_FIND_HASH, &findTP, NULL)) == NULL)
+            {
+                printf("%s: CertFindCertificateInStore failed (%s@%u).\n", __FUNCTION__, __FILE__, __LINE__);
+                throw GetLastError();
+            }
+        }
+        IssueDeviceTrust(dfuName, hDevAuthCert, hCodeAuthCert);
     }
     catch (const std::exception& e)
     {

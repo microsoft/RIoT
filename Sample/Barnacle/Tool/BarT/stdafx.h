@@ -7,6 +7,8 @@
 
 #include "targetver.h"
 
+#define SHA256_DIGEST_LENGTH (32)
+
 #include <stdio.h>
 #include <tchar.h>
 #include <vector>
@@ -22,6 +24,7 @@
 #include <cyrep/RiotEcc.h>
 #include <cyrep/RiotCrypt.h>
 #include <BarnacleTA.h>
+#include <Barnacle.h>
 #include "DfuSe.h"
 
 #define WSTR_TO_LOWER(__str) for (UINT32 n = 0; n < __str.size(); n++) __str[n] = tolower(__str[n]);

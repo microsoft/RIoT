@@ -258,7 +258,7 @@ uint8_t *MEM_If_Read_FS (uint8_t *src, uint8_t *dest, uint32_t Len)
   /* USER CODE BEGIN 4 */ 
 
     // We never allow anybody to read our firewalled area
-    if(src > (uint8_t*)0x080FF000)
+    if((src >= (uint8_t*)0x080FE000) && (src < (uint8_t*)0x080FF000))
     {
         dbgPrint("r");
         return 0;

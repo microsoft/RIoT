@@ -141,7 +141,7 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-      HAL_Delay(3000);
+      HAL_Delay(5000);
       fprintf(stderr, "Hello World! (0x%08x)\r\n", (unsigned int)trigger);
       if((trigger & 0x0000000f) == 0x0f)
       {

@@ -68,5 +68,11 @@
     <ClCompile Include="..\..\..\..\CyReP\RiotSha256.c">
       <Filter>Source Files\CyReP</Filter>
     </ClCompile>
+    <ClCompile Include="SignAgent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IssueTrust.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

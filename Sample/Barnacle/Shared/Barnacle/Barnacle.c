@@ -493,6 +493,7 @@ bool BarnacleVerifyAgent()
             dbgPrint("ERROR: RiotCrypt_Verify failed.\r\n");
             goto Cleanup;
         }
+        dbgPrint("INFO: Agent signature valid.\r\n");
     }
 
     // Is this the first launch or the first launch after an update?

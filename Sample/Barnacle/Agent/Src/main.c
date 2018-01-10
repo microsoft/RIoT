@@ -124,6 +124,18 @@ int main(void)
                   (short unsigned int)AgentHdr.s.sign.agent.version % 0x0000ffff,
                   dateStr);
 
+  dbgPrint("INFO: DeviceID is \r\n0x");
+  {
+      uint8_t devicePub[65] = {0};
+      RiotCrypt_ExportEccPub((RIOT_ECC_PUBLIC*)&pCertStore->info.devicePubKey, devicePub, NULL);
+      for(uint32_t n = 0; n < sizeof(devicePub); n++)
+      {
+          if (!((n + 1) % 22) && (n > 0)) dbgPrint("\r\n");
+          dbgPrint("%02x", devicePub[n]);
+      }
+  }
+  dbgPrint("\r\n");
+
   // Issue policy based end cert
   if(!BarnacleTADerivePolicyIdentity((uint8_t*)agentPolicy, sizeof(agentPolicy)))
   {

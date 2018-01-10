@@ -410,20 +410,34 @@ bool BarnacleInitialProvision()
         dbgPrint("INFO: Device already provisioned.\r\n");
     }
 
-    dbgPrint("INFO: DevCert is %s and %s\r\n", ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_PROVISIONIED) ? "ISSUED" : "SELFSIGNED"),
-                                               ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_WRITELOCK) ? "WRITELOCKED" : "WRITEABLE"));
-    dbgPrint("%s", (char*)&IssuedCerts.certBag[IssuedCerts.info.certTable[BARNACLE_ISSUED_DEVICE].start]);
-    if(IssuedCerts.info.certTable[BARNACLE_ISSUED_ROOT].size != 0)
+    dbgPrint("INFO: DeviceID is \r\n0x");
     {
-        dbgPrint("%s", (char*)&IssuedCerts.certBag[IssuedCerts.info.certTable[BARNACLE_ISSUED_ROOT].start]);
+        uint8_t devicePub[65] = {0};
+        RiotCrypt_ExportEccPub((RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey, devicePub, NULL);
+        for(uint32_t n = 0; n < sizeof(devicePub); n++)
+        {
+            if (!((n + 1) % 22) && (n > 0)) dbgPrint("\r\n");
+            dbgPrint("%02x", devicePub[n]);
+        }
     }
-    dbgPrint("INFO: CodeAuth is %s", ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT) ? "LOCKED to 0x" : "UNLOCKED\r\n"));
+    dbgPrint("\r\n");
+    dbgPrint("INFO: DeviceCert is %s and %s\r\n", ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_PROVISIONIED) ? "ISSUED" : "SELFSIGNED"),
+                                               ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_WRITELOCK) ? "WRITELOCKED" : "WRITEABLE"));
+//    dbgPrint("%s", (char*)&IssuedCerts.certBag[IssuedCerts.info.certTable[BARNACLE_ISSUED_DEVICE].start]);
+//    if(IssuedCerts.info.certTable[BARNACLE_ISSUED_ROOT].size != 0)
+//    {
+//        dbgPrint("%s", (char*)&IssuedCerts.certBag[IssuedCerts.info.certTable[BARNACLE_ISSUED_ROOT].start]);
+//    }
+    dbgPrint("INFO: CodeAuthority is %s", ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT) ? "LOCKED to\r\n0x" : "UNLOCKED\r\n"));
     if(IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT)
     {
-        uint8_t codeAuthPub[64] = {0};
-        BigValToBigInt(&codeAuthPub[0], &IssuedCerts.info.codeAuthPubKey.x);
-        BigValToBigInt(&codeAuthPub[32], &IssuedCerts.info.codeAuthPubKey.y);
-        for(uint32_t n = 0; n < sizeof(codeAuthPub); n++) dbgPrint("%02x", codeAuthPub[n]);
+        uint8_t codeAuthPub[65] = {0};
+        RiotCrypt_ExportEccPub((RIOT_ECC_PUBLIC*)&IssuedCerts.info.codeAuthPubKey, codeAuthPub, NULL);
+        for(uint32_t n = 0; n < sizeof(codeAuthPub); n++)
+        {
+            if (!((n + 1) % 22) && (n > 0)) dbgPrint("\r\n");
+            dbgPrint("%02x", codeAuthPub[n]);
+        }
         dbgPrint("\r\n");
     }
 

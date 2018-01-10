@@ -74,5 +74,11 @@
     <ClCompile Include="IssueTrust.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\CyReP\RiotCrypt.c">
+      <Filter>Source Files\CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\CyReP\RiotAes128.c">
+      <Filter>Source Files\CyReP</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

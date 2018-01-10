@@ -2,96 +2,111 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="RIoTEmulator.cpp" />
-    <ClCompile Include="DICE\DiceSha256.c">
-      <Filter>DICE</Filter>
-    </ClCompile>
-    <ClCompile Include="RIoT\RIoTCrypt\RiotAes128.c">
-      <Filter>RIoT\RIoTCrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="RIoT\RIoTCrypt\RiotAesTables.c">
-      <Filter>RIoT\RIoTCrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="RIoT\RIoTCrypt\RiotCrypt.c">
-      <Filter>RIoT\RIoTCrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="RIoT\RIoTCrypt\RiotDerEnc.c">
-      <Filter>RIoT\RIoTCrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="RIoT\RIoTCrypt\RiotEcc.c">
-      <Filter>RIoT\RIoTCrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="RIoT\RIoTCrypt\RiotHmac.c">
-      <Filter>RIoT\RIoTCrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="RIoT\RIoTCrypt\RiotKdf.c">
-      <Filter>RIoT\RIoTCrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="RIoT\RIoTCrypt\RiotSha256.c">
-      <Filter>RIoT\RIoTCrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="RIoT\RIoTCrypt\RiotX509Bldr.c">
-      <Filter>RIoT\RIoTCrypt</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="RIoT\RIoTCrypt\RiotBase64.c">
-      <Filter>RIoT\RIoTCrypt</Filter>
+    <ClCompile Include="..\CyReP\RiotAes128.c">
+      <Filter>CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CyReP\RiotAesTables.c">
+      <Filter>CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CyReP\RiotBase64.c">
+      <Filter>CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CyReP\RiotCrypt.c">
+      <Filter>CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CyReP\RiotDerEnc.c">
+      <Filter>CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CyReP\RiotEcc.c">
+      <Filter>CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CyReP\RiotHmac.c">
+      <Filter>CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CyReP\RiotKdf.c">
+      <Filter>CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CyReP\RiotSha256.c">
+      <Filter>CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CyReP\RiotX509Bldr.c">
+      <Filter>CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\tinycbor\src\cborencoder.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\tinycbor\src\cborencoder_close_container_checked.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\tinycbor\src\cborerrorstrings.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\tinycbor\src\cborparser.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\tinycbor\src\cborparser_dup_string.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\tinycbor\src\cborpretty.c">
+      <Filter>TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CyReP\tcps\TcpsId.c">
+      <Filter>TCPS</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DICE\DiceSha256.h">
-      <Filter>DICE</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoT\RiotStatus.h">
-      <Filter>RIoT</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoT\RIoT.h">
-      <Filter>RIoT</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotAes128.h">
-      <Filter>RIoT\RIoTCrypt\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotCrypt.h">
-      <Filter>RIoT\RIoTCrypt\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotDerEnc.h">
-      <Filter>RIoT\RIoTCrypt\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotEcc.h">
-      <Filter>RIoT\RIoTCrypt\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotHmac.h">
-      <Filter>RIoT\RIoTCrypt\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotKdf.h">
-      <Filter>RIoT\RIoTCrypt\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotSha256.h">
-      <Filter>RIoT\RIoTCrypt\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotTarget.h">
-      <Filter>RIoT\RIoTCrypt\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotX509Bldr.h">
-      <Filter>RIoT\RIoTCrypt\Headers</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotBase64.h">
-      <Filter>RIoT\RIoTCrypt\Headers</Filter>
+    <ClInclude Include="..\CyReP\CyReP\RiotAes128.h">
+      <Filter>CyReP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\CyReP\RiotBase64.h">
+      <Filter>CyReP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\CyReP\RiotCrypt.h">
+      <Filter>CyReP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\CyReP\RiotDerEnc.h">
+      <Filter>CyReP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\CyReP\RiotEcc.h">
+      <Filter>CyReP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\CyReP\RiotHmac.h">
+      <Filter>CyReP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\CyReP\RiotKdf.h">
+      <Filter>CyReP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\CyReP\RiotSha256.h">
+      <Filter>CyReP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\CyReP\RiotStatus.h">
+      <Filter>CyReP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\CyReP\RiotTarget.h">
+      <Filter>CyReP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\CyReP\RiotX509Bldr.h">
+      <Filter>CyReP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\tinycbor\src\cbor.h">
+      <Filter>TinyCBOR</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\tcps\TcpsId.h">
+      <Filter>TCPS</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="RIoT">
-      <UniqueIdentifier>{2df01b63-da74-4891-b610-c8e8bc1fb2db}</UniqueIdentifier>
+    <Filter Include="CyReP">
+      <UniqueIdentifier>{290a1e25-ea08-4077-b0fd-ead96f0ea839}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RIoT\RIoTCrypt">
-      <UniqueIdentifier>{a95c9c20-aa12-452a-a234-9a8b2b0ab8b2}</UniqueIdentifier>
+    <Filter Include="TinyCBOR">
+      <UniqueIdentifier>{a9459869-10c0-4921-9181-529ab3b4c650}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RIoT\RIoTCrypt\Headers">
-      <UniqueIdentifier>{75b4b551-5a2c-4d2f-b949-0f951355ccb1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DICE">
-      <UniqueIdentifier>{07866156-20d9-4902-aaa5-670ac7865661}</UniqueIdentifier>
+    <Filter Include="TCPS">
+      <UniqueIdentifier>{c55467c2-0c96-4c9f-b3f2-21de7ba230fb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

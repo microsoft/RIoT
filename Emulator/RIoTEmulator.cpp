@@ -9,11 +9,19 @@ Confidential Information
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-#include "RIoT.h"
-#include "RiotCrypt.h"
-#include "RiotDerEnc.h"
-#include "RiotX509Bldr.h"
-#include "DiceSha256.h"
+#include <cyrep/RiotTarget.h>
+#include <cyrep/RiotStatus.h>
+#include <cyrep/RiotSha256.h>
+#include <cyrep/RiotHmac.h>
+#include <cyrep/RiotKdf.h>
+#include <cyrep/RiotAes128.h>
+#include <cyrep/RiotKdf.h>
+#include <cyrep/RiotEcc.h>
+#include <cyrep/RiotDerEnc.h>
+#include <cyrep/RiotX509Bldr.h>
+#include "cyrep/RiotCrypt.h"
+
+#include "TcpsId.h"
 
 //Debug
 #define DEBUG
@@ -34,6 +42,9 @@ uint8_t rDigest[DICE_DIGEST_LENGTH] = {
     0xe0, 0x94, 0xab, 0xaf, 0xd7, 0x40, 0x78, 0x7e,
     0x05, 0x0d, 0xfe, 0x6d, 0x85, 0x90, 0x53, 0xa0 };
 
+#define CODE_AUTHORITY_SECRET         "Authority Signer Secret"
+#define CODE_AUTHORITY_SECRET_SIZE    lblSize(CODE_AUTHORITY_SECRET)
+
 // Size, in bytes, returned when the required certificate buffer size is
 // requested.  For this emulator the actual size (~552 bytes) is static,
 // based on the contents of the x509TBSData struct (the fiels don't vary).
@@ -42,19 +53,19 @@ uint8_t rDigest[DICE_DIGEST_LENGTH] = {
 #define REASONABLE_MIN_CERT_SIZE    DER_MAX_TBS
 
 // The static data fields that make up the Alias Cert "to be signed" region
-RIOT_X509_TBS_DATA x509AliasTBSData = { { 0x0A, 0x0B, 0x0C, 0x0D, 0x0E },
+RIOT_X509_TBS_DATA x509AliasTBSData = { { 0 },
                                        "RIoT Core", "MSR_TEST", "US",
                                        "170101000000Z", "370101000000Z",
                                        "RIoT Device", "MSR_TEST", "US" };
 
 // The static data fields that make up the DeviceID Cert "to be signed" region
-RIOT_X509_TBS_DATA x509DeviceTBSData = { { 0x0E, 0x0D, 0x0C, 0x0B, 0x0A },
+RIOT_X509_TBS_DATA x509DeviceTBSData = { { 0 },
                                        "RIoT R00t", "MSR_TEST", "US",
                                        "170101000000Z", "370101000000Z",
                                        "RIoT Core", "MSR_TEST", "US" };
 
 // The static data fields that make up the "root signer" Cert
-RIOT_X509_TBS_DATA x509RootTBSData   = { { 0x1A, 0x2B, 0x3C, 0x4D, 0x5E },
+RIOT_X509_TBS_DATA x509RootTBSData   = { { 0 },
                                        "RIoT R00t", "MSR_TEST", "US",
                                        "170101000000Z", "370101000000Z",
                                        "RIoT R00t", "MSR_TEST", "US" };
@@ -97,7 +108,8 @@ CreateDeviceAuthBundle(
     BYTE    *AliasKeyEncoded,
     DWORD   *AliasKeyEncodedSize,
     BYTE    *AliasCertBuffer,
-    DWORD   *AliasCertBufSize
+    DWORD   *AliasCertBufSize,
+    RIOT_ECC_PUBLIC *AuthKeyPub
 );
 
 #ifdef DEBUG
@@ -122,12 +134,23 @@ main()
     DWORD   devCertSize     = DER_MAX_PEM;
     DWORD   aliasCertSize   = DER_MAX_PEM;
 
+    RIOT_ECC_PUBLIC     authKeyPub = { 0 };
+    RIOT_ECC_PRIVATE    authKeyPriv = { 0 };
+
+    RiotCrypt_DeriveEccKey(&authKeyPub,
+        &authKeyPriv,
+        (const uint8_t *)CODE_AUTHORITY_SECRET,
+        CODE_AUTHORITY_SECRET_SIZE,
+        (const uint8_t *)RIOT_LABEL_IDENTITY,
+        lblSize(RIOT_LABEL_IDENTITY));
+
     CreateDeviceAuthBundle(UDS, DICE_UDS_LENGTH,
                            FWID, RIOT_DIGEST_LENGTH,
                            deviceIDPub, &deviceIDPubSize,
                            devCert, &devCertSize, RIOT_ROOT_SIGNED,
                            aliasKey, &aliaskeySize,
-                           aliasCert, &aliasCertSize);
+                           aliasCert, &aliasCertSize,
+                           &authKeyPub);
 
     return 0;
 }
@@ -146,7 +169,8 @@ CreateDeviceAuthBundle(
     BYTE    *AliasKeyEncoded,
     DWORD   *AliasKeyEncodedSize,
     BYTE    *AliasCertBuffer,
-    DWORD   *AliasCertBufSize
+    DWORD   *AliasCertBufSize,
+    RIOT_ECC_PUBLIC *AuthKeyPub
 )
 {
     char                PEM[DER_MAX_PEM] = { 0 };
@@ -160,6 +184,8 @@ CreateDeviceAuthBundle(
     RIOT_ECC_SIGNATURE  tbsSig = { 0 };
     DERBuilderContext   derCtx = { 0 };
     uint32_t            length = 0;
+    uint8_t             *Tcps = NULL;
+    uint32_t            TcpsLen = 0;
 
     // REVISIT: Implement "required size" invocation for this function?
 
@@ -170,10 +196,10 @@ CreateDeviceAuthBundle(
     }
 
     // Don't use UDS directly
-    DiceSHA256(Seed, DICE_UDS_LENGTH, digest);
+    RiotCrypt_Hash(digest, DICE_DIGEST_LENGTH, Seed, DICE_UDS_LENGTH);
 
     // Derive CDI based on UDS and RIoT Core "measurement"
-    DiceSHA256_2(digest, DICE_DIGEST_LENGTH, rDigest, DICE_DIGEST_LENGTH, CDI);
+    RiotCrypt_Hash2(CDI, DICE_DIGEST_LENGTH, digest, DICE_DIGEST_LENGTH, rDigest, DICE_DIGEST_LENGTH);
 
     // Don't use CDI directly
     RiotCrypt_Hash(digest, RIOT_DIGEST_LENGTH, CDI, DICE_DIGEST_LENGTH);
@@ -233,9 +259,23 @@ CreateDeviceAuthBundle(
 
     // Build the TBS (to be signed) region of Alias Key Certificate
     DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+    RiotCrypt_Kdf(digest,
+        sizeof(digest),
+        (uint8_t*)&aliasKeyPub, sizeof(aliasKeyPub),
+        NULL, 0,
+        (const uint8_t *)RIOT_LABEL_SERIAL,
+        lblSize(RIOT_LABEL_SERIAL),
+        sizeof(digest));
+    digest[0] &= 0x7F; // Ensure that the serial number is positive
+    digest[0] |= 0x01; // Ensure that there is no leading zero
+    memcpy(x509AliasTBSData.SerialNum, digest, sizeof(x509AliasTBSData.SerialNum));
+    BuildTCPSAliasIdentity(AuthKeyPub,
+        Fwid, RIOT_DIGEST_LENGTH,
+        &Tcps, &TcpsLen);
     X509GetAliasCertTBS(&derCtx, &x509AliasTBSData,
         &aliasKeyPub, &deviceIDPub,
-        Fwid, RIOT_DIGEST_LENGTH);
+        Fwid, RIOT_DIGEST_LENGTH,
+        Tcps, TcpsLen, 0);
 
     // Sign the Alias Key Certificate's TBS region
     RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
@@ -255,7 +295,7 @@ CreateDeviceAuthBundle(
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
     WriteBinaryFile("AliasCert.der", derCtx.Buffer, derCtx.Position);
-    WriteBinaryFile("AliasCert.pem", (uint8_t *)PEM, length);
+    WriteBinaryFile("AliasCert.cer", (uint8_t *)PEM, length);
 #endif
 
     // This reference supports generation of either: a "root"-signed DeviceID
@@ -268,7 +308,21 @@ CreateDeviceAuthBundle(
     if (DeviceCertType == RIOT_SELF_SIGNED) {
         // Generating self-signed DeviceID certificate
         DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub);
+        RiotCrypt_Kdf(digest,
+            sizeof(digest),
+            (uint8_t*)&deviceIDPub, sizeof(deviceIDPub),
+            NULL, 0,
+            (const uint8_t *)RIOT_LABEL_SERIAL,
+            lblSize(RIOT_LABEL_SERIAL),
+            sizeof(digest));
+        digest[0] &= 0x7F; // Ensure that the serial number is positive
+        digest[0] |= 0x01; // Ensure that there is no leading zero
+        memcpy(x509DeviceTBSData.SerialNum, digest, sizeof(x509DeviceTBSData.SerialNum));
+        BuildTCPSDeviceIdentity(&deviceIDPub,
+            AuthKeyPub,
+            NULL, 0,
+            &Tcps, &TcpsLen);
+        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub, NULL, Tcps, TcpsLen, 1);
 
         // Sign the DeviceID Certificate's TBS region
         RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
@@ -290,7 +344,21 @@ CreateDeviceAuthBundle(
     else {
         // Generating "root"-signed DeviceID certificate
         DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub);
+        RiotCrypt_Kdf(digest,
+            sizeof(digest),
+            (uint8_t*)&deviceIDPub, sizeof(deviceIDPub),
+            NULL, 0,
+            (const uint8_t *)RIOT_LABEL_SERIAL,
+            lblSize(RIOT_LABEL_SERIAL),
+            sizeof(digest));
+        digest[0] &= 0x7F; // Ensure that the serial number is positive
+        digest[0] |= 0x01; // Ensure that there is no leading zero
+        memcpy(x509DeviceTBSData.SerialNum, digest, sizeof(x509DeviceTBSData.SerialNum));
+        BuildTCPSDeviceIdentity(&deviceIDPub,
+            AuthKeyPub,
+            NULL, 0,
+            &Tcps, &TcpsLen);
+        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub, (RIOT_ECC_PUBLIC *)eccRootPubBytes, Tcps, TcpsLen, 1);
 
         // Sign the DeviceID Certificate's TBS region
         RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, (RIOT_ECC_PRIVATE *)eccRootPrivBytes);
@@ -313,15 +381,25 @@ CreateDeviceAuthBundle(
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
     WriteBinaryFile("DeviceIDCrt.der", derCtx.Buffer, derCtx.Position);
-    WriteBinaryFile("DeviceIDCrt.pem", (uint8_t *)PEM, length);
+    WriteBinaryFile("DeviceIDCrt.cer", (uint8_t *)PEM, length);
 #endif
 
     // Generate "root" CA certficiate
     DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-    X509GetRootCertTBS(&derCtx, &x509RootTBSData, (RIOT_ECC_PUBLIC*)eccRootPubBytes);
+    RiotCrypt_Kdf(digest,
+        sizeof(digest),
+        eccRootPubBytes, sizeof(eccRootPubBytes),
+        NULL, 0,
+        (const uint8_t *)RIOT_LABEL_SERIAL,
+        lblSize(RIOT_LABEL_SERIAL),
+        sizeof(digest));
+    digest[0] &= 0x7F; // Ensure that the serial number is positive
+    digest[0] |= 0x01; // Ensure that there is no leading zero
+    memcpy(x509RootTBSData.SerialNum, digest, sizeof(x509RootTBSData.SerialNum));
+    X509GetRootCertTBS(&derCtx, &x509RootTBSData, (RIOT_ECC_PUBLIC*)eccRootPubBytes, -1);
 
     // Self-sign the "root" Certificate's TBS region
-    RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
+    RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, (RIOT_ECC_PRIVATE*)eccRootPrivBytes);
 
     // Generate "root" CA cert
     X509MakeRootCert(&derCtx, &tbsSig);
@@ -336,9 +414,11 @@ CreateDeviceAuthBundle(
     PEM[length] = '\0'; // JUST FOR PRINTF
     printf("%s", PEM);
     WriteBinaryFile("R00tCrt.der", derCtx.Buffer, derCtx.Position);
-    WriteBinaryFile("R00tCrt.pem", (uint8_t *)PEM, length);
+    WriteBinaryFile("R00tCrt.cer", (uint8_t *)PEM, length);
 #endif
 
+    // Cleanup any allocated heap.
+    FreeTCPSId( Tcps );
     return 0;
 }
 

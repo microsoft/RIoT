@@ -82,13 +82,13 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DICE;$(SolutionDir)\RIoT;$(SolutionDir)\RIoT\RIoTCrypt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\tcps;$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalOptions>/wd4229 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -99,12 +99,11 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DICE;$(SolutionDir)\RIoT;$(SolutionDir)\RIoT\RIoTCrypt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\tcps;$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -117,14 +116,14 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DICE;$(SolutionDir)\RIoT;$(SolutionDir)\RIoT\RIoTCrypt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\tcps;$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalOptions>/wd4229 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -138,13 +137,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\DICE;$(SolutionDir)\RIoT;$(SolutionDir)\RIoT\RIoTCrypt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\tcps;$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -157,35 +155,46 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="DICE\DiceSha256.h" />
-    <ClInclude Include="RIoT\RIoT.h" />
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotAes128.h" />
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotBase64.h" />
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotCrypt.h" />
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotDerEnc.h" />
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotEcc.h" />
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotHmac.h" />
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotKdf.h" />
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotSha256.h" />
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotTarget.h" />
-    <ClInclude Include="RIoT\RIoTCrypt\include\RiotX509Bldr.h" />
-    <ClInclude Include="RIoT\RiotStatus.h" />
+    <ClInclude Include="..\CyReP\CyReP\RiotAes128.h" />
+    <ClInclude Include="..\CyReP\CyReP\RiotBase64.h" />
+    <ClInclude Include="..\CyReP\CyReP\RiotCrypt.h" />
+    <ClInclude Include="..\CyReP\CyReP\RiotDerEnc.h" />
+    <ClInclude Include="..\CyReP\CyReP\RiotEcc.h" />
+    <ClInclude Include="..\CyReP\CyReP\RiotHmac.h" />
+    <ClInclude Include="..\CyReP\CyReP\RiotKdf.h" />
+    <ClInclude Include="..\CyReP\CyReP\RiotSha256.h" />
+    <ClInclude Include="..\CyReP\CyReP\RiotStatus.h" />
+    <ClInclude Include="..\CyReP\CyReP\RiotTarget.h" />
+    <ClInclude Include="..\CyReP\CyReP\RiotX509Bldr.h" />
+    <ClInclude Include="..\CyReP\tcps\TcpsId.h" />
+    <ClInclude Include="..\External\tinycbor\src\cbor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DICE\DiceSha256.c" />
-    <ClCompile Include="RIoTEmulator.cpp" />
-    <ClCompile Include="RIoT\RIoTCrypt\RiotAes128.c" />
-    <ClCompile Include="RIoT\RIoTCrypt\RiotAesTables.c" />
-    <ClCompile Include="RIoT\RIoTCrypt\RiotBase64.c" />
-    <ClCompile Include="RIoT\RIoTCrypt\RiotCrypt.c" />
-    <ClCompile Include="RIoT\RIoTCrypt\RiotDerEnc.c" />
-    <ClCompile Include="RIoT\RIoTCrypt\RiotEcc.c" />
-    <ClCompile Include="RIoT\RIoTCrypt\RiotHmac.c" />
-    <ClCompile Include="RIoT\RIoTCrypt\RiotKdf.c" />
-    <ClCompile Include="RIoT\RIoTCrypt\RiotSha256.c" />
-    <ClCompile Include="RIoT\RIoTCrypt\RiotX509Bldr.c" />
+    <ClCompile Include="..\CyReP\RiotAes128.c" />
+    <ClCompile Include="..\CyReP\RiotAesTables.c" />
+    <ClCompile Include="..\CyReP\RiotBase64.c" />
+    <ClCompile Include="..\CyReP\RiotCrypt.c" />
+    <ClCompile Include="..\CyReP\RiotDerEnc.c" />
+    <ClCompile Include="..\CyReP\RiotEcc.c" />
+    <ClCompile Include="..\CyReP\RiotHmac.c" />
+    <ClCompile Include="..\CyReP\RiotKdf.c" />
+    <ClCompile Include="..\CyReP\RiotSha256.c" />
+    <ClCompile Include="..\CyReP\RiotX509Bldr.c" />
+    <ClCompile Include="..\CyReP\tcps\TcpsId.c" />
+    <ClCompile Include="..\External\tinycbor\src\cborencoder.c" />
+    <ClCompile Include="..\External\tinycbor\src\cborencoder_close_container_checked.c" />
+    <ClCompile Include="..\External\tinycbor\src\cborerrorstrings.c" />
+    <ClCompile Include="..\External\tinycbor\src\cborparser.c" />
+    <ClCompile Include="..\External\tinycbor\src\cborparser_dup_string.c" />
+    <ClCompile Include="..\External\tinycbor\src\cborpretty.c" />
+    <ClCompile Include="RIoTEmulator.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\CyReP;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\CyReP;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\CyReP;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\CyReP;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

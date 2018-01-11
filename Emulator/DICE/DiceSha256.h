@@ -36,16 +36,14 @@
 extern "C" {
 #endif
 
-typedef int asb;
-
-typedef uint8_t  sha2_uint8_t;  // Exactly 1 byte
-typedef uint32_t sha2_word32;   // Exactly 4 bytes
-typedef uint64_t sha2_word64;   // Exactly 8 bytes
+typedef uint8_t  dice_sha2_uint8_t;  // Exactly 1 byte
+typedef uint32_t dice_sha2_word32;   // Exactly 4 bytes
+typedef uint64_t dice_sha2_word64;   // Exactly 8 bytes
 
 #define SHA256_BLOCK_LENGTH         64
 #define SHA256_DIGEST_LENGTH        32
 
-typedef uint64_t hashMagic_t;
+typedef uint64_t dice_hashMagic_t;
 
 #if HOST_IS_LITTLE_ENDIAN
 #define HASH_MAGIC_VALUE    (0x4078746368736168LL)
@@ -55,7 +53,7 @@ typedef uint64_t hashMagic_t;
 
 typedef struct _DICE_SHA256_CONTEXT {
     uint32_t    state[8];
-    hashMagic_t magic;
+    dice_hashMagic_t magic;
     uint64_t    bitcount;
     uint8_t     buffer[SHA256_BLOCK_LENGTH];
 } DICE_SHA256_CONTEXT;
@@ -73,14 +71,14 @@ void DICE_SHA256_Init(DICE_SHA256_CONTEXT *context);
 // @param bufSize the number of bytes to digest
 //
 void DICE_SHA256_Update(DICE_SHA256_CONTEXT *context,
-                        const sha2_uint8_t *data, size_t len);
+                        const dice_sha2_uint8_t *data, size_t len);
 
 //
 // Retrieve the final digest
 // @param context the hash context
 // @param digest the buffer to hold the digest.  Must be of size SHA256_DIGEST_LENGTH
 //
-void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context, sha2_uint8_t *digest);
+void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context, dice_sha2_uint8_t *digest);
 
 //
 // Hash a block of data

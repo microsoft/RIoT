@@ -189,6 +189,26 @@ RiotCrypt_DeriveEccKey(
                                  pSrcVal, label, labelSize);
 }
 
+RIOT_STATUS
+RiotCrypt_ImportEccPub(
+    uint8_t             *b, // IN: TODO
+    uint32_t            s,  // IN: TODO
+    ecc_publickey       *a  // OUT: TODO
+)
+{
+    if ((*b++ != 0x04) ||
+        (s < 1 + 2 * RIOT_ECC_COORD_BYTES))
+    {
+        return RIOT_INVALID_PARAMETER;
+    }
+
+    BigIntToBigVal(&a->x, b, RIOT_ECC_COORD_BYTES);
+    b += RIOT_ECC_COORD_BYTES;
+    BigIntToBigVal(&a->y, b, RIOT_ECC_COORD_BYTES );
+    a->infinity = 0;
+    return RIOT_SUCCESS;
+}
+
 void
 RiotCrypt_ExportEccPub(
     RIOT_ECC_PUBLIC     *a,     // IN:  TODO

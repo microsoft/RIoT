@@ -100,25 +100,28 @@ X509AddExtensions(
         CHK(            DERPopNesting(Tbs));
         CHK(        DERPopNesting(Tbs));
     }
-    if (!(PathLen == 0))
+    if (PathLen > 0)
     {
-        CHK(    DERStartSequenceOrSet(Tbs, true));
-        CHK(        DERAddOID(Tbs, keyUsageOID));
-        CHK(        DERStartEnvelopingOctetString(Tbs));
-        CHK(            DERAddBitString(Tbs, keyUsageCA, sizeof(keyUsageCA)));
+        CHK(        DERStartSequenceOrSet(Tbs, true));
+        CHK(            DERAddOID(Tbs, keyUsageOID));
+        CHK(            DERStartEnvelopingOctetString(Tbs));
+        CHK(                DERAddBitString(Tbs, keyUsageCA, sizeof(keyUsageCA)));
+        CHK(            DERPopNesting(Tbs));
         CHK(        DERPopNesting(Tbs));
-        CHK(    DERPopNesting(Tbs));
     }
-    CHK(        DERStartSequenceOrSet(Tbs, true));
-    CHK(            DERAddOID(Tbs, extKeyUsageOID));
-    CHK(            DERAddBoolean(Tbs, true));
-    CHK(            DERStartEnvelopingOctetString(Tbs));
-    CHK(                DERStartSequenceOrSet(Tbs, true));
-    CHK(                    DERAddOID(Tbs, clientAuthOID));
-    CHK(                    DERAddOID(Tbs, serverAuthOID));
-    CHK(                DERPopNesting(Tbs));
-    CHK(            DERPopNesting(Tbs));
-    CHK(        DERPopNesting(Tbs));
+    else
+    {
+        CHK(        DERStartSequenceOrSet(Tbs, true));
+        CHK(            DERAddOID(Tbs, extKeyUsageOID));
+        CHK(            DERAddBoolean(Tbs, true));
+        CHK(            DERStartEnvelopingOctetString(Tbs));
+        CHK(                DERStartSequenceOrSet(Tbs, true));
+        CHK(                    DERAddOID(Tbs, clientAuthOID));
+        CHK(                    DERAddOID(Tbs, serverAuthOID));
+        CHK(                DERPopNesting(Tbs));
+        CHK(            DERPopNesting(Tbs));
+        CHK(        DERPopNesting(Tbs));
+    }
     if (TcpsLen == 0)
     {
         CHK(        DERStartSequenceOrSet(Tbs, true));
@@ -280,7 +283,7 @@ X509GetDeviceCertTBS(
         CHK(                DERPopNesting(Tbs));
         CHK(            DERPopNesting(Tbs));
     }
-    if(!(PathLength == 0))
+    if(PathLength <= 0)
     {
         CHK(        DERStartSequenceOrSet(Tbs, true));
         CHK(            DERAddOID(Tbs, keyUsageOID));

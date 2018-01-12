@@ -7,6 +7,8 @@
 
 #include "targetver.h"
 
+#define SHA256_DIGEST_LENGTH (32)
+
 #include <stdio.h>
 #include <tchar.h>
 #include <vector>
@@ -22,6 +24,7 @@
 #include <cyrep/RiotEcc.h>
 #include <cyrep/RiotCrypt.h>
 #include <BarnacleTA.h>
+#include <Barnacle.h>
 #include "DfuSe.h"
 
 #define WSTR_TO_LOWER(__str) for (UINT32 n = 0; n < __str.size(); n++) __str[n] = tolower(__str[n]);
@@ -30,6 +33,7 @@
 #define diceDeviceVid 0x0483
 #define diceDevicePid 0xDF11
 #define diceDeviceVer 0x0200
+#define szTcpsOID  "2.23.133.5.4.2"
 
 std::vector<BYTE> ReadHex(std::wstring strIn);
 uint32_t GetTimeStamp(void);
@@ -40,6 +44,12 @@ std::vector<BYTE> ReadHex(std::wstring strIn);
 std::vector<BYTE> ReadFromFile(std::wstring fileName);
 std::string ReadStrFromFile(std::wstring fileName);
 void WriteToFile(std::wstring fileName, std::vector<BYTE> data);
+void WriteToFile(std::wstring fileName, std::string data);
 void WriteToFile(std::wstring fileName, UINT32 data);
+std::wstring ToHexWString(std::vector<BYTE> &byteVector);
+std::string ToHexString(std::vector<BYTE> &byteVector);
+
+bool RunSignAgent(std::unordered_map<std::wstring, std::wstring> param);
+bool RunIssueDeviceTrust(std::unordered_map<std::wstring, std::wstring> param);
 
 // TODO: reference additional headers your program requires here

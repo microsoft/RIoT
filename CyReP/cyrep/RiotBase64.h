@@ -8,7 +8,8 @@
 extern "C" {
 #endif
 
-#define Base64Length(l) ((l == 0) ? (1) : (((((l - 1) / 3) + 1) * 4) + 2))
+#define Base64RawLength(l) ((l == 0) ? (1) : (((((l - 1) / 3) + 1) * 4)))
+#define Base64Length(l) (Base64RawLength(l) + (Base64RawLength(l) / 64) * 2 + 2)
 
 int
 Base64Encode(

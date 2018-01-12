@@ -87,7 +87,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\tcps;$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/wd4229 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -104,7 +104,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\tcps;$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -122,7 +122,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\tcps;$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/wd4229 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -143,7 +143,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\CyReP\tcps;$(SolutionDir)..\CyReP\cyrep;$(SolutionDir)..\External\tinycbor\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -167,10 +167,10 @@
     <ClInclude Include="..\CyReP\CyReP\RiotStatus.h" />
     <ClInclude Include="..\CyReP\CyReP\RiotTarget.h" />
     <ClInclude Include="..\CyReP\CyReP\RiotX509Bldr.h" />
+    <ClInclude Include="..\CyReP\tcps\TcpsId.h" />
     <ClInclude Include="..\External\tinycbor\src\cbor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="TcpsId.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\CyReP\RiotAes128.c" />
@@ -183,6 +183,7 @@
     <ClCompile Include="..\CyReP\RiotKdf.c" />
     <ClCompile Include="..\CyReP\RiotSha256.c" />
     <ClCompile Include="..\CyReP\RiotX509Bldr.c" />
+    <ClCompile Include="..\CyReP\tcps\TcpsId.c" />
     <ClCompile Include="..\External\tinycbor\src\cborencoder.c" />
     <ClCompile Include="..\External\tinycbor\src\cborencoder_close_container_checked.c" />
     <ClCompile Include="..\External\tinycbor\src\cborerrorstrings.c" />
@@ -196,7 +197,6 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\CyReP;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="TcpsId.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

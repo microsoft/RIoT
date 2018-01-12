@@ -14,6 +14,7 @@
 #include <cyrep/RiotCrypt.h>
 #include <cyrep/RiotDerEnc.h>
 #include <cyrep/RiotX509Bldr.h>
+#include <tcps/TcpsId.h>
 #include <AgentInfo.h>
 #include <BarnacleTA.h>
 
@@ -62,6 +63,8 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
     uint8_t derBuffer[DER_MAX_TBS] = { 0 };
     uint32_t length = 0;
     RIOT_ECC_SIGNATURE  tbsSig = { 0 };
+    uint8_t* tcps = NULL;
+    uint32_t tcpsLen = 0;
 
     // Derive the policy compound key
     if(!(result = (RiotCrypt_Hash2(digest,
@@ -111,13 +114,29 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
         goto Cleanup;
     }
 
-    if(!(result = (X509GetAliasCertTBS(&derCtx,
-                                       &x509TBSData,
-                                       (RIOT_ECC_PUBLIC*)&policyPubKey,
-                                       (RIOT_ECC_PUBLIC*)&pCompoundId->info.pubKey,
-                                       (uint8_t*)digest,
-                                       sizeof(digest),
-                                       0) == 0)))
+    if(!(result = (BuildTCPSAliasIdentity(&pCertStore->info.devicePubKey,
+                                          (uint8_t*)digest,
+                                          sizeof(digest),
+                                          &tcps,
+                                          &tcpsLen) == RIOT_SUCCESS)))
+    {
+        dbgPrint("ERROR: BuildTCPSAliasIdentity failed.\r\n");
+        goto Cleanup;
+    }
+
+    result = (X509GetAliasCertTBS(&derCtx,
+                                  &x509TBSData,
+                                  (RIOT_ECC_PUBLIC*)&policyPubKey,
+                                  (RIOT_ECC_PUBLIC*)&pCompoundId->info.pubKey,
+                                  (uint8_t*)digest,
+                                  sizeof(digest),
+                                  tcps,
+                                  tcpsLen,
+                                  0) == 0);
+    FreeTCPSId(tcps);
+    tcps = NULL;
+    tcpsLen = 0;
+    if(!result)
     {
         dbgPrint("ERROR: X509GetAliasCertTBS failed.\r\n");
         goto Cleanup;

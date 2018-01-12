@@ -15,10 +15,12 @@
 #include <cyrep/RiotCrypt.h>
 #include <cyrep/RiotDerEnc.h>
 #include <cyrep/RiotX509Bldr.h>
+#include <tcps/TcpsId.h>
 #include <BarnacleTA.h>
 #include <Barnacle.h>
 
 extern RNG_HandleTypeDef hrng;
+extern const char DeviceBuildId[32];
 
 __attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr;
 #ifndef NDEBUG
@@ -38,17 +40,21 @@ __attribute__((section(".FWRW"))) const BARNACLE_CACHED_DATA FwCache;
 char dfuString[128] = {0};
 char* BarnacleGetDfuStr(void)
 {
-	uint32_t cursor = 0;
-	int32_t agentArea = ((uint32_t)&IssuedCerts - (uint32_t)&AgentHdr) / 4096;
-	cursor += sprintf(&dfuString[cursor], "@Barnacle /0x%08x/", (unsigned int)&AgentHdr);
-	while(agentArea > 0)
-	{
-		uint32_t iteration = MIN(agentArea, 99);
-		cursor += sprintf(&dfuString[cursor], "%02u*004Kf,", (unsigned int)iteration);
-		agentArea -= iteration;
-	}
-	cursor += sprintf(&dfuString[cursor], "01*04K%c", (IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_WRITELOCK) ? 'a' : 'g');
-	return dfuString;
+    uint32_t cursor = 0;
+    int32_t agentArea = ((uint32_t)&FwDeviceId - (uint32_t)&AgentHdr) / 4096;
+    cursor += sprintf(&dfuString[cursor], "@Barnacle /0x%08x/", (unsigned int)&AgentHdr);
+    while(agentArea > 0)
+    {
+        uint32_t iteration = MIN(agentArea, 99);
+        cursor += sprintf(&dfuString[cursor], "%02u*004Kf", (unsigned int)iteration);
+        agentArea -= iteration;
+        if(agentArea > 0)
+        {
+            cursor += sprintf(&dfuString[cursor], ",");
+        }
+    }
+    cursor += sprintf(&dfuString[cursor], "/0x%08x/01*04K%c", (unsigned int)&IssuedCerts, ((IssuedCerts.info.magic != BARNACLEMAGIC) || !(IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_WRITELOCK)) ? 'g' : 'a' );
+    return dfuString;
 }
 
 bool BarnacleErasePages(void* dest, uint32_t size)
@@ -212,6 +218,7 @@ bool BarnacleWriteLockLoader()
         ob.RDPLevel = OB_RDP_LEVEL_1;
         ob.PCROPConfig = OB_PCROP_RDP_ERASE;
 #endif
+        HAL_FLASH_Lock();
         if(HAL_FLASH_Unlock() != HAL_OK)
         {
             result = false;
@@ -310,6 +317,8 @@ bool BarnacleInitialProvision()
         uint8_t digest[SHA256_DIGEST_LENGTH] = { 0 };
         uint32_t length = 0;
         RIOT_ECC_SIGNATURE  tbsSig = { 0 };
+        uint8_t* tcps = NULL;
+        uint32_t tcpsLen = 0;
 
         dbgPrint("INFO: Generating and persisting new device certificate.\r\n");
         // Make sure we don't flash unwritten space in the cert bag
@@ -332,11 +341,29 @@ bool BarnacleInitialProvision()
         digest[0] &= 0x7F; // Ensure that the serial number is positive
         digest[0] |= 0x01; // Ensure that the serial is not null
         memcpy(x509TBSData.SerialNum, digest, sizeof(x509TBSData.SerialNum));
-        if(!(result = (X509GetDeviceCertTBS(&derCtx,
-                                           &x509TBSData,
-                                           (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
-                                           (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
-                                           2) == 0)))
+
+        if(!(result = (BuildTCPSDeviceIdentity((RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                               (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                               (uint8_t*)DeviceBuildId,
+                                               sizeof(DeviceBuildId),
+                                               &tcps,
+                                               &tcpsLen) == RIOT_SUCCESS)))
+        {
+            dbgPrint("ERROR: BuildTCPSDeviceIdentity failed.\r\n");
+            goto Cleanup;
+        }
+
+        result = (X509GetDeviceCertTBS(&derCtx,
+                                       &x509TBSData,
+                                       (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                       (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                       tcps,
+                                       tcpsLen,
+                                       2) == 0);
+        FreeTCPSId(tcps);
+        tcps = NULL;
+        tcpsLen = 0;
+        if(!result)
         {
             dbgPrint("ERROR: X509GetDeviceCertTBS failed.\r\n");
             goto Cleanup;
@@ -364,8 +391,8 @@ bool BarnacleInitialProvision()
             dbgPrint("ERROR: DERtoPEM failed.\r\n");
             goto Cleanup;
         }
-        newCertBag.info.certTable[NUMELEM(newCertBag.info.certTable) - 1].start = newCertBag.info.cursor;
-        newCertBag.info.certTable[NUMELEM(newCertBag.info.certTable) - 1].size = (uint16_t)length;
+        newCertBag.info.certTable[BARNACLE_ISSUED_DEVICE].start = newCertBag.info.cursor;
+        newCertBag.info.certTable[BARNACLE_ISSUED_DEVICE].size = (uint16_t)length;
         newCertBag.info.cursor += length;
         newCertBag.certBag[newCertBag.info.cursor++] = '\0';
 
@@ -381,6 +408,37 @@ bool BarnacleInitialProvision()
     if(!generateCerts)
     {
         dbgPrint("INFO: Device already provisioned.\r\n");
+    }
+
+    dbgPrint("INFO: DeviceID is \r\n0x");
+    {
+        uint8_t devicePub[65] = {0};
+        RiotCrypt_ExportEccPub((RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey, devicePub, NULL);
+        for(uint32_t n = 0; n < sizeof(devicePub); n++)
+        {
+            if (!((n + 1) % 22) && (n > 0)) dbgPrint("\r\n");
+            dbgPrint("%02x", devicePub[n]);
+        }
+    }
+    dbgPrint("\r\n");
+    dbgPrint("INFO: DeviceCert is %s and %s\r\n", ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_PROVISIONIED) ? "ISSUED" : "SELFSIGNED"),
+                                               ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_WRITELOCK) ? "WRITELOCKED" : "WRITEABLE"));
+//    dbgPrint("%s", (char*)&IssuedCerts.certBag[IssuedCerts.info.certTable[BARNACLE_ISSUED_DEVICE].start]);
+//    if(IssuedCerts.info.certTable[BARNACLE_ISSUED_ROOT].size != 0)
+//    {
+//        dbgPrint("%s", (char*)&IssuedCerts.certBag[IssuedCerts.info.certTable[BARNACLE_ISSUED_ROOT].start]);
+//    }
+    dbgPrint("INFO: CodeAuthority is %s", ((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT) ? "LOCKED to\r\n0x" : "UNLOCKED\r\n"));
+    if(IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT)
+    {
+        uint8_t codeAuthPub[65] = {0};
+        RiotCrypt_ExportEccPub((RIOT_ECC_PUBLIC*)&IssuedCerts.info.codeAuthPubKey, codeAuthPub, NULL);
+        for(uint32_t n = 0; n < sizeof(codeAuthPub); n++)
+        {
+            if (!((n + 1) % 22) && (n > 0)) dbgPrint("\r\n");
+            dbgPrint("%02x", codeAuthPub[n]);
+        }
+        dbgPrint("\r\n");
     }
 
 Cleanup:
@@ -411,7 +469,7 @@ bool BarnacleVerifyAgent()
     // Verify the agent code digest against the header
     if(!(result = (RiotCrypt_Hash(digest,
                                   sizeof(digest),
-								  AgentCode,
+                                  AgentCode,
                                   AgentHdr.s.sign.agent.size) == RIOT_SUCCESS)))
     {
         dbgPrint("ERROR: RiotCrypt_Hash failed.\r\n");
@@ -423,32 +481,33 @@ bool BarnacleVerifyAgent()
         goto Cleanup;
     }
 
-	// Calculate the header signature
-	if(!(result = (RiotCrypt_Hash(digest,
-								  sizeof(digest),
-								  (const void*)&AgentHdr.s.sign,
-								  sizeof(AgentHdr.s.sign)) == RIOT_SUCCESS)))
-	{
-		dbgPrint("ERROR: RiotCrypt_Hash failed.\r\n");
-		goto Cleanup;
-	}
+    // Calculate the header signature
+    if(!(result = (RiotCrypt_Hash(digest,
+                                  sizeof(digest),
+                                  (const void*)&AgentHdr.s.sign,
+                                  sizeof(AgentHdr.s.sign)) == RIOT_SUCCESS)))
+    {
+        dbgPrint("ERROR: RiotCrypt_Hash failed.\r\n");
+        goto Cleanup;
+    }
 
-	// If authenticated boot is provisioned and enabled
+    // If authenticated boot is provisioned and enabled
     if((IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_PROVISIONIED) &&
        (IssuedCerts.info.flags & BARNACLE_ISSUEDFLAG_AUTHENTICATED_BOOT) &&
        (!BarnacleNullCheck((void*)&IssuedCerts.info.codeAuthPubKey, sizeof(IssuedCerts.info.codeAuthPubKey))))
     {
-		//Re-hydrate the signature
-		BigIntToBigVal(&sig.r, AgentHdr.s.signature.r, sizeof(AgentHdr.s.signature.r));
-		BigIntToBigVal(&sig.s, AgentHdr.s.signature.s, sizeof(AgentHdr.s.signature.s));
-		if(!(result = (RiotCrypt_VerifyDigest(digest,
-											   sizeof(digest),
-											   &sig,
-											   &IssuedCerts.info.codeAuthPubKey) == RIOT_SUCCESS)))
-		{
-			dbgPrint("ERROR: RiotCrypt_Verify failed.\r\n");
-			goto Cleanup;
-		}
+        //Re-hydrate the signature
+        BigIntToBigVal(&sig.r, AgentHdr.s.signature.r, sizeof(AgentHdr.s.signature.r));
+        BigIntToBigVal(&sig.s, AgentHdr.s.signature.s, sizeof(AgentHdr.s.signature.s));
+        if(!(result = (RiotCrypt_VerifyDigest(digest,
+                                               sizeof(digest),
+                                               &sig,
+                                               &IssuedCerts.info.codeAuthPubKey) == RIOT_SUCCESS)))
+        {
+            dbgPrint("ERROR: RiotCrypt_Verify failed.\r\n");
+            goto Cleanup;
+        }
+        dbgPrint("INFO: Agent signature valid.\r\n");
     }
 
     // Is this the first launch or the first launch after an update?
@@ -465,6 +524,8 @@ bool BarnacleVerifyAgent()
         uint32_t length = 0;
         RIOT_ECC_SIGNATURE  tbsSig = { 0 };
         BARNACLE_CACHED_DATA cache = {0};
+        uint8_t* tcps = NULL;
+        uint32_t tcpsLen = 0;
 
         // Detect rollback attack if this is not the first launch
         if(FwCache.info.magic == BARNACLEMAGIC)
@@ -538,13 +599,30 @@ bool BarnacleVerifyAgent()
         digest[0] &= 0x7F; // Ensure that the serial number is positive
         digest[0] |= 0x01; // Ensure that the serial is not null
         memcpy(x509TBSData.SerialNum, digest, sizeof(x509TBSData.SerialNum));
-        if(!(result = (X509GetAliasCertTBS(&derCtx,
-                                           &x509TBSData,
-                                           (RIOT_ECC_PUBLIC*)&cache.info.compoundPubKey,
-                                           (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
-                                           (uint8_t*)AgentHdr.s.sign.agent.digest,
-                                           sizeof(AgentHdr.s.sign.agent.digest),
-                                           1) == 0)))
+
+        if(!(result = (BuildTCPSAliasIdentity((RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                              (uint8_t*)AgentHdr.s.sign.agent.digest,
+                                              sizeof(AgentHdr.s.sign.agent.digest),
+                                              &tcps,
+                                              &tcpsLen) == RIOT_SUCCESS)))
+        {
+            dbgPrint("ERROR: BuildTCPSAliasIdentity failed.\r\n");
+            goto Cleanup;
+        }
+
+        result = (X509GetAliasCertTBS(&derCtx,
+                                      &x509TBSData,
+                                      (RIOT_ECC_PUBLIC*)&cache.info.compoundPubKey,
+                                      (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
+                                      (uint8_t*)AgentHdr.s.sign.agent.digest,
+                                      sizeof(AgentHdr.s.sign.agent.digest),
+                                      tcps,
+                                      tcpsLen,
+                                      1) == 0);
+        FreeTCPSId(tcps);
+        tcps = NULL;
+        tcpsLen = 0;
+        if(!result)
         {
             dbgPrint("ERROR: X509GetAliasCertTBS failed.\r\n");
             goto Cleanup;
@@ -600,6 +678,7 @@ bool BarnacleVerifyAgent()
     memcpy(&CompoundId.info.privKey, &FwCache.info.compoundPrivKey, sizeof(CompoundId.info.privKey));
     memset(&CertStore, 0x00, sizeof(CertStore));
     CertStore.info.magic = BARNACLEMAGIC;
+    memcpy(&CertStore.info.devicePubKey, &FwDeviceId.info.pubKey, sizeof(CertStore.info.devicePubKey));
 
     // Issued Root
     if((CertStore.info.cursor + IssuedCerts.info.certTable[BARNACLE_ISSUED_ROOT].size) >  sizeof(CertStore.certBag))

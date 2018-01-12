@@ -40,6 +40,17 @@ void WriteToFile(std::wstring fileName, std::vector<BYTE> data)
     }
 }
 
+void WriteToFile(std::wstring fileName, std::string data)
+{
+    // http://stackoverflow.com/questions/14841396/stdunique-ptr-deleters-and-the-win32-api
+    std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)> hFile(::CreateFile(fileName.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL), &::CloseHandle);
+    DWORD bytesWritten = 0;
+    if (!WriteFile(hFile.get(), data.c_str(), data.size(), &bytesWritten, NULL))
+    {
+        throw GetLastError();
+    }
+}
+
 void WriteToFile(std::wstring fileName, UINT32 data)
 {
     // http://stackoverflow.com/questions/14841396/stdunique-ptr-deleters-and-the-win32-api
@@ -127,3 +138,28 @@ std::vector<BYTE> CertThumbPrint(PCCERT_CONTEXT hCert)
     BCryptCloseAlgorithmProvider(hSha1, 0);
     return digest;
 }
+
+std::wstring ToHexWString(std::vector<BYTE> &byteVector)
+{
+    std::wstring stringOut((byteVector.size() + 2) * 2, '\0');
+    DWORD result = stringOut.size();
+    if (!CryptBinaryToStringW(byteVector.data(), byteVector.size(), CRYPT_STRING_HEXRAW, (LPWSTR)stringOut.c_str(), &result))
+    {
+        throw GetLastError();
+    }
+    stringOut.resize(stringOut.size() - 4);
+    return stringOut;
+}
+
+std::string ToHexString(std::vector<BYTE> &byteVector)
+{
+    std::string stringOut((byteVector.size() + 2) * 2, '\0');
+    DWORD result = stringOut.size();
+    if (!CryptBinaryToStringA(byteVector.data(), byteVector.size(), CRYPT_STRING_HEXRAW, (LPSTR)stringOut.c_str(), &result))
+    {
+        throw GetLastError();
+    }
+    stringOut.resize(stringOut.size() - 4);
+    return stringOut;
+}
+

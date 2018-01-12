@@ -43,6 +43,7 @@
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include"/>
 									<listOptionValue builtIn="false" value="../../../../CyReP"/>
 									<listOptionValue builtIn="false" value="../../Shared/BarnacleTA"/>
+									<listOptionValue builtIn="false" value="../../../../External/tinycbor/src"/>
 								</option>
 								<option id="com.atollic.truestudio.gcc.symbols.defined.1670122205" name="Defined symbols" superClass="com.atollic.truestudio.gcc.symbols.defined" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__weak=__attribute__((weak))"/>
@@ -134,7 +135,9 @@
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32L4xx/Include"/>
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include"/>
 									<listOptionValue builtIn="false" value="../../../../CyReP/cyrep"/>
+									<listOptionValue builtIn="false" value="../../../../CyReP/tcps"/>
 									<listOptionValue builtIn="false" value="../../Shared/BarnacleTA"/>
+									<listOptionValue builtIn="false" value="../../../../External/tinycbor/src"/>
 								</option>
 								<inputType id="com.atollic.truestudio.gcc.input.1137768595" superClass="com.atollic.truestudio.gcc.input"/>
 							</tool>

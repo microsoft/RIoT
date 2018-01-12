@@ -128,6 +128,13 @@ RiotCrypt_DeriveEccKey(
     size_t              labelSize       // IN:  TODO
 );
 
+RIOT_STATUS
+RiotCrypt_ImportEccPub(
+    uint8_t             *b, // IN: TODO
+    uint32_t            s,  // IN: TODO
+    ecc_publickey       *a  // OUT: TODO
+);
+
 void
 RiotCrypt_ExportEccPub(
     RIOT_ECC_PUBLIC     *a,     // IN:  TODO

@@ -39,6 +39,9 @@
     <ClInclude Include="..\..\Shared\RIoT\RIoTCrypt\include\RiotCrypt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Shared\Barnacle\Barnacle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -63,6 +66,18 @@
       <Filter>Source Files\CyReP</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\CyReP\RiotSha256.c">
+      <Filter>Source Files\CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="SignAgent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IssueTrust.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\CyReP\RiotCrypt.c">
+      <Filter>Source Files\CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\CyReP\RiotAes128.c">
       <Filter>Source Files\CyReP</Filter>
     </ClCompile>
   </ItemGroup>

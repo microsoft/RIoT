@@ -245,8 +245,11 @@ Base64Encode(
     // Calculate required output buffer length in bytes
     reqSize = (Length == 0) ? (0) : ((((Length - 1) / 3) + 1) * 4);
 
+    // CRLFs after 64 characters
+    reqSize += (reqSize / 64) * 2;
+
     // Plus trailing CR&NL
-    reqSize += 3;
+    reqSize += 2;
 
     // Validate length of output buffer
     if (OutLen && (*OutLen < reqSize)) {
@@ -258,6 +261,7 @@ Base64Encode(
     //   b0            b1(+1)          b2(+2)
     // 7 6 5 4 3 2 1 0 7 6 5 4 3 2 1 0 7 6 5 4 3 2 1 0
     // |----c1---| |----c2---| |----c3---| |----c4---|
+    uint32_t line = 0;
     while (Length - curPos >= 3)
     {
         char c1 = base64char(Input[curPos] >> 2);
@@ -272,7 +276,13 @@ Base64Encode(
         Output[dstPos++] = c2;
         Output[dstPos++] = c3;
         Output[dstPos++] = c4;
-
+        line += 4;
+        if((line % 64) == 0)
+        {
+            Output[dstPos++] = '\r';
+            Output[dstPos++] = '\n';
+            line = 0;
+        }
     }
 
     if (Length - curPos == 2)
@@ -286,6 +296,7 @@ Base64Encode(
         Output[dstPos++] = c2;
         Output[dstPos++] = c3;
         Output[dstPos++] = '=';
+        line += 4;
     }
     else if (Length - curPos == 1)
     {
@@ -296,6 +307,7 @@ Base64Encode(
         Output[dstPos++] = c2;
         Output[dstPos++] = '=';
         Output[dstPos++] = '=';
+        line += 4;
     }
 
     // Add CR&NL termination

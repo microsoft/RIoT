@@ -225,25 +225,6 @@ RiotCrypt_ExportEccPub(
     }
 }
 
-int
-RiotCrypt_ImportEccPub(
-    uint8_t             *b,
-    uint32_t            s,
-    ecc_publickey       *a
-)
-{
-    if (*b++ != 0x04 ||
-         s < 1 + 2 * RIOT_ECC_COORD_BYTES) {
-        return -1;
-    }
-
-    BigIntToBigVal(&a->x, b, RIOT_ECC_COORD_BYTES);
-    b += RIOT_ECC_COORD_BYTES;
-    BigIntToBigVal(&a->y, b, RIOT_ECC_COORD_BYTES );
-    return 0;
-}
-
-
 RIOT_STATUS
 RiotCrypt_Sign(
     RIOT_ECC_SIGNATURE     *sig,        // OUT: TODO

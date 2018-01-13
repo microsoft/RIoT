@@ -386,7 +386,7 @@ bool BarnacleInitialProvision()
 
         // Produce a PEM formatted output from the DER encoded cert
         length = sizeof(newCertBag.certBag) - newCertBag.info.cursor;
-        if(!(result = (DERtoPEM(&derCtx, CERT_TYPE, (char*)&newCertBag.certBag[newCertBag.info.cursor], &length) == 0)))
+        if(!(result = (DERtoPEM(&derCtx, R_CERT_TYPE, (char*)&newCertBag.certBag[newCertBag.info.cursor], &length) == 0)))
         {
             dbgPrint("ERROR: DERtoPEM failed.\r\n");
             goto Cleanup;
@@ -647,7 +647,7 @@ bool BarnacleVerifyAgent()
 
         // Copy compound key Certificate
         length = sizeof(cache.cert);
-        if(!(result = (DERtoPEM(&derCtx, CERT_TYPE, (char*)cache.cert, &length) == 0)))
+        if(!(result = (DERtoPEM(&derCtx, R_CERT_TYPE, (char*)cache.cert, &length) == 0)))
         {
             dbgPrint("ERROR: DERtoPEM failed.\r\n");
             goto Cleanup;

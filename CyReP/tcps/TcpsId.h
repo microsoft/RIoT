@@ -24,15 +24,26 @@ extern "C" {
 //  share the following defines.
 #define TCPS_ID_MAP_VER_CURENT    1
 
+#define MAX_ASSERTION_KEY_LEN      0xf
 #define TCPS_IDENTITY_MAP_VER      "VER"
 #define TCPS_IDENTITY_MAP_FWID     "FIRMWID"
 #define TCPS_IDENTITY_MAP_AUTH     "CODEAUTH"
 #define TCPS_IDENTITY_MAP_PUBKEY   "PUBKEY"
 
+
+#define ASSERT_TYPE_BUFFER      0
+#define ASSERT_TYPE_INT         1
+
 typedef struct _TcpsAssertion {
-    char *Name;
-    uint8_t *Data;
-    uint32_t DataSize;
+    char Name[MAX_ASSERTION_KEY_LEN];
+    uint32_t DataType;
+    union {
+        struct {
+            const uint8_t *Value;
+            uint32_t Size;
+        } Buff;
+        int Value;
+    } Data;
 }TcpsAssertion;
 
 RIOT_STATUS
@@ -54,6 +65,17 @@ BuildTCPSDeviceIdentity(
     uint32_t *IdSize
 );
 
+RIOT_STATUS
+ModifyTCPSDeviceIdentity(
+    uint8_t *ExistingId,
+    uint32_t ExistingIdSize,
+    RIOT_ECC_PUBLIC *Pub,
+    RIOT_ECC_PUBLIC *AuthKeyPub,
+    uint8_t *Fwid,
+    uint32_t FwidSize,
+    uint8_t **NewId,
+    uint32_t *NewIdSize
+);
 void
 FreeTCPSId(
     uint8_t *Id

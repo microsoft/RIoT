@@ -162,7 +162,7 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
     // Copy compound key Certificate into the cert store
     pCertStore->info.certTable[BARNACLE_CERTSTORE_POLICY].start = pCertStore->info.cursor;
     length = sizeof(pCertStore->certBag) - pCertStore->info.cursor;
-    if(!(result = (DERtoPEM(&derCtx, CERT_TYPE, (char*)&pCertStore->certBag[pCertStore->info.cursor], &length) == 0)))
+    if(!(result = (DERtoPEM(&derCtx, R_CERT_TYPE, (char*)&pCertStore->certBag[pCertStore->info.cursor], &length) == 0)))
     {
         dbgPrint("ERROR: DERtoPEM failed.\r\n");
         goto Cleanup;

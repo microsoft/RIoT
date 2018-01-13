@@ -227,7 +227,7 @@ CreateDeviceAuthBundle(
     length = sizeof(PEM);
     DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
     X509GetDEREccPub(&derCtx, deviceIDPub);
-    DERtoPEM(&derCtx, PUBLICKEY_TYPE, PEM, &length);
+    DERtoPEM(&derCtx, R_PUBLICKEY_TYPE, PEM, &length);
     *DeviceIDPublicEncodedSize = length;
     memcpy(DeviceIDPublicEncoded, PEM, length);
 
@@ -244,7 +244,7 @@ CreateDeviceAuthBundle(
     length = sizeof(PEM);
     DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
     X509GetDEREcc(&derCtx, aliasKeyPub, aliasKeyPriv);
-    DERtoPEM(&derCtx, ECC_PRIVATEKEY_TYPE, PEM, &length);
+    DERtoPEM(&derCtx, R_ECC_PRIVATEKEY_TYPE, PEM, &length);
     *AliasKeyEncodedSize = length;
     memcpy(AliasKeyEncoded, PEM, length);
 
@@ -285,7 +285,7 @@ CreateDeviceAuthBundle(
 
     // Copy Alias Key Certificate
     length = sizeof(PEM);
-    DERtoPEM(&derCtx, CERT_TYPE, PEM, &length);
+    DERtoPEM(&derCtx, R_CERT_TYPE, PEM, &length);
     *AliasCertBufSize = length;
     memcpy(AliasCertBuffer, PEM, length);
 
@@ -369,7 +369,7 @@ CreateDeviceAuthBundle(
 
     // Copy DeviceID Certificate or CSR
     length = sizeof(PEM);
-    DERtoPEM(&derCtx, CERT_TYPE, PEM, &length);
+    DERtoPEM(&derCtx, R_CERT_TYPE, PEM, &length);
     *DeviceCertBufSize = length;
     memcpy(DeviceCertBuffer, PEM, length);
 
@@ -404,7 +404,7 @@ CreateDeviceAuthBundle(
 
     // Copy "root" CA Certificate
     length = sizeof(PEM);
-    DERtoPEM(&derCtx, CERT_TYPE, PEM, &length);
+    DERtoPEM(&derCtx, R_CERT_TYPE, PEM, &length);
 
 #ifdef DEBUG
     printf("\"root\" CA Cert");

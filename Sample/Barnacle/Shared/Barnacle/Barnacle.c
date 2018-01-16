@@ -317,7 +317,7 @@ bool BarnacleInitialProvision()
         uint8_t digest[SHA256_DIGEST_LENGTH] = { 0 };
         uint32_t length = 0;
         RIOT_ECC_SIGNATURE  tbsSig = { 0 };
-        uint8_t* tcps = NULL;
+        uint8_t tcps[BARNACLE_TCPS_ID_BUF_LENGTH];
         uint32_t tcpsLen = 0;
 
         dbgPrint("INFO: Generating and persisting new device certificate.\r\n");
@@ -347,6 +347,7 @@ bool BarnacleInitialProvision()
                                                (uint8_t*)DeviceBuildId,
                                                sizeof(DeviceBuildId),
                                                &tcps,
+											   BARNACLE_TCPS_ID_BUF_LENGTH,
                                                &tcpsLen) == RIOT_SUCCESS)))
         {
             dbgPrint("ERROR: BuildTCPSDeviceIdentity failed.\r\n");
@@ -360,9 +361,6 @@ bool BarnacleInitialProvision()
                                        tcps,
                                        tcpsLen,
                                        2) == 0);
-        FreeTCPSId(tcps);
-        tcps = NULL;
-        tcpsLen = 0;
         if(!result)
         {
             dbgPrint("ERROR: X509GetDeviceCertTBS failed.\r\n");
@@ -524,7 +522,7 @@ bool BarnacleVerifyAgent()
         uint32_t length = 0;
         RIOT_ECC_SIGNATURE  tbsSig = { 0 };
         BARNACLE_CACHED_DATA cache = {0};
-        uint8_t* tcps = NULL;
+        uint8_t tcps[BARNACLE_TCPS_ID_BUF_LENGTH];
         uint32_t tcpsLen = 0;
 
         // Detect rollback attack if this is not the first launch
@@ -603,7 +601,8 @@ bool BarnacleVerifyAgent()
         if(!(result = (BuildTCPSAliasIdentity((RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
                                               (uint8_t*)AgentHdr.s.sign.agent.digest,
                                               sizeof(AgentHdr.s.sign.agent.digest),
-                                              &tcps,
+                                              tcps,
+											  BARNACLE_TCPS_ID_BUF_LENGTH,
                                               &tcpsLen) == RIOT_SUCCESS)))
         {
             dbgPrint("ERROR: BuildTCPSAliasIdentity failed.\r\n");
@@ -619,9 +618,6 @@ bool BarnacleVerifyAgent()
                                       tcps,
                                       tcpsLen,
                                       1) == 0);
-        FreeTCPSId(tcps);
-        tcps = NULL;
-        tcpsLen = 0;
         if(!result)
         {
             dbgPrint("ERROR: X509GetAliasCertTBS failed.\r\n");

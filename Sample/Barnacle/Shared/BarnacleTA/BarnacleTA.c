@@ -63,7 +63,7 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
     uint8_t derBuffer[DER_MAX_TBS] = { 0 };
     uint32_t length = 0;
     RIOT_ECC_SIGNATURE  tbsSig = { 0 };
-    uint8_t* tcps = NULL;
+    uint8_t tcps[BARNACLE_TCPS_ID_BUF_LENGTH];
     uint32_t tcpsLen = 0;
 
     // Derive the policy compound key
@@ -117,7 +117,8 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
     if(!(result = (BuildTCPSAliasIdentity(&pCertStore->info.devicePubKey,
                                           (uint8_t*)digest,
                                           sizeof(digest),
-                                          &tcps,
+                                          tcps,
+										  BARNACLE_TCPS_ID_BUF_LENGTH,
                                           &tcpsLen) == RIOT_SUCCESS)))
     {
         dbgPrint("ERROR: BuildTCPSAliasIdentity failed.\r\n");
@@ -133,9 +134,6 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
                                   tcps,
                                   tcpsLen,
                                   0) == 0);
-    FreeTCPSId(tcps);
-    tcps = NULL;
-    tcpsLen = 0;
     if(!result)
     {
         dbgPrint("ERROR: X509GetAliasCertTBS failed.\r\n");

@@ -15,6 +15,9 @@
 #define BARNACLETIMESTAMP           (0x59e7bd55)
 #define BARNACLEDIGESTLEN           (32)
 
+#define BARNACLE_TCPS_ID_BUF_LENGTH		(TCPS_ID_PUBKEY_LENGTH * 2) + TCPS_ID_FWID_LENGTH
+
+
 typedef union
 {
     struct

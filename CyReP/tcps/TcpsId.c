@@ -96,6 +96,11 @@ Cleanup:
 }
 
 
+//
+//  cbor_value_ref_byte_string is written with the intent to at some point, move into 
+//  tinycbor. It takes a dependency on an internal function from that project.
+//
+
 CborError _cbor_value_extract_number( const uint8_t **ptr, const uint8_t *end, uint64_t *len );
 CborError
 cbor_value_ref_byte_string(
@@ -356,6 +361,30 @@ pAddAssertionBuffer(
 }
 
 RIOT_STATUS
+pAddAssertionInteger(
+    TcpsIdenity *TcpsId,
+    char* Key,
+    uint32_t Value
+)
+{
+    size_t             index;
+
+    index = pFindAssertion(Key, TcpsId->AssertionArray, TcpsId->Used);
+    if (index == -1)
+    {
+        if (TcpsId->Used == MAX_ASSERTION_COUNT) {
+            return RIOT_FAILURE;
+        }
+        index = TcpsId->Used++;
+        memcpy(TcpsId->AssertionArray[index].Name, Key, strlen(Key));
+    }
+    TcpsId->AssertionArray[index].DataType = ASSERT_TYPE_INT;
+    TcpsId->AssertionArray[index].Data.Value = Value;
+
+    return RIOT_SUCCESS;
+}
+
+RIOT_STATUS
 pBuildTCPSAssertionTable(
     RIOT_ECC_PUBLIC *Pub,
     RIOT_ECC_PUBLIC *AuthKeyPub,
@@ -371,6 +400,14 @@ pBuildTCPSAssertionTable(
     uint32_t        encBufferLen;
     uint8_t         authBuffer[65];
     uint32_t        authBufferLen;
+
+    status = pAddAssertionInteger( TcpsId,
+                                   TCPS_IDENTITY_MAP_VER,
+                                   TCPS_ID_MAP_VER_CURENT );
+
+    if (status != RIOT_SUCCESS) {
+        goto Cleanup;
+    }
 
     if (Pub != NULL)
     {

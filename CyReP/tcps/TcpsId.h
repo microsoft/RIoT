@@ -51,8 +51,9 @@ BuildTCPSAliasIdentity(
     RIOT_ECC_PUBLIC *AuthKeyPub,
     uint8_t *Fwid,
     uint32_t FwidSize,
-    uint8_t **Id,
-    uint32_t *IdSize
+    uint8_t *Id,
+    uint32_t IdSize,
+    uint32_t *Written
 );
 
 RIOT_STATUS
@@ -61,8 +62,9 @@ BuildTCPSDeviceIdentity(
     RIOT_ECC_PUBLIC *AuthKeyPub,
     uint8_t *Fwid,
     uint32_t FwidSize,
-    uint8_t **Id,
-    uint32_t *IdSize
+    uint8_t *Id,
+    uint32_t IdSize,
+    uint32_t *Written
 );
 
 RIOT_STATUS
@@ -73,8 +75,9 @@ ModifyTCPSDeviceIdentity(
     RIOT_ECC_PUBLIC *AuthKeyPub,
     uint8_t *Fwid,
     uint32_t FwidSize,
-    uint8_t **NewId,
-    uint32_t *NewIdSize
+    uint8_t *NewId,
+    uint32_t NewIdSize,
+    uint32_t *Written
 );
 void
 FreeTCPSId(

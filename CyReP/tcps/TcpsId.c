@@ -34,26 +34,17 @@ typedef struct _TcpsIdenity {
     uint32_t Used;
 } TcpsIdenity;
 
-void
-FreeTCPSId(
-    uint8_t *Id
-)
-{
-    if (Id != NULL)
-    {
-        free( Id );
-    }
-}
 
-CborError
+RIOT_STATUS
 pBuildTCPSIdentity(
     TcpsAssertion *Assertions,
     size_t AssertionCount,
     uint8_t *Id,
     uint32_t IdSize,
-    uint32_t *SizeNeeded
+    uint32_t *Written
 )
 {
+    RIOT_STATUS status = RIOT_FAILURE;
     CborError err;
     CborEncoder encodedId;
     CborEncoder map;
@@ -61,12 +52,13 @@ pBuildTCPSIdentity(
 
     if (AssertionCount == 0 ||
         Assertions == NULL ||
-        SizeNeeded == NULL)
+        Written == NULL)
     {
         err = CborUnknownError;
         goto Cleanup;
     }
 
+    memset( Id, 0x0, IdSize );
     cbor_encoder_init( &encodedId, Id, IdSize, 0 );
 
     CLEANUP_ENCODER_ERR( cbor_encoder_create_map( &encodedId, &map, entryCount ) );
@@ -86,13 +78,16 @@ pBuildTCPSIdentity(
 
     CLEANUP_ENCODER_ERR( cbor_encoder_close_container( &encodedId, &map ) );
 
-    *SizeNeeded = (uint32_t) cbor_encoder_get_extra_bytes_needed( &encodedId );
-
-    err = (*SizeNeeded != 0) ? CborErrorOutOfMemory : CborNoError;
+    *Written = 0;
+    if (cbor_encoder_get_extra_bytes_needed( &encodedId ) == 0)
+    {
+        status = RIOT_SUCCESS;
+        *Written = (uint32_t)cbor_encoder_get_buffer_size( &encodedId, Id );
+    }
 
 Cleanup:
 
-    return err;
+    return status;
 }
 
 
@@ -156,6 +151,7 @@ Advances the Value to the next cbor object.
 
     return err;
 }
+
 
 CborError
 pDecodeAssertionKvP(
@@ -246,76 +242,6 @@ Cleanup:
 }
 
 
-RIOT_STATUS
-pAllocAndBuildIdentity(
-    TcpsIdenity *TcpsId,
-    uint8_t **Id,
-    uint32_t *IdSize
-)
-{
-    RIOT_STATUS     status = RIOT_FAILURE;
-    CborError       err;
-    uint8_t         *localId = NULL;
-    uint32_t        localIdSize = 0;
-    uint32_t        sizeNeeded;
-
-    if (TcpsId == NULL ||
-        TcpsId->Used == 0 ||
-        Id == NULL ||
-        IdSize == NULL )
-    {
-        status = RIOT_INVALID_PARAMETER;
-        goto Cleanup;
-    }
-
-    err = pBuildTCPSIdentity( TcpsId->AssertionArray,
-        TcpsId->Used,
-        NULL,
-        0,
-        &sizeNeeded );
-    if (err != CborErrorOutOfMemory)
-    {
-        goto Cleanup;
-    }
-
-    localId = (uint8_t*)malloc( sizeNeeded );
-    localIdSize = sizeNeeded;
-    memset( localId, 0x00, localIdSize );
-    sizeNeeded = 0;
-
-    err = pBuildTCPSIdentity( TcpsId->AssertionArray,
-        TcpsId->Used,
-        localId,
-        localIdSize,
-        &sizeNeeded );
-    if (err != CborNoError)
-    {
-        goto Cleanup;
-    }
-
-    //
-    //  Success.
-    //  We can now free the incoming buffer if it is already allocated.
-    //  Only do this now in order to preserve the callers state on failure.
-    //
-
-    status = RIOT_SUCCESS;
-
-    if (*Id != NULL)
-    {
-        FreeTCPSId( *Id );
-    }
-
-    *Id = localId;
-    localId = NULL;
-    *IdSize = localIdSize;
-
-Cleanup:
-
-    FreeTCPSId( localId );
-    return status;
-}
-
 int
 pFindAssertion(
     char* Key,
@@ -333,6 +259,7 @@ pFindAssertion(
 
     return -1;
 }
+
 
 RIOT_STATUS
 pAddAssertionBuffer(
@@ -384,6 +311,7 @@ pAddAssertionInteger(
     return RIOT_SUCCESS;
 }
 
+
 RIOT_STATUS
 pBuildTCPSAssertionTable(
     RIOT_ECC_PUBLIC *Pub,
@@ -391,8 +319,9 @@ pBuildTCPSAssertionTable(
     uint8_t *Fwid,
     uint32_t FwidSize,
     TcpsIdenity *TcpsId,
-    uint8_t **Id,
-    uint32_t *IdSize
+    uint8_t *Id,
+    uint32_t IdSize,
+    uint32_t *Written
 )
 {
     RIOT_STATUS     status;
@@ -444,9 +373,11 @@ pBuildTCPSAssertionTable(
         }
     }
 
-    status =  pAllocAndBuildIdentity( TcpsId,
-        Id,
-        IdSize );
+    status = pBuildTCPSIdentity( TcpsId->AssertionArray,
+                                 TcpsId->Used,
+                                 Id,
+                                 IdSize,
+                                 Written );
 
     if (status != RIOT_SUCCESS) {
         goto Cleanup;
@@ -465,8 +396,9 @@ BuildTCPSAliasIdentity(
     RIOT_ECC_PUBLIC *AuthKeyPub,
     uint8_t *Fwid,
     uint32_t FwidSize,
-    uint8_t **Id,
-    uint32_t *IdSize
+    uint8_t *Id,
+    uint32_t IdSize,
+    uint32_t *Written
 )
 {
     TcpsIdenity aliasId = { 0 };
@@ -477,7 +409,8 @@ BuildTCPSAliasIdentity(
                                      FwidSize,
                                      &aliasId,
                                      Id,
-                                     IdSize );
+                                     IdSize,
+                                     Written );
 }
 
 
@@ -487,8 +420,9 @@ BuildTCPSDeviceIdentity(
     RIOT_ECC_PUBLIC *AuthKeyPub,
     uint8_t *Fwid,
     uint32_t FwidSize,
-    uint8_t **Id,
-    uint32_t *IdSize
+    uint8_t *Id,
+    uint32_t IdSize,
+    uint32_t *Written
 )
 {
     TcpsIdenity deviceId = { 0 };
@@ -499,9 +433,9 @@ BuildTCPSDeviceIdentity(
                                      FwidSize,
                                      &deviceId,
                                      Id,
-                                     IdSize );
+                                     IdSize,
+                                     Written );
 }
-
 
 RIOT_STATUS
 ModifyTCPSDeviceIdentity(
@@ -511,8 +445,9 @@ ModifyTCPSDeviceIdentity(
     RIOT_ECC_PUBLIC *AuthKeyPub,
     uint8_t *Fwid,
     uint32_t FwidSize,
-    uint8_t **NewId,
-    uint32_t *NewIdSize
+    uint8_t *NewId,
+    uint32_t NewIdSize,
+    uint32_t *Written
 )
 {
     CborError       err;
@@ -541,5 +476,6 @@ ModifyTCPSDeviceIdentity(
                                      FwidSize,
                                      &tcpsId,
                                      NewId,
-                                     NewIdSize );
+                                     NewIdSize,
+                                     Written );
 }

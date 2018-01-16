@@ -30,6 +30,10 @@ extern "C" {
 #define TCPS_IDENTITY_MAP_AUTH     "CODEAUTH"
 #define TCPS_IDENTITY_MAP_PUBKEY   "PUBKEY"
 
+//  Rough estimate of encoded sizes for static buffer declaration.
+#define TCPS_ID_EST_ENCODING       MAX_ASSERTION_KEY_LEN + 0x10
+#define TCPS_ID_FWID_LENGTH        RIOT_DIGEST_LENGTH + TCPS_ID_EST_ENCODING
+#define TCPS_ID_PUBKEY_LENGTH      0x41 + TCPS_ID_EST_ENCODING
 
 #define ASSERT_TYPE_BUFFER      0
 #define ASSERT_TYPE_INT         1

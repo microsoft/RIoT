@@ -54,11 +54,6 @@ uint8_t rDigest[DICE_DIGEST_LENGTH] = {
 
 // Estimate the buffer size needed, in bytes, for a TCPS ID. In our case
 // we will not have more then two PUBKEYs and a FW measurement.
-// Be sure to include an encoding estimate, which entails a assertion key
-// and a little bit of overhead.
-#define TCPS_ID_EST_ENCODING       MAX_ASSERTION_KEY_LEN + 0x10
-#define TCPS_ID_FWID_LENGTH        RIOT_DIGEST_LENGTH + TCPS_ID_EST_ENCODING
-#define TCPS_ID_PUBKEY_LENGTH      0x41 + TCPS_ID_EST_ENCODING
 #define TCPS_ID_BUFFER_LENGTH      (TCPS_ID_PUBKEY_LENGTH * 2) + TCPS_ID_FWID_LENGTH
 
 // The static data fields that make up the Alias Cert "to be signed" region

@@ -83,10 +83,6 @@ ModifyTCPSDeviceIdentity(
     uint32_t NewIdSize,
     uint32_t *Written
 );
-void
-FreeTCPSId(
-    uint8_t *Id
-);
 
 #ifdef __cplusplus
 }

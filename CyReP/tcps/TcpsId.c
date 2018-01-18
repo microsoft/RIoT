@@ -78,11 +78,19 @@ pBuildTCPSIdentity(
 
     CLEANUP_ENCODER_ERR( cbor_encoder_close_container( &encodedId, &map ) );
 
-    *Written = 0;
-    if (cbor_encoder_get_extra_bytes_needed( &encodedId ) == 0)
+    //
+    //  Written will contain the bytes needed on OUTOFMEM
+    //
+
+    *Written = (uint32_t)cbor_encoder_get_extra_bytes_needed(&encodedId);
+    if (*Written == 0)
     {
         status = RIOT_SUCCESS;
         *Written = (uint32_t)cbor_encoder_get_buffer_size( &encodedId, Id );
+    }
+    else
+    {
+        status = RIOT_BAD_FORMAT;
     }
 
 Cleanup:
@@ -95,8 +103,8 @@ Cleanup:
 //  cbor_value_ref_byte_string is written with the intent to at some point, move into 
 //  tinycbor. It takes a dependency on an internal function from that project.
 //
+#include "extract_number_p.h"
 
-CborError _cbor_value_extract_number( const uint8_t **ptr, const uint8_t *end, uint64_t *len );
 CborError
 cbor_value_ref_byte_string(
     CborValue *Cborstring,
@@ -141,7 +149,7 @@ Advances the Value to the next cbor object.
 
     if (err == CborNoError) {
         ptr = Cborstring->ptr;
-        _cbor_value_extract_number(&ptr, Cborstring->parser->end, &len);
+        extract_number(&ptr, Cborstring->parser->end, &len);
         if (len > 0) {
             *Bstr = ptr;
         }
@@ -449,6 +457,27 @@ ModifyTCPSDeviceIdentity(
     uint32_t NewIdSize,
     uint32_t *Written
 )
+
+/*++
+
+Routine Description:
+
+    Modifies an existing TCPS identity blob, by either adding or replaceing idenity
+    attributes. Does not allow for removing existing attributes.
+
+    Specifying an attribute will replace an existing value, or add the value. A NULL
+    value will be ignored.
+
+Returns:
+
+    On Success:
+     - Written: number of bytes written to NewId.
+
+    RIOT_BAD_FORMAT
+     - Written: number of bytes required in NewId.
+
+--*/
+
 {
     CborError       err;
     TcpsIdenity     tcpsId = { 0 };

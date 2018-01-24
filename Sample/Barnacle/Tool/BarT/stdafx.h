@@ -23,6 +23,7 @@
 #include <cyrep/RiotStatus.h>
 #include <cyrep/RiotEcc.h>
 #include <cyrep/RiotCrypt.h>
+#include <tcps/tcpsid.h>
 #include <BarnacleTA.h>
 #include <Barnacle.h>
 #include "DfuSe.h"
@@ -43,7 +44,7 @@ std::vector<BYTE> CertThumbPrint(PCCERT_CONTEXT hCert);
 std::vector<BYTE> ReadHex(std::wstring strIn);
 std::vector<BYTE> ReadFromFile(std::wstring fileName);
 std::string ReadStrFromFile(std::wstring fileName);
-void WriteToFile(std::wstring fileName, std::vector<BYTE> data);
+void WriteToFile(std::wstring fileName, std::vector<BYTE> data, DWORD dwCreationDisposition = CREATE_ALWAYS);
 void WriteToFile(std::wstring fileName, std::string data);
 void WriteToFile(std::wstring fileName, UINT32 data);
 std::wstring ToHexWString(std::vector<BYTE> &byteVector);

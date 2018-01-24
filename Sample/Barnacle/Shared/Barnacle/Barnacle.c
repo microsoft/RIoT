@@ -346,8 +346,8 @@ bool BarnacleInitialProvision()
                                                (RIOT_ECC_PUBLIC*)&FwDeviceId.info.pubKey,
                                                (uint8_t*)DeviceBuildId,
                                                sizeof(DeviceBuildId),
-                                               &tcps,
-											   BARNACLE_TCPS_ID_BUF_LENGTH,
+                                               tcps,
+                                               sizeof(tcps),
                                                &tcpsLen) == RIOT_SUCCESS)))
         {
             dbgPrint("ERROR: BuildTCPSDeviceIdentity failed.\r\n");
@@ -602,7 +602,7 @@ bool BarnacleVerifyAgent()
                                               (uint8_t*)AgentHdr.s.sign.agent.digest,
                                               sizeof(AgentHdr.s.sign.agent.digest),
                                               tcps,
-											  BARNACLE_TCPS_ID_BUF_LENGTH,
+                                              sizeof(tcps),
                                               &tcpsLen) == RIOT_SUCCESS)))
         {
             dbgPrint("ERROR: BuildTCPSAliasIdentity failed.\r\n");

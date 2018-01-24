@@ -16,6 +16,12 @@
     <Filter Include="Source Files\CyReP">
       <UniqueIdentifier>{dc71c5c6-4cf9-4752-8a64-1f98d3479f95}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\CyReP\TCPS">
+      <UniqueIdentifier>{1b57c96c-bbb0-44b6-8b8e-639e6213cb4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\TinyCBOR">
+      <UniqueIdentifier>{7a4ca758-9948-4a8d-8367-229ab273478f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -79,6 +85,27 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\CyReP\RiotAes128.c">
       <Filter>Source Files\CyReP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\CyReP\tcps\TcpsId.c">
+      <Filter>Source Files\CyReP\TCPS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborencoder.c">
+      <Filter>Source Files\TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborencoder_close_container_checked.c">
+      <Filter>Source Files\TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborerrorstrings.c">
+      <Filter>Source Files\TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborparser.c">
+      <Filter>Source Files\TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborparser_dup_string.c">
+      <Filter>Source Files\TinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborpretty.c">
+      <Filter>Source Files\TinyCBOR</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

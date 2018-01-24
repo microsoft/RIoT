@@ -319,7 +319,7 @@ X509GetDeviceCertTBS(
         CHK(        DERStartSequenceOrSet(Tbs, true));
         CHK(            DERAddOID(Tbs, tcpsOID));
         CHK(            DERStartEnvelopingOctetString(Tbs));
-        CHK(                DERAddBitString(Tbs, Tcps, TcpsLen));
+        CHK(                DERAddOctetString(Tbs, Tcps, TcpsLen));
         CHK(            DERPopNesting(Tbs));
         CHK(        DERPopNesting(Tbs));
     }

@@ -29,10 +29,11 @@ uint32_t GetTimeStamp(void)
     return convert.LowPart;
 }
 
-void WriteToFile(std::wstring fileName, std::vector<BYTE> data)
+void WriteToFile(std::wstring fileName, std::vector<BYTE> data, DWORD dwCreationDisposition)
 {
     // http://stackoverflow.com/questions/14841396/stdunique-ptr-deleters-and-the-win32-api
-    std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)> hFile(::CreateFile(fileName.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL), &::CloseHandle);
+    std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)> hFile(::CreateFile(fileName.c_str(), GENERIC_WRITE, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL), &::CloseHandle);
+    SetFilePointer(hFile.get(), 0, 0, FILE_END);
     DWORD bytesWritten = 0;
     if (!WriteFile(hFile.get(), data.data(), data.size(), &bytesWritten, NULL))
     {

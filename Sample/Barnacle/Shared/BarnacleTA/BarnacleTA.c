@@ -118,7 +118,7 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
                                           (uint8_t*)digest,
                                           sizeof(digest),
                                           tcps,
-										  BARNACLE_TCPS_ID_BUF_LENGTH,
+                                          sizeof(tcps),
                                           &tcpsLen) == RIOT_SUCCESS)))
     {
         dbgPrint("ERROR: BuildTCPSAliasIdentity failed.\r\n");

@@ -191,6 +191,48 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\CyReP\tcps\TcpsId.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\..\external\tinycbor\src;$(SolutionDir)..\..\..\CyReP\tcps;$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\..\external\tinycbor\src;$(SolutionDir)..\..\..\CyReP\tcps;$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\external\tinycbor\src;$(SolutionDir)..\..\..\CyReP\tcps;$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\external\tinycbor\src;$(SolutionDir)..\..\..\CyReP\tcps;$(SolutionDir)..\..\..\CyReP\cyrep;$(SolutionDir)..\Shared\BarnacleTA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborencoder.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborencoder_close_container_checked.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborerrorstrings.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborparser.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborparser_dup_string.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\External\tinycbor\src\cborpretty.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\..\External\tinycbor\src;$(SolutionDir)..\..\..\CyReP;$(SolutionDir)..\Shared\BarnacleTA;$(SolutionDir)..\Shared\Barnacle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="BarT.cpp" />
     <ClCompile Include="DfuSe.cpp" />
     <ClCompile Include="helper.cpp" />

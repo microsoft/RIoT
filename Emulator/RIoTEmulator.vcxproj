@@ -166,6 +166,7 @@
     <ClInclude Include="RIoT\RIoTCrypt\include\RiotEcc.h" />
     <ClInclude Include="RIoT\RIoTCrypt\include\RiotHmac.h" />
     <ClInclude Include="RIoT\RIoTCrypt\include\RiotKdf.h" />
+    <ClInclude Include="RIoT\RIoTCrypt\include\RiotSha1.h" />
     <ClInclude Include="RIoT\RIoTCrypt\include\RiotSha256.h" />
     <ClInclude Include="RIoT\RIoTCrypt\include\RiotTarget.h" />
     <ClInclude Include="RIoT\RIoTCrypt\include\RiotX509Bldr.h" />
@@ -184,6 +185,7 @@
     <ClCompile Include="RIoT\RIoTCrypt\RiotEcc.c" />
     <ClCompile Include="RIoT\RIoTCrypt\RiotHmac.c" />
     <ClCompile Include="RIoT\RIoTCrypt\RiotKdf.c" />
+    <ClCompile Include="RIoT\RIoTCrypt\RiotSha1.c" />
     <ClCompile Include="RIoT\RIoTCrypt\RiotSha256.c" />
     <ClCompile Include="RIoT\RIoTCrypt\RiotX509Bldr.c" />
     <ClCompile Include="stdafx.cpp" />

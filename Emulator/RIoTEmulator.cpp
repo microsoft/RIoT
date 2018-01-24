@@ -197,6 +197,7 @@ CreateDeviceAuthBundle(
         (const uint8_t *)RIOT_LABEL_ALIAS,
         lblSize(RIOT_LABEL_ALIAS));
 
+
     // Copy DeviceID Public
     length = sizeof(PEM);
     DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
@@ -221,6 +222,7 @@ CreateDeviceAuthBundle(
     DERtoPEM(&derCtx, ECC_PRIVATEKEY_TYPE, PEM, &length);
     *AliasKeyEncodedSize = length;
     memcpy(AliasKeyEncoded, PEM, length);
+
 
 #ifdef DEBUG
     printf("Alias Key");
@@ -268,7 +270,7 @@ CreateDeviceAuthBundle(
     if (DeviceCertType == RIOT_SELF_SIGNED) {
         // Generating self-signed DeviceID certificate
         DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub);
+        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub, NULL, 0);
 
         // Sign the DeviceID Certificate's TBS region
         RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
@@ -289,8 +291,13 @@ CreateDeviceAuthBundle(
     }
     else {
         // Generating "root"-signed DeviceID certificate
-        DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub);
+
+		uint8_t rootPubBuffer[65];
+		uint32_t rootPubBufLen = 65;
+		RiotCrypt_ExportEccPub((RIOT_ECC_PUBLIC *)eccRootPubBytes, rootPubBuffer, &rootPubBufLen);
+
+		DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub, rootPubBuffer, rootPubBufLen);
 
         // Sign the DeviceID Certificate's TBS region
         RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, (RIOT_ECC_PRIVATE *)eccRootPrivBytes);
@@ -321,7 +328,7 @@ CreateDeviceAuthBundle(
     X509GetRootCertTBS(&derCtx, &x509RootTBSData, (RIOT_ECC_PUBLIC*)eccRootPubBytes);
 
     // Self-sign the "root" Certificate's TBS region
-    RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
+    RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, (RIOT_ECC_PRIVATE *)eccRootPrivBytes);
 
     // Generate "root" CA cert
     X509MakeRootCert(&derCtx, &tbsSig);

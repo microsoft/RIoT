@@ -199,6 +199,7 @@ namespace DICETest
         internal bool CheckSubjectIssuerLinkage()
         {
             bool ok = true;
+            Notify($"Checking Subject/Issuer Linkage");
             foreach (var c in Certs)
             {
                 Notify($"    {c.SubjectDN.ToString()}");
@@ -226,6 +227,8 @@ namespace DICETest
         /// <returns>Chain signing linkage is OK</returns>
         internal bool CheckSigningLinkage()
         {
+            Notify($"Checking signature chains");
+
             bool ok = true;
             // alias to cert-before-root should be signed by parent
             for (int j = 0; j < NumCerts - 1; j++)
@@ -239,7 +242,7 @@ namespace DICETest
                 }
                 catch(Exception e)
                 {
-                    Error($"Cert {target.SubjectDN.ToString()} is not properly signed by {signer.SubjectDN.ToString()}.  Error is {e.ToString()}");
+                    Error($"    Cert {target.SubjectDN.ToString()} is not properly signed by {signer.SubjectDN.ToString()}.  Error is {e.ToString()}");
                     ok = false;
                 }
             }
@@ -250,9 +253,9 @@ namespace DICETest
             {
                 root.Verify(rootPubKey);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Error($"Root cert is not properly self-signed.  Error is {e.ToString()}");
+                Error($"Root cert is not properly self-signed.");
                 ok = false;
             }
             return ok;
@@ -447,7 +450,12 @@ namespace DICETest
             try
             {
                 var keyUsage= c.GetKeyUsage();
-                if(keyUsage.Length>9)
+                if(keyUsage==null)
+                {
+                    Error($"KeyUsage is missing.");
+                    return false;
+                }
+                if (keyUsage.Length>9)
                 {
                     Error($"Unsupported KeyUsage.  This usually means that DecipherOnly is asserted, which is an error");
                     return false;

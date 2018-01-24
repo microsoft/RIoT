@@ -43,6 +43,7 @@ namespace DICETest
                 {
                     Program.Print("One or more errors in certificate chain.", NotifyType.Error);
                 }
+                else
                 {
                     Program.Print("Certificates and certificate chain are valid.", NotifyType.Success);
                 }

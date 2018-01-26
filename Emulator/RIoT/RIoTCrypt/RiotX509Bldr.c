@@ -38,6 +38,16 @@ Notes for Dennis.
 
 */
 
+static int GenerateGuidFromSeed(char* nameBuf, uint32_t *nameBufLen, const uint8_t* seed, size_t seedLen)
+{
+	uint8_t digest[RIOT_DIGEST_LENGTH];
+	int result;
+	RIOT_SHA256_Block(seed, seedLen, digest);
+	result = Base64Encode(digest, 16, nameBuf, nameBufLen);
+	return result;
+}
+
+
 static int
 X509AddExtensions(
     DERBuilderContext   *Tbs,
@@ -160,16 +170,17 @@ X509GetDeviceCertTBS(
 	uint8_t             *RootKeyPub,
 	uint32_t             RootKeyPubLen)
 {
-    uint8_t     encBuffer[65];
+	uint8_t     encBuffer[65];
     uint32_t    encBufferLen;
     uint8_t     keyUsage = RIOT_X509_KEY_USAGE;
-
 	uint8_t authKeyIdentifier[SHA1_DIGEST_LENGTH];
+
+	RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen);
+
 	if (RootKeyPub != NULL)
 	{
 		RIOT_SHA1_Block(RootKeyPub, RootKeyPubLen, authKeyIdentifier);
 	}
-
 
     CHK(DERStartSequenceOrSet(Tbs, true));
     CHK(    DERAddShortExplicitInteger(Tbs, 2));
@@ -188,7 +199,6 @@ X509GetDeviceCertTBS(
     CHK(            DERAddOID(Tbs, ecPublicKeyOID));
     CHK(            DERAddOID(Tbs, prime256v1OID));
     CHK(        DERPopNesting(Tbs));
-                RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen);
     CHK(        DERAddBitString(Tbs, encBuffer, encBufferLen));
     CHK(    DERPopNesting(Tbs));
     CHK(    DERStartExplicit(Tbs, 3));
@@ -280,8 +290,25 @@ X509GetAliasCertTBS(
     uint32_t             FwidLen
 )
 {
-    uint8_t     encBuffer[65];
+	int result;
+	char guidBuffer[64];
+	uint8_t     encBuffer[65];
     uint32_t    encBufferLen;
+
+	if (strcmp(TbsData->SubjectCommon, "*") == 0)
+	{
+		RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen);
+		uint32_t bufLen = sizeof(guidBuffer);
+		// replace the common-name with a per-device GUID (derived from the DeviceID 
+		// public key
+		result = GenerateGuidFromSeed(guidBuffer, &bufLen, encBuffer, encBufferLen);
+		if (result < 0) return result;
+		guidBuffer[bufLen-1] = 0;
+		TbsData->SubjectCommon = guidBuffer;
+	}
+
+
+
 
     CHK(DERStartSequenceOrSet(Tbs, true));
     CHK(    DERAddShortExplicitInteger(Tbs, 2));
@@ -559,3 +586,4 @@ X509MakeRootCert(
 Error:
     return -1;
 }
+

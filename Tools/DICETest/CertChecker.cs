@@ -5,10 +5,12 @@
 namespace DICETest
 {
     using System;
+    using System.Linq;
     using System.IO;
     using Org.BouncyCastle.Asn1;
     using Org.BouncyCastle.Asn1.Nist;
     using Org.BouncyCastle.Asn1.X509;
+    using Org.BouncyCastle.Math;
     using Org.BouncyCastle.Pkcs;
     using Org.BouncyCastle.X509;
     using Org.BouncyCastle.X509.Extension;
@@ -218,6 +220,10 @@ namespace DICETest
                     ok = false;
                 }
             }
+            if(ok)
+            {
+                NotifySuccess("OK");
+            }
             return ok;
         }
 
@@ -257,6 +263,10 @@ namespace DICETest
             {
                 Error($"Root cert is not properly self-signed.");
                 ok = false;
+            }
+            if(ok)
+            {
+                NotifySuccess("OK");
             }
             return ok;
         }
@@ -558,13 +568,21 @@ namespace DICETest
         /// <returns></returns>
         bool CheckSerialNumber(X509Certificate c)
         {
-            var sn = c.SerialNumber;
-            int snNumBytes = sn.ToByteArray().Length;
+            BigInteger sn = c.SerialNumber;
+            var snBytes = sn.ToByteArray();
+            int snNumBytes = snBytes.Length;
             if(snNumBytes<serialNumMinBytes)
             {
                 Error($"Serial number is only {snNumBytes} bytes, but {serialNumMinBytes} is recommended");
                 return false;
             }
+            int numZeroBytes = snBytes.Count(x => x == 0);
+            if (numZeroBytes>=3)
+            {
+                Warning($"Serial number has {numZeroBytes} zeros.  Is it random?");
+                return false;
+            }
+
             return true;
         }
 

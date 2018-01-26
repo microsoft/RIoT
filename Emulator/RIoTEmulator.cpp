@@ -41,11 +41,15 @@ uint8_t rDigest[DICE_DIGEST_LENGTH] = {
 // just pick a reasonable minimum buffer size and worry about this later.
 #define REASONABLE_MIN_CERT_SIZE    DER_MAX_TBS
 
-// The static data fields that make up the Alias Cert "to be signed" region
+// The static data fields that make up the Alias Cert "to be signed" region.
+// Note: if the device SubjectCommon is *, then a device-unique GUID is 
+// generated
+// Note2: if a self-signed DeviceID cert is selected, then the tbs-data
+// subject is also used for the issuer
 RIOT_X509_TBS_DATA x509AliasTBSData = { { 0x0A, 0x0B, 0x0C, 0x0D, 0x0E },
                                        "RIoT Core", "MSR_TEST", "US",
                                        "170101000000Z", "370101000000Z",
-                                       "RIoT Device", "MSR_TEST", "US" };
+                                       "*", "MSR_TEST", "US" };
 
 // The static data fields that make up the DeviceID Cert "to be signed" region
 RIOT_X509_TBS_DATA x509DeviceTBSData = { { 0x0E, 0x0D, 0x0C, 0x0B, 0x0A },
@@ -59,10 +63,13 @@ RIOT_X509_TBS_DATA x509RootTBSData   = { { 0x1A, 0x2B, 0x3C, 0x4D, 0x5E },
                                        "170101000000Z", "370101000000Z",
                                        "RIoT R00t", "MSR_TEST", "US" };
 
-// Selectors for DeviceID cert handling (See comment below)
+// Selectors for DeviceID cert handling.  
 #define RIOT_ROOT_SIGNED    0x00
 #define RIOT_SELF_SIGNED    0x01
 #define RIOT_CSR            0x02
+
+#define DEVICE_ID_CERT_TYPE RIOT_ROOT_SIGNED
+
 
 // The "root" signing key. This is intended for development purposes only.
 // This key is used to sign the DeviceID certificate, the certificiate for
@@ -82,6 +89,10 @@ BYTE eccRootPrivBytes[sizeof(ecc_privatekey)] = {
     0xe3, 0xe7, 0xc7, 0x13, 0x57, 0x3f, 0xd9, 0xc8, 0xb8, 0xe1, 0xea, 0xf4,
     0x53, 0xf1, 0x56, 0x15, 0x02, 0xf0, 0x71, 0xc0, 0x53, 0x49, 0xc8, 0xda,
     0xe6, 0x26, 0xa9, 0x0b, 0x17, 0x88, 0xe5, 0x70, 0x00, 0x00, 0x00, 0x00 };
+
+// Sets tbsData->SerialNumber to a quasi-random value derived from seedData
+void SetSerialNumber(RIOT_X509_TBS_DATA* tbsData, const uint8_t* seedData, size_t seedLen);
+
 
 int
 CreateDeviceAuthBundle(
@@ -125,7 +136,7 @@ main()
     CreateDeviceAuthBundle(UDS, DICE_UDS_LENGTH,
                            FWID, RIOT_DIGEST_LENGTH,
                            deviceIDPub, &deviceIDPubSize,
-                           devCert, &devCertSize, RIOT_ROOT_SIGNED,
+                           devCert, &devCertSize, DEVICE_ID_CERT_TYPE,
                            aliasKey, &aliaskeySize,
                            aliasCert, &aliasCertSize);
 
@@ -185,6 +196,9 @@ CreateDeviceAuthBundle(
         (const uint8_t *)RIOT_LABEL_IDENTITY,
         lblSize(RIOT_LABEL_IDENTITY));
 
+	// Set the serial number
+	SetSerialNumber(&x509DeviceTBSData, digest, RIOT_DIGEST_LENGTH);
+
     // Combine CDI and FWID, result in digest
     RiotCrypt_Hash2(digest, RIOT_DIGEST_LENGTH,
         digest, RIOT_DIGEST_LENGTH,
@@ -197,6 +211,8 @@ CreateDeviceAuthBundle(
         (const uint8_t *)RIOT_LABEL_ALIAS,
         lblSize(RIOT_LABEL_ALIAS));
 
+	// Set the serial number
+	SetSerialNumber(&x509AliasTBSData, digest, RIOT_DIGEST_LENGTH);
 
     // Copy DeviceID Public
     length = sizeof(PEM);
@@ -245,11 +261,11 @@ CreateDeviceAuthBundle(
     // Generate Alias Key Certificate
     X509MakeAliasCert(&derCtx, &tbsSig);
 
-    // Copy Alias Key Certificate
     length = sizeof(PEM);
     DERtoPEM(&derCtx, CERT_TYPE, PEM, &length);
     *AliasCertBufSize = length;
     memcpy(AliasCertBuffer, PEM, length);
+
 
 #ifdef DEBUG
     printf("Alias Cert");
@@ -269,6 +285,11 @@ CreateDeviceAuthBundle(
 
     if (DeviceCertType == RIOT_SELF_SIGNED) {
         // Generating self-signed DeviceID certificate
+
+		x509DeviceTBSData.IssuerCommon = x509DeviceTBSData.SubjectCommon;
+		x509DeviceTBSData.IssuerOrg = x509DeviceTBSData.IssuerOrg;
+		x509DeviceTBSData.IssuerCountry = x509DeviceTBSData.SubjectCountry;
+
         DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
         X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &deviceIDPub, NULL, 0);
 
@@ -308,9 +329,16 @@ CreateDeviceAuthBundle(
         X509MakeDeviceCert(&derCtx, &tbsSig);
     }
 
-    // Copy DeviceID Certificate or CSR
+    // Copy DeviceID Certificate or CSR  Note: depending on DeviceCertType this 
+	// may be self-signed, Root-signed, or a CSR
+	uint32_t pemType = CERT_TYPE;
+	if (DeviceCertType == RIOT_CSR)
+	{
+		pemType = CERT_REQ_TYPE;
+	}
+
     length = sizeof(PEM);
-    DERtoPEM(&derCtx, CERT_TYPE, PEM, &length);
+    DERtoPEM(&derCtx, pemType, PEM, &length);
     *DeviceCertBufSize = length;
     memcpy(DeviceCertBuffer, PEM, length);
 
@@ -348,6 +376,24 @@ CreateDeviceAuthBundle(
 
     return 0;
 }
+
+void SetSerialNumber(RIOT_X509_TBS_DATA* tbsData, const uint8_t* seedData, size_t seedLen)
+{
+	// Set the tbsData serial number to 8 bytes of data derived from seedData
+	uint8_t hashBuf[DICE_DIGEST_LENGTH];
+	// SHA-1 hash of "DICE SEED" == 6e785006 84941d8f 7880520c 60b8c7e4 3f1a3c00
+	uint8_t seedExtender[20] = { 0x6e, 0x78, 0x50, 0x06, 0x84, 0x94, 0x1d, 0x8f, 0x78,
+		0x80, 0x52, 0x0c, 0x60, 0xb8, 0xc7, 0xe4, 0x3f, 0x1a, 0x3c, 0x00 };
+
+	DiceSHA256_2(seedData, seedLen, seedExtender, sizeof(seedExtender), hashBuf);
+	// Take first 8 bytes to form serial number
+	memcpy(tbsData->SerialNum, hashBuf, RIOT_X509_SNUM_LEN);
+	// DER encoded serial number must be positive and the first byte must not be zero
+	tbsData->SerialNum[0] &= (uint8_t)0x7f;
+	tbsData->SerialNum[0] |= (uint8_t)0x01;
+	return;
+}
+
 
 #ifdef DEBUG
 void HexConvert(uint8_t* in, int inLen, char* outBuf, int outLen)

@@ -40,6 +40,9 @@
     <ClCompile Include="RIoTCrypt\RiotX509Bldr.c">
       <Filter>Source Files\RIoTCrypt</Filter>
     </ClCompile>
+    <ClCompile Include="RIoTCrypt\RiotSha1.c">
+      <Filter>Source Files\RIoTCrypt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -47,27 +50,6 @@
     </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Ignore</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoTCrypt\include\RiotAes128.h">
-      <Filter>Source Files\RIoTCrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoTCrypt\include\RiotCrypt.h">
-      <Filter>Source Files\RIoTCrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoTCrypt\include\RiotEcc.h">
-      <Filter>Source Files\RIoTCrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoTCrypt\include\RiotHmac.h">
-      <Filter>Source Files\RIoTCrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoTCrypt\include\RiotKdf.h">
-      <Filter>Source Files\RIoTCrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoTCrypt\include\RiotSha256.h">
-      <Filter>Source Files\RIoTCrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="RIoTCrypt\include\RiotTarget.h">
-      <Filter>Source Files\RIoTCrypt</Filter>
     </ClInclude>
     <ClInclude Include="RIoTSim.h">
       <Filter>Ignore</Filter>
@@ -79,13 +61,37 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RIoTCrypt\include\RiotBase64.h">
-      <Filter>Source Files\RIoTCrypt</Filter>
+      <Filter>Source Files\RIoTCrypt\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="RIoTCrypt\include\RiotAes128.h">
+      <Filter>Source Files\RIoTCrypt\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="RIoTCrypt\include\RiotCrypt.h">
+      <Filter>Source Files\RIoTCrypt\Headers</Filter>
     </ClInclude>
     <ClInclude Include="RIoTCrypt\include\RiotDerEnc.h">
-      <Filter>Source Files\RIoTCrypt</Filter>
+      <Filter>Source Files\RIoTCrypt\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="RIoTCrypt\include\RiotEcc.h">
+      <Filter>Source Files\RIoTCrypt\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="RIoTCrypt\include\RiotHmac.h">
+      <Filter>Source Files\RIoTCrypt\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="RIoTCrypt\include\RiotKdf.h">
+      <Filter>Source Files\RIoTCrypt\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="RIoTCrypt\include\RiotTarget.h">
+      <Filter>Source Files\RIoTCrypt\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="RIoTCrypt\include\RiotSha256.h">
+      <Filter>Source Files\RIoTCrypt\Headers</Filter>
     </ClInclude>
     <ClInclude Include="RIoTCrypt\include\RiotX509Bldr.h">
-      <Filter>Source Files\RIoTCrypt</Filter>
+      <Filter>Source Files\RIoTCrypt\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="RIoTCrypt\include\RiotSha1.h">
+      <Filter>Source Files\RIoTCrypt\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +106,9 @@
     </Filter>
     <Filter Include="Source Files\RIoTCrypt">
       <UniqueIdentifier>{8154c665-1e08-4aa5-84b9-76d6c7a4dcb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RIoTCrypt\Headers">
+      <UniqueIdentifier>{eeee9a1c-d534-423d-abbd-ac8105d791bc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

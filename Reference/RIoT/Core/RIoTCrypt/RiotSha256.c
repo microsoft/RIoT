@@ -27,7 +27,6 @@
  * SUCH DAMAGE.
  *
  */
-
 /******************************************************************************
  * Copyright (c) 2014, AllSeen Alliance. All rights reserved.
  *
@@ -43,6 +42,10 @@
  *    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  ******************************************************************************/
+/*
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE in the project root.
+ */
 
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).

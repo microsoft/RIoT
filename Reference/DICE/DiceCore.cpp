@@ -22,7 +22,7 @@ BYTE CDI[DICE_DIGEST_LENGTH] = { 0x00 };
 
 // Simulation-only definitions
 #define DEFAULT_RIOT_PATH       L"riot.dll"     // Contains RIoT Invariant Code
-#define DEFAULT_LOADER_PATH     L"FW.dll"       // Our simulated FW
+#define DEFAULT_LOADER_PATH     L"FW.dll"       // Our simulated Device Firmware
 #define RIOT_ENTRY              "RiotStart"     // RIoT Core entry point 
 typedef void(__cdecl* fpRiotStart)(const BYTE *, const uint32_t, const TCHAR *);
 
@@ -39,12 +39,12 @@ int _tmain(int argc, TCHAR* argv[])
 // the Boot label can be safely ignored, as it is uninteresting.
 //
 {
-    uint8_t uDigest[DICE_DIGEST_LENGTH] = { 0 };
-    uint8_t rDigest[DICE_DIGEST_LENGTH] = { 0 };
-    TCHAR *riotImagePath, *loaderImagePath;
-    uint8_t *riotCore;
-    DWORD riotSize, offset;
-    HINSTANCE hRiotDLL;
+    uint8_t     uDigest[DICE_DIGEST_LENGTH] = { 0 };
+    uint8_t     rDigest[DICE_DIGEST_LENGTH] = { 0 };
+    TCHAR       *riotImagePath, *loaderImagePath;
+    uint8_t     *riotCore;
+    DWORD       riotSize, offset;
+    HINSTANCE   hRiotDLL;
 
     // Assume default paths
     riotImagePath = DEFAULT_RIOT_PATH;

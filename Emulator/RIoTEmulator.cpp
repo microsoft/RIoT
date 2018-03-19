@@ -40,23 +40,22 @@ uint8_t rDigest[DICE_DIGEST_LENGTH] = {
 #define REASONABLE_MIN_CERT_SIZE    DER_MAX_TBS
 
 // The static data fields that make up the Alias Cert "to be signed" region.
-// Note: if the device SubjectCommon is *, then a device-unique GUID is 
-// generated
-// Note2: if a self-signed DeviceID cert is selected, then the tbs-data
-// subject is also used for the issuer
-RIOT_X509_TBS_DATA x509AliasTBSData = { { 0x0A, 0x0B, 0x0C, 0x0D, 0x0E },
+// If the device SubjectCommon is *, then a device-unique GUID is generated.
+// If a self-signed DeviceID cert is selected, then the tbs subject is also
+// used for the issuer.
+RIOT_X509_TBS_DATA x509AliasTBSData = { { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F },
                                        "RIoT Core", "MSR_TEST", "US",
                                        "170101000000Z", "370101000000Z",
                                        "*", "MSR_TEST", "US" };
 
 // The static data fields that make up the DeviceID Cert "to be signed" region
-RIOT_X509_TBS_DATA x509DeviceTBSData = { { 0x0E, 0x0D, 0x0C, 0x0B, 0x0A },
+RIOT_X509_TBS_DATA x509DeviceTBSData = { { 0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08 },
                                        "RIoT R00t", "MSR_TEST", "US",
                                        "170101000000Z", "370101000000Z",
                                        "RIoT Core", "MSR_TEST", "US" };
 
 // The static data fields that make up the "root signer" Cert
-RIOT_X509_TBS_DATA x509RootTBSData   = { { 0x1A, 0x2B, 0x3C, 0x4D, 0x5E },
+RIOT_X509_TBS_DATA x509RootTBSData   = { { 0x1A, 0x2B, 0x3C, 0x4D, 0x5E , 0x6F, 0x70, 0x81 },
                                        "RIoT R00t", "MSR_TEST", "US",
                                        "170101000000Z", "370101000000Z",
                                        "RIoT R00t", "MSR_TEST", "US" };
@@ -67,7 +66,6 @@ RIOT_X509_TBS_DATA x509RootTBSData   = { { 0x1A, 0x2B, 0x3C, 0x4D, 0x5E },
 #define RIOT_CSR            0x02
 
 #define DEVICE_ID_CERT_TYPE RIOT_ROOT_SIGNED
-
 
 // The "root" signing key. This is intended for development purposes only.
 // This key is used to sign the DeviceID certificate, the certificiate for
@@ -392,7 +390,7 @@ void SetSerialNumber(RIOT_X509_TBS_DATA* tbsData, const uint8_t* seedData, size_
 }
 
 #ifdef DEBUG
-// What follows are some helper routines used for debugging
+// What follows are some helper routines used for debugging.
 void HexConvert(uint8_t* in, int inLen, char* outBuf, int outLen)
     {
         int pos = 0;

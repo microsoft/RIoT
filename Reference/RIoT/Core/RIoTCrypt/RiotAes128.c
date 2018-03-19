@@ -13,6 +13,10 @@
  *    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  ******************************************************************************/
+/*
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE in the project root.
+ */
 
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT)
@@ -144,7 +148,6 @@ void RIOT_AES128_Enable(const uint8_t *key, aes128EncryptKey_t *aesEncryptKey)
     }
 }
 
-
 void RIOT_AES128_Disable(aes128EncryptKey_t *aesEncryptionKey)
 {
     memset(aesEncryptionKey, 0, sizeof(aes128EncryptKey_t));
@@ -221,7 +224,6 @@ void RIOT_AES_CBC_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,
     Unpack32(iv, ivt);
 }
 #endif
-
 
 #if AES_ECB_MODE
 void RIOT_AES_ECB_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,

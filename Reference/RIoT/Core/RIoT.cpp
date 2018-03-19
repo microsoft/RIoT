@@ -1,10 +1,7 @@
-/*(Copyright)
-
-Microsoft Copyright 2017
-Confidential Information
-
-*/
-
+/*
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE in the project root.
+ */
 #include "stdafx.h"
 
 // There are lots of ways to force a new CDI value. However, to
@@ -12,39 +9,80 @@ Confidential Information
 // linker option that randomizes base addresses must be disabled.
 
 // For our simulated device, it's fine that these are in the global
-// data for the RIoT DLL. On real hardware, these are passed via some
-// shared data area or in a hardware security module.
+// data for the RIoT DLL. On real hardware, these are passed via hardware
+// security module or shared data area.
 RIOT_ECC_PUBLIC     DeviceIDPub;
 RIOT_ECC_PUBLIC     AliasKeyPub;
 RIOT_ECC_PRIVATE    AliasKeyPriv;
-BYTE                FWID[RIOT_DIGEST_LENGTH];
-char                Cert[DER_MAX_PEM];
-char               *CSRBuffer = NULL; // Optional, !used when NULL
+char                AliasCert[DER_MAX_PEM];
+char                DeviceCert[DER_MAX_PEM];
+char                r00tCert[DER_MAX_PEM];
 
-// Device Firmware may prefer PEM encoded DeviceID/Alias Keys. This is not
-// the default. Define RIOT_ENCODED_KEYS here and adjust the buffer copies
-// below to support PEM-encoded keys for device firmware.
-// #define RIOT_ENCODED_KEYS
+// The static data fields that make up the Alias Cert "to be signed" region.
+// If the device SubjectCommon is *, then a device-unique GUID is generated.
+// If a self-signed DeviceID cert is selected, then the tbs subject is also
+// used for the issuer.
+RIOT_X509_TBS_DATA x509AliasTBSData = { { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F },
+                                        "RIoT Core", "MSR_TEST", "US",
+                                        "170101000000Z", "370101000000Z",
+                                        "*", "MSR_TEST", "US" };
 
-// The static data fields that make up the x509 "to be signed" region
-RIOT_X509_TBS_DATA x509TBSData = { { 0x0A, 0x0B, 0x0C, 0x0D, 0x0E },
-                                   "RIoT Core", "MSR_TEST", "US",
-                                   "170101000000Z", "370101000000Z",
-                                   "RIoT Device", "MSR_TEST", "US" };
+// The static data fields that make up the DeviceID Cert "to be signed" region
+RIOT_X509_TBS_DATA x509DeviceTBSData = { { 0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08 },
+                                        "RIoT R00t", "MSR_TEST", "US",
+                                        "170101000000Z", "370101000000Z",
+                                        "RIoT Core", "MSR_TEST", "US" };
+
+// The static data fields that make up the "root signer" Cert
+RIOT_X509_TBS_DATA x509RootTBSData = { { 0x1A, 0x2B, 0x3C, 0x4D, 0x5E , 0x6F, 0x70, 0x81 },
+                                        "RIoT R00t", "MSR_TEST", "US",
+                                        "170101000000Z", "370101000000Z",
+                                        "RIoT R00t", "MSR_TEST", "US" };
+
+// Selectors for DeviceID cert handling.  
+#define RIOT_ROOT_SIGNED    0x00
+#define RIOT_SELF_SIGNED    0x01
+#define RIOT_CSR            0x02
+
+#define DEVICE_ID_CERT_TYPE RIOT_ROOT_SIGNED
+
+// The "root" signing key. This is intended for development purposes only.
+// This key is used to sign the DeviceID certificate, the certificiate for
+// this "root" key represents the "trusted" CA for the developer-mode DPS
+// server(s). Again, this is for development purposes only and (obviously)
+// provides no meaningful security whatsoever.
+BYTE eccRootPubBytes[sizeof(ecc_publickey)] = {
+    0xeb, 0x9c, 0xfc, 0xc8, 0x49, 0x94, 0xd3, 0x50, 0xa7, 0x1f, 0x9d, 0xc5,
+    0x09, 0x3d, 0xd2, 0xfe, 0xb9, 0x48, 0x97, 0xf4, 0x95, 0xa5, 0x5d, 0xec,
+    0xc9, 0x0f, 0x52, 0xa1, 0x26, 0x5a, 0xab, 0x69, 0x00, 0x00, 0x00, 0x00,
+    0x7d, 0xce, 0xb1, 0x62, 0x39, 0xf8, 0x3c, 0xd5, 0x9a, 0xad, 0x9e, 0x05,
+    0xb1, 0x4f, 0x70, 0xa2, 0xfa, 0xd4, 0xfb, 0x04, 0xe5, 0x37, 0xd2, 0x63,
+    0x9a, 0x46, 0x9e, 0xfd, 0xb0, 0x5b, 0x1e, 0xdf, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00 };
+
+BYTE eccRootPrivBytes[sizeof(ecc_privatekey)] = {
+    0xe3, 0xe7, 0xc7, 0x13, 0x57, 0x3f, 0xd9, 0xc8, 0xb8, 0xe1, 0xea, 0xf4,
+    0x53, 0xf1, 0x56, 0x15, 0x02, 0xf0, 0x71, 0xc0, 0x53, 0x49, 0xc8, 0xda,
+    0xe6, 0x26, 0xa9, 0x0b, 0x17, 0x88, 0xe5, 0x70, 0x00, 0x00, 0x00, 0x00 };
 
 // Name and function pointer corresponding to the current FW image
 #define FIRMWARE_ENTRY        "FirmwareEntry"
 typedef void(__cdecl* fpFirmwareEntry)(
+    char             *r00tCert,
     ecc_publickey    *DeviceIDPub,
+    char             *DeviceCert,
     ecc_publickey    *AliasKeyPub,
     ecc_privatekey   *AliasKeyPriv,
     char             *AliasKeyCert
     );
 
 // Simulation only: This function finds the in-memory base-offset and size
-// of RIoT .text section. On real hardware RIoT would have knowledge of
-// the physical location and size of device firmware.
+// of the RIoT .text section. On real hardware RIoT would have knowledge of
+// the physical address and size of device firmware.
 BOOLEAN RiotGetFWInfo(HINSTANCE fwDLL, DWORD *baseOffset, DWORD *length);
+
+// Sets tbsData->SerialNumber to a quasi-random value derived from seedData
+void RiotSetSerialNumber(RIOT_X509_TBS_DATA* tbsData, const uint8_t* seedData, size_t seedLen);
 
 RIOT_API void
 RiotStart(
@@ -53,16 +91,15 @@ RiotStart(
     const TCHAR *FWImagePath
 )
 {
-    BYTE                cerBuffer[DER_MAX_TBS];
     BYTE                derBuffer[DER_MAX_TBS];
     BYTE                cDigest[RIOT_DIGEST_LENGTH];
+    BYTE                FWID[RIOT_DIGEST_LENGTH];
     RIOT_ECC_PRIVATE    deviceIDPriv;
     RIOT_ECC_SIGNATURE  tbsSig;
     DERBuilderContext   derCtx;
-    DERBuilderContext   cerCtx;
     fpFirmwareEntry     FirmwareEntry;
     BYTE               *fwImage;
-    uint32_t            length;
+    uint32_t            length, PEMtype;
     DWORD               fwSize, offset, i;
     HINSTANCE           fwDLL;
 
@@ -84,7 +121,10 @@ RiotStart(
                            (const uint8_t *)RIOT_LABEL_IDENTITY,
                            lblSize(RIOT_LABEL_IDENTITY));
 
-    // Device Identity Key pair
+    // Set the serial number for DeviceID certificate
+    RiotSetSerialNumber(&x509DeviceTBSData, cDigest, RIOT_DIGEST_LENGTH);
+
+    // Output Device Identity Key pair
     printf("RIOT: deviceIDPublic:\n\tx: ");
     for (i = 0; i < ((BIGLEN) - 1); i++) {
         printf("%08X", DeviceIDPub.x.data[i]);
@@ -137,67 +177,107 @@ RiotStart(
                            (const uint8_t *)RIOT_LABEL_ALIAS,
                            lblSize(RIOT_LABEL_ALIAS));
 
+    // Set the serial number
+    RiotSetSerialNumber(&x509AliasTBSData, cDigest, RIOT_DIGEST_LENGTH);
+
     // Clean up potentially sensative data
     memset(cDigest, 0x00, RIOT_DIGEST_LENGTH);
     
     // Build the TBS (to be signed) region of Alias Key Certificate
-    DERInitContext(&cerCtx, cerBuffer, DER_MAX_TBS);
-    X509GetAliasCertTBS(&cerCtx, &x509TBSData,
+    DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+    X509GetAliasCertTBS(&derCtx, &x509AliasTBSData,
                         &AliasKeyPub, &DeviceIDPub,
                         FWID, RIOT_DIGEST_LENGTH);
 
     // Sign the Alias Key Certificate's TBS region
-    RiotCrypt_Sign(&tbsSig, cerCtx.Buffer, cerCtx.Position, &deviceIDPriv);
+    RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
 
-    // Generate Alias Key Certificate by signing the TBS region
-    X509MakeAliasCert(&cerCtx, &tbsSig);
+    // Generate Alias Key Certificate
+    X509MakeAliasCert(&derCtx, &tbsSig);
 
-    // Optionally,  make a CSR for the DeviceID
-    if (CSRBuffer != NULL) {
+    // Copy Alias Key Certificate
+    length = sizeof(AliasCert);
+    DERtoPEM(&derCtx, CERT_TYPE, AliasCert, &length);
+    AliasCert[length] = '\0';
 
-        // Initialize, create CSR TBS region
+    // This reference supports generation of either: a "root"-signed DeviceID
+    // certificate, or a certificate signing request for the DeviceID Key. 
+    // In a production device, Alias Key Certificates are normally leaf certs
+    // that chain back to a known root CA. This is difficult to represent in
+    // simulation since different vendors each have different manufacturing 
+    // processes and CAs.
+
+    if (DEVICE_ID_CERT_TYPE == RIOT_SELF_SIGNED) {
+        // Generating self-signed DeviceID certificate
+
+        x509DeviceTBSData.IssuerCommon  = x509DeviceTBSData.SubjectCommon;
+        x509DeviceTBSData.IssuerOrg     = x509DeviceTBSData.IssuerOrg;
+        x509DeviceTBSData.IssuerCountry = x509DeviceTBSData.SubjectCountry;
+
         DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-        X509GetDERCsrTbs(&derCtx, &x509TBSData, &DeviceIDPub);
+        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &DeviceIDPub, NULL, 0);
+
+        // Sign the DeviceID Certificate's TBS region
+        RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
+
+        // Generate DeviceID Certificate
+        X509MakeDeviceCert(&derCtx, &tbsSig);
+        PEMtype = CERT_TYPE;
+    }
+    else if (DEVICE_ID_CERT_TYPE == RIOT_CSR) {
+        // Generating CSR
+        DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+        X509GetDERCsrTbs(&derCtx, &x509AliasTBSData, &DeviceIDPub);
 
         // Sign the Alias Key Certificate's TBS region
         RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
 
         // Create CSR for DeviceID
         X509GetDERCsr(&derCtx, &tbsSig);
+        PEMtype = CERT_REQ_TYPE;
+    }
+    else {
+        // Generating "root"-signed DeviceID certificate
 
-        // Copy CSR
-        length = sizeof(CSRBuffer);
-        DERtoPEM(&derCtx, CERT_REQ_TYPE, CSRBuffer, &length);
-        CSRBuffer[length] = '\0';
+        uint8_t     rootPubBuffer[65];
+        uint32_t    rootPubBufLen = 65;
+
+        RiotCrypt_ExportEccPub((RIOT_ECC_PUBLIC *)eccRootPubBytes, rootPubBuffer, &rootPubBufLen);
+
+        DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+        X509GetDeviceCertTBS(&derCtx, &x509DeviceTBSData, &DeviceIDPub, rootPubBuffer, rootPubBufLen);
+
+        // Sign the DeviceID Certificate's TBS region
+        RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, (RIOT_ECC_PRIVATE *)eccRootPrivBytes);
+
+        RiotCrypt_Verify(derCtx.Buffer, derCtx.Position, &tbsSig, (RIOT_ECC_PUBLIC *)eccRootPubBytes);
+
+        // Generate DeviceID Certificate
+        X509MakeDeviceCert(&derCtx, &tbsSig);
+        PEMtype = CERT_TYPE;
     }
 
-    // Copy Alias Key Certificate
-    length = sizeof(Cert);
-    DERtoPEM(&cerCtx, CERT_TYPE, Cert, &length);
-    Cert[length] = '\0';
+    // Copy DeviceID Certificate
+    length = sizeof(DeviceCert);
+    DERtoPEM(&derCtx, PEMtype, DeviceCert, &length);
+    DeviceCert[length] = '\0';
 
-#ifdef RIOT_ENCODE_KEYS
-
-    // Copy DeviceID Public
-    length = sizeof(PEM);
+    // Generate "root" CA certficiate
     DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-    X509GetDEREccPub(&derCtx, DeviceIDPub);
-    DERtoPEM(&derCtx, PUBLICKEY_TYPE, PEM, &length);
-    *DeviceIDPublicEncodedSize = length;
-    memcpy(DeviceIDPublicEncoded, PEM, length);
+    X509GetRootCertTBS(&derCtx, &x509RootTBSData, (RIOT_ECC_PUBLIC*)eccRootPubBytes);
 
-    // Copy Alias Key Pair
-    length = sizeof(PEM);
-    DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-    X509GetDEREcc(&derCtx, AliasKeyPub, AliasKeyPriv);
-    DERtoPEM(&derCtx, ECC_PRIVATEKEY_TYPE, PEM, &length);
-    *AliasKeyEncodedSize = length;
-    memcpy(AliasKeyEncoded, PEM, length);
+    // Self-sign the "root" Certificate's TBS region
+    RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, (RIOT_ECC_PRIVATE *)eccRootPrivBytes);
 
-#endif
+    // Generate "root" CA cert
+    X509MakeRootCert(&derCtx, &tbsSig);
+
+    // Copy "root" CA Certificate
+    length = sizeof(r00tCert);
+    DERtoPEM(&derCtx, CERT_TYPE, r00tCert, &length);
 
     // Transfer control to firmware
-    FirmwareEntry(&DeviceIDPub, &AliasKeyPub, &AliasKeyPriv, Cert);
+    FirmwareEntry(r00tCert, &DeviceIDPub, DeviceCert, &AliasKeyPub, &AliasKeyPriv, AliasCert);
 
     return;
 }
@@ -231,4 +311,30 @@ RiotGetFWInfo(
         sectionHeader++;
     }
     return FALSE;
+}
+
+void
+RiotSetSerialNumber(
+    RIOT_X509_TBS_DATA  *tbsData, 
+    const uint8_t       *seedData,
+    size_t               seedLen
+)
+// Set the tbsData serial number to 8 bytes of data derived from seedData
+{
+    
+    uint8_t hashBuf[RIOT_DIGEST_LENGTH];
+    // SHA-1 hash of "DICE SEED" == 6e785006 84941d8f 7880520c 60b8c7e4 3f1a3c00
+    uint8_t seedExtender[20] = { 0x6e, 0x78, 0x50, 0x06, 0x84, 0x94, 0x1d, 0x8f, 0x78, 0x80,
+                                 0x52, 0x0c, 0x60, 0xb8, 0xc7, 0xe4, 0x3f, 0x1a, 0x3c, 0x00 };
+
+    RiotCrypt_Hash2(hashBuf, sizeof(hashBuf), seedData, seedLen, seedExtender, sizeof(seedExtender));
+
+    // Take first 8 bytes to form serial number
+    memcpy(tbsData->SerialNum, hashBuf, RIOT_X509_SNUM_LEN);
+
+    // DER encoded serial number must be positive and the first byte must not be zero
+    tbsData->SerialNum[0] &= (uint8_t)0x7f;
+    tbsData->SerialNum[0] |= (uint8_t)0x01;
+
+    return;
 }

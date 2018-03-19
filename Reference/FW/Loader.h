@@ -18,7 +18,9 @@ extern "C" {
 #endif
 
 FW_API void FirmwareEntry(
+    char             *rootCert,
     ecc_publickey    *DeviceIDPub,
+    char             *DeiceCert,
     ecc_publickey    *AliasKeyPub,
     ecc_privatekey   *AliasKeyPriv,
     char             *AliasKeyCert

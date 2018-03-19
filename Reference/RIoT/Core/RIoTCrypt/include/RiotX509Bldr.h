@@ -1,3 +1,7 @@
+/*
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE in the project root.
+ */
 #ifndef _RIOT_X509_BLDR_H
 #define _RIOT_X509_BLDR_H
 
@@ -6,8 +10,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define RIOT_X509_SNUM_LEN  0x05
+// KeyUsage :: = BIT STRING {
+//     digitalSignature(0),
+//     nonRepudiation(1),
+//     keyEncipherment(2),
+//     dataEncipherment(3),
+//     keyAgreement(4),
+//     keyCertSign(5),
+//     cRLSign(6)
+// }
+#define RIOT_X509_KEY_USAGE 0x04    // keyCertSign
+#define RIOT_X509_SNUM_LEN  0x08    // In bytes
 
 // Const x509 "to be signed" data
 typedef struct
@@ -27,7 +40,9 @@ int
 X509GetDeviceCertTBS(
     DERBuilderContext   *Tbs,
     RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *DevIdKeyPub
+	RIOT_ECC_PUBLIC     *DevIdKeyPub,
+	uint8_t             *RootKeyPub,
+	uint32_t             RootKeyPubLen
 );
 
 int
@@ -76,6 +91,19 @@ int
 X509GetDERCsr(
     DERBuilderContext   *Context,
     RIOT_ECC_SIGNATURE  *Signature
+);
+
+int
+X509GetRootCertTBS(
+    DERBuilderContext   *Tbs,
+    RIOT_X509_TBS_DATA  *TbsData,
+    RIOT_ECC_PUBLIC     *RootKeyPub
+);
+
+int
+X509MakeRootCert(
+    DERBuilderContext   *AliasCert,
+    RIOT_ECC_SIGNATURE  *TbsSig
 );
 
 #ifdef __cplusplus

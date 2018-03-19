@@ -11,7 +11,9 @@ Confidential Information
 // linker option that randomizes base addresses must be disabled.
 
 FW_API void FirmwareEntry(
+    char             *r00tCert,
     ecc_publickey    *DeviceIDPub,
+    char             *DeviceCert,
     ecc_publickey    *AliasKeyPub,
     ecc_privatekey   *AliasKeyPriv,
     char             *AliasKeyCert
@@ -33,6 +35,8 @@ FW_API void FirmwareEntry(
         printf("%08X", AliasKeyPriv->data[i]);
     }
 
+    printf("\nFW: r00tCertificate:\n %s", r00tCert);
+    printf("\nFW: DeviceCertificate:\n %s", DeviceCert);
     printf("\nFW: AliasKeyCertificate:\n %s", AliasKeyCert);
 
     i = 5;

@@ -1,9 +1,7 @@
-/*(Copyright)
-
-Microsoft Copyright 2017
-Confidential Information
-
-*/
+/*
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE in the project root.
+ */
 
 //
 // This source implements the interface between the RIoT framework and
@@ -26,6 +24,7 @@ Confidential Information
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "RiotSha1.h"
 #include "RiotSha256.h"
 #include "RiotAes128.h"
 #include "RiotHmac.h"

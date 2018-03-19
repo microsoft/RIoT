@@ -13,6 +13,10 @@
  *    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *****************************************************************************/
+/*
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE in the project root.
+ */
 
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
@@ -1628,11 +1632,12 @@ BigValToBigInt(void *out, const bigval_t *src)
     // Start with the most significant word and work down.
     // Initialize i with the number of bytes to move - 1.
 
+    uint8_t unused;
     uint8_t* intermediate = (uint8_t*)out;
     for (i = ((BIGLEN - 1) * 4) - 1; i >= 0; i--) 
     {
         *intermediate = (uint8_t)(src->data[i / 4] >> (8 * (i % 4)));
-        *(intermediate)++;
+        unused = *(intermediate)++;
     }
 }
 
@@ -1673,7 +1678,10 @@ get_random_bytes(uint8_t *buf, size_t len)
     srand((unsigned)time(NULL));
     for (; len; len--)
     {
-        *buf++ = (uint8_t)rand();
+    //  TODO: REVERT THIS WHEN THE SDK
+    //        NO LONGER REQUIRES IT!!
+    //  *buf++ = (uint8_t)rand();
+        *buf++ = (uint8_t)len;
     }
     return 0;
 }

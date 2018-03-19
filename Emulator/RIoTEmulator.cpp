@@ -1,9 +1,7 @@
-/*(Copyright)
-
-Microsoft Copyright 2017
-Confidential Information
-
-*/
+/*
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE in the project root.
+ */
 #include "stdafx.h"
 #include <stdint.h>
 #define WIN32_LEAN_AND_MEAN
@@ -92,7 +90,6 @@ BYTE eccRootPrivBytes[sizeof(ecc_privatekey)] = {
 
 // Sets tbsData->SerialNumber to a quasi-random value derived from seedData
 void SetSerialNumber(RIOT_X509_TBS_DATA* tbsData, const uint8_t* seedData, size_t seedLen);
-
 
 int
 CreateDeviceAuthBundle(
@@ -394,8 +391,8 @@ void SetSerialNumber(RIOT_X509_TBS_DATA* tbsData, const uint8_t* seedData, size_
 	return;
 }
 
-
 #ifdef DEBUG
+// What follows are some helper routines used for debugging
 void HexConvert(uint8_t* in, int inLen, char* outBuf, int outLen)
     {
         int pos = 0;

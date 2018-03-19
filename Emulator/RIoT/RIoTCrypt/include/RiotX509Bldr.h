@@ -1,3 +1,7 @@
+/*
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE in the project root.
+ */
 #ifndef _RIOT_X509_BLDR_H
 #define _RIOT_X509_BLDR_H
 
@@ -6,10 +10,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define RIOT_X509_SNUM_LEN  0x08
-
-// KeyUsage :: = BIT STRING{
+// KeyUsage :: = BIT STRING {
 //     digitalSignature(0),
 //     nonRepudiation(1),
 //     keyEncipherment(2),
@@ -18,7 +19,8 @@ extern "C" {
 //     keyCertSign(5),
 //     cRLSign(6)
 // }
-#define RIOT_X509_KEY_USAGE 0x4  // keyCertSign
+#define RIOT_X509_KEY_USAGE 0x04    // keyCertSign
+#define RIOT_X509_SNUM_LEN  0x08    // In bytes
 
 // Const x509 "to be signed" data
 typedef struct

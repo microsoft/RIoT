@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license.
-
+/*
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE in the project root.
+ */
 #ifndef RIOT_BASE64_H
 #define RIOT_BASE64_H
 

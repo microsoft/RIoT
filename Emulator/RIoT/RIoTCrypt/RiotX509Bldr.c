@@ -1,9 +1,7 @@
-/*(Copyright)
-
-Microsoft Copyright 2017
-Confidential Information
-
-*/
+/*
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE in the project root.
+ */
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -29,24 +27,15 @@ static int countryNameOID[] = { 2,5,4,6,-1 };
 static int orgNameOID[] = { 2,5,4,10,-1 };
 static int basicConstraintsOID[] = { 2,5,29,19,-1 };
 
-
-/*
-Notes for Dennis.
-	Check RIotSha1.h/c  these are new.  I tried to make changes similar to what you did
-		for Sha256, but please scrub.
-
-
-*/
-
 static int GenerateGuidFromSeed(char* nameBuf, uint32_t *nameBufLen, const uint8_t* seed, size_t seedLen)
 {
-	uint8_t digest[RIOT_DIGEST_LENGTH];
-	int result;
-	RIOT_SHA256_Block(seed, seedLen, digest);
-	result = Base64Encode(digest, 16, nameBuf, nameBufLen);
-	return result;
-}
+    uint8_t digest[RIOT_DIGEST_LENGTH];
+    int     result;
 
+    RIOT_SHA256_Block(seed, seedLen, digest);
+    result = Base64Encode(digest, 16, nameBuf, nameBufLen);
+    return result;
+}
 
 static int
 X509AddExtensions(
@@ -58,25 +47,24 @@ X509AddExtensions(
 )
 // Create the RIoT extensions.  
 {
-	uint8_t authKeyIdentifier[SHA1_DIGEST_LENGTH];
-	RIOT_SHA1_Block(DevIdPub, DevIdPubLen, authKeyIdentifier);
-	uint8_t     keyUsage = RIOT_X509_KEY_USAGE;
-	uint8_t		extLen = 1;
+    uint8_t     authKeyIdentifier[SHA1_DIGEST_LENGTH];
+    RIOT_SHA1_Block(DevIdPub, DevIdPubLen, authKeyIdentifier);
+    uint8_t     keyUsage = RIOT_X509_KEY_USAGE;
+    uint8_t        extLen = 1;
 
-	CHK(DERStartExplicit(Tbs, 3));
-	
-	CHK(    DERStartSequenceOrSet(Tbs, true));
+    CHK(DERStartExplicit(Tbs, 3));
+    CHK(    DERStartSequenceOrSet(Tbs, true));
     
-	// keyUsage
-	CHK(		DERStartSequenceOrSet(Tbs, true));
-    CHK(			DERAddOID(Tbs, keyUsageOID));
-    CHK(			DERStartEnvelopingOctetString(Tbs));
-    CHK(				DERAddBitString(Tbs, &keyUsage, extLen)); 
-    CHK(			DERPopNesting(Tbs));
-    CHK(		DERPopNesting(Tbs));
+    // keyUsage
+    CHK(        DERStartSequenceOrSet(Tbs, true));
+    CHK(            DERAddOID(Tbs, keyUsageOID));
+    CHK(            DERStartEnvelopingOctetString(Tbs));
+    CHK(                DERAddBitString(Tbs, &keyUsage, extLen)); 
+    CHK(            DERPopNesting(Tbs));
+    CHK(        DERPopNesting(Tbs));
 
-	// extendedKeyUsage
-	CHK(        DERStartSequenceOrSet(Tbs, true));
+    // extendedKeyUsage
+    CHK(        DERStartSequenceOrSet(Tbs, true));
     CHK(            DERAddOID(Tbs, extKeyUsageOID));
     CHK(            DERStartEnvelopingOctetString(Tbs));
     CHK(                DERStartSequenceOrSet(Tbs, true));
@@ -85,19 +73,19 @@ X509AddExtensions(
     CHK(            DERPopNesting(Tbs));
     CHK(        DERPopNesting(Tbs));
 
-	// authKeyIdentifier
-	CHK(		DERStartSequenceOrSet(Tbs, true));
-	CHK(			DERAddOID(Tbs, extAuthKeyIdentifierOID));
-	CHK(			DERStartEnvelopingOctetString(Tbs));
-	CHK(				DERStartSequenceOrSet(Tbs, true));
-	CHK(					DERStartExplicit(Tbs, 0));
-	CHK(						DERAddOctetString(Tbs, authKeyIdentifier, 20));
-	CHK(					DERPopNesting(Tbs));
-	CHK(				DERPopNesting(Tbs));
-	CHK(			DERPopNesting(Tbs));
-	CHK(		DERPopNesting(Tbs));
-	
-	// RIoT extension
+    // authKeyIdentifier
+    CHK(        DERStartSequenceOrSet(Tbs, true));
+    CHK(            DERAddOID(Tbs, extAuthKeyIdentifierOID));
+    CHK(            DERStartEnvelopingOctetString(Tbs));
+    CHK(                DERStartSequenceOrSet(Tbs, true));
+    CHK(                    DERStartExplicit(Tbs, 0));
+    CHK(                        DERAddOctetString(Tbs, authKeyIdentifier, 20));
+    CHK(                    DERPopNesting(Tbs));
+    CHK(                DERPopNesting(Tbs));
+    CHK(            DERPopNesting(Tbs));
+    CHK(        DERPopNesting(Tbs));
+    
+    // RIoT extension
     CHK(        DERStartSequenceOrSet(Tbs, true));
     CHK(            DERAddOID(Tbs, riotOID));
     CHK(            DERStartEnvelopingOctetString(Tbs));
@@ -167,20 +155,20 @@ X509GetDeviceCertTBS(
     DERBuilderContext   *Tbs,
     RIOT_X509_TBS_DATA  *TbsData,
     RIOT_ECC_PUBLIC     *DevIdKeyPub,
-	uint8_t             *RootKeyPub,
-	uint32_t             RootKeyPubLen)
+    uint8_t             *RootKeyPub,
+    uint32_t             RootKeyPubLen)
 {
-	uint8_t     encBuffer[65];
+    uint8_t     encBuffer[65];
     uint32_t    encBufferLen;
     uint8_t     keyUsage = RIOT_X509_KEY_USAGE;
-	uint8_t authKeyIdentifier[SHA1_DIGEST_LENGTH];
+    uint8_t     authKeyIdentifier[SHA1_DIGEST_LENGTH];
 
-	RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen);
+    RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen);
 
-	if (RootKeyPub != NULL)
-	{
-		RIOT_SHA1_Block(RootKeyPub, RootKeyPubLen, authKeyIdentifier);
-	}
+    if (RootKeyPub != NULL)
+    {
+        RIOT_SHA1_Block(RootKeyPub, RootKeyPubLen, authKeyIdentifier);
+    }
 
     CHK(DERStartSequenceOrSet(Tbs, true));
     CHK(    DERAddShortExplicitInteger(Tbs, 2));
@@ -204,7 +192,7 @@ X509GetDeviceCertTBS(
     CHK(    DERStartExplicit(Tbs, 3));
     CHK(        DERStartSequenceOrSet(Tbs, true));
 
-	CHK(            DERStartSequenceOrSet(Tbs, true));
+    CHK(            DERStartSequenceOrSet(Tbs, true));
     CHK(                DERAddOID(Tbs, keyUsageOID));
     CHK(                DERStartEnvelopingOctetString(Tbs));
                             encBufferLen = 1;
@@ -212,7 +200,7 @@ X509GetDeviceCertTBS(
     CHK(                DERPopNesting(Tbs));
     CHK(            DERPopNesting(Tbs));
     
-	CHK(            DERStartSequenceOrSet(Tbs, true));
+    CHK(            DERStartSequenceOrSet(Tbs, true));
     CHK(                DERAddOID(Tbs, basicConstraintsOID));
     CHK(                DERAddBoolean(Tbs, true));
     CHK(                DERStartEnvelopingOctetString(Tbs));
@@ -223,20 +211,21 @@ X509GetDeviceCertTBS(
     CHK(                DERPopNesting(Tbs));
     CHK(            DERPopNesting(Tbs));
 
-if(RootKeyPub!=NULL)
-{
-	CHK(			DERStartSequenceOrSet(Tbs, true));
-	CHK(				DERAddOID(Tbs, extAuthKeyIdentifierOID));
-	CHK(				DERStartEnvelopingOctetString(Tbs));
-	CHK(					DERStartSequenceOrSet(Tbs, true));
-	CHK(						DERStartExplicit(Tbs, 0));
-	CHK(							DERAddOctetString(Tbs, authKeyIdentifier, 20));
-	CHK(						DERPopNesting(Tbs));
-	CHK(					DERPopNesting(Tbs));
-	CHK(				DERPopNesting(Tbs));
-	CHK(			DERPopNesting(Tbs));
-}
-	CHK(        DERPopNesting(Tbs));
+    if(RootKeyPub!=NULL)
+    {
+        CHK(        DERStartSequenceOrSet(Tbs, true));
+        CHK(            DERAddOID(Tbs, extAuthKeyIdentifierOID));
+        CHK(            DERStartEnvelopingOctetString(Tbs));
+        CHK(                DERStartSequenceOrSet(Tbs, true));
+        CHK(                    DERStartExplicit(Tbs, 0));
+        CHK(                        DERAddOctetString(Tbs, authKeyIdentifier, 20));
+        CHK(                    DERPopNesting(Tbs));
+        CHK(                DERPopNesting(Tbs));
+        CHK(            DERPopNesting(Tbs));
+        CHK(        DERPopNesting(Tbs));
+    }
+
+    CHK(        DERPopNesting(Tbs));
     CHK(    DERPopNesting(Tbs));
     CHK(DERPopNesting(Tbs));
 
@@ -290,25 +279,26 @@ X509GetAliasCertTBS(
     uint32_t             FwidLen
 )
 {
-	int result;
-	char guidBuffer[64];
-	uint8_t     encBuffer[65];
+    int result;
+    char guidBuffer[64];
+    uint8_t     encBuffer[65];
     uint32_t    encBufferLen;
 
-	if (strcmp(TbsData->SubjectCommon, "*") == 0)
-	{
-		RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen);
-		uint32_t bufLen = sizeof(guidBuffer);
-		// replace the common-name with a per-device GUID (derived from the DeviceID 
-		// public key
-		result = GenerateGuidFromSeed(guidBuffer, &bufLen, encBuffer, encBufferLen);
-		if (result < 0) return result;
-		guidBuffer[bufLen-1] = 0;
-		TbsData->SubjectCommon = guidBuffer;
-	}
+    if (strcmp(TbsData->SubjectCommon, "*") == 0)
+    {
+        RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen);
+        uint32_t bufLen = sizeof(guidBuffer);
 
+        // Replace the common-name with a per-device GUID derived from the DeviceID public key
+        result = GenerateGuidFromSeed(guidBuffer, &bufLen, encBuffer, encBufferLen);
 
+        if (result < 0) {
+            return result;
+        }
 
+        guidBuffer[bufLen-1] = 0;
+        TbsData->SubjectCommon = guidBuffer;
+    }
 
     CHK(DERStartSequenceOrSet(Tbs, true));
     CHK(    DERAddShortExplicitInteger(Tbs, 2));

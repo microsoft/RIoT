@@ -1,9 +1,7 @@
-/*(Copyright)
-
-Microsoft Copyright 2015, 2016
-Confidential Information
-
-*/
+/*
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE in the project root.
+ */
 #pragma once
 
 #ifdef __cplusplus

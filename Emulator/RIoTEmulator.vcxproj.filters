@@ -36,6 +36,9 @@
     <ClCompile Include="RIoT\RIoTCrypt\RiotBase64.c">
       <Filter>RIoT\RIoTCrypt</Filter>
     </ClCompile>
+    <ClCompile Include="RIoT\RIoTCrypt\RiotSha1.c">
+      <Filter>RIoT\RIoTCrypt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DICE\DiceSha256.h">
@@ -77,6 +80,9 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="RIoT\RIoTCrypt\include\RiotBase64.h">
+      <Filter>RIoT\RIoTCrypt\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="RIoT\RIoTCrypt\include\RiotSha1.h">
       <Filter>RIoT\RIoTCrypt\Headers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define RIOT_X509_SNUM_LEN  0x05
+#define RIOT_X509_SNUM_LEN  0x08
 
 // KeyUsage :: = BIT STRING{
 //     digitalSignature(0),
@@ -38,7 +38,9 @@ int
 X509GetDeviceCertTBS(
     DERBuilderContext   *Tbs,
     RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *DevIdKeyPub
+	RIOT_ECC_PUBLIC     *DevIdKeyPub,
+	uint8_t             *RootKeyPub,
+	uint32_t             RootKeyPubLen
 );
 
 int

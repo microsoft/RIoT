@@ -26,6 +26,7 @@ Confidential Information
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "RiotSha1.h"
 #include "RiotSha256.h"
 #include "RiotAes128.h"
 #include "RiotHmac.h"

@@ -22,5 +22,3 @@ Soon we will also share demos and sample code for specific DICE-enabled hardware
 For more information on DICE, and to learn how you can contribute, we encourage you to check out the [DICE Architectures workgroup](https://trustedcomputinggroup.org/work-groups/dice-architectures/) (DiceArch) in the [Trusted Computing Group](https://trustedcomputinggroup.org/).  For questions, comments, or contributions to the RIoT project from MSR, feel free to contact us at riotdev@microsoft.com.
 
   
-
-

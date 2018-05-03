@@ -1668,25 +1668,31 @@ ECC_feature_list(void)
 }
 #endif // ECC_TEST 
 
-
 #if USES_EPHEMERAL
 #include <stdlib.h>
-#include <time.h>
+static unsigned int drbg_seed = 0x00;
+
+void
+set_drbg_seed(uint8_t *buf, size_t length)
+{
+    if (buf) {
+        drbg_seed = 0;
+        for (size_t i = 0; i < length; i++) {
+            drbg_seed += ~(buf[i]);
+        }
+        srand(~drbg_seed);
+    }
+}
+
 static int
 get_random_bytes(uint8_t *buf, size_t len)
 {
-    srand((unsigned)time(NULL));
-    for (; len; len--)
-    {
-    //  TODO: REVERT THIS WHEN THE SDK
-    //        NO LONGER REQUIRES IT!!
-    //  *buf++ = (uint8_t)rand();
-        *buf++ = (uint8_t)len;
+    for (; len; len--) {
+        *buf++ = (uint8_t)rand();
     }
     return 0;
 }
 #endif
-
 
 #if ECDH_OUT
 //

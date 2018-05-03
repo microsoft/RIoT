@@ -206,6 +206,9 @@ CreateDeviceAuthBundle(
         (const uint8_t *)RIOT_LABEL_ALIAS,
         lblSize(RIOT_LABEL_ALIAS));
 
+    // With the Alias Key pair derived, we can now Seed DRBG
+    RiotCrypt_SeedDRBG((uint8_t*)&aliasKeyPriv, sizeof(RIOT_ECC_PRIVATE));
+
 	// Set the serial number
 	SetSerialNumber(&x509AliasTBSData, digest, RIOT_DIGEST_LENGTH);
 

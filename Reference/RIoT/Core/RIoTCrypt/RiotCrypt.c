@@ -8,6 +8,16 @@
                                     RIOT_MAX_KDF_LABEL_LENGTH   + 5
 
 RIOT_STATUS
+RiotCrypt_SeedDRBG(
+    uint8_t     *bytes,
+    size_t       size
+)
+{
+    set_drbg_seed(bytes, size);
+    return RIOT_SUCCESS;
+}
+
+RIOT_STATUS
 RiotCrypt_Kdf(
     uint8_t        *result,         // OUT: Buffer to receive the derived bytes
     size_t          resultSize,     // IN:  Capacity of the result buffer

@@ -177,6 +177,9 @@ RiotStart(
                            (const uint8_t *)RIOT_LABEL_ALIAS,
                            lblSize(RIOT_LABEL_ALIAS));
 
+    // With the Alias Key pair derived, we can now Seed DRBG
+    RiotCrypt_SeedDRBG((uint8_t*)&AliasKeyPriv, sizeof(RIOT_ECC_PRIVATE));
+
     // Set the serial number
     RiotSetSerialNumber(&x509AliasTBSData, cDigest, RIOT_DIGEST_LENGTH);
 

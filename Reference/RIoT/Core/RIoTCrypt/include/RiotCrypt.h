@@ -74,6 +74,12 @@ typedef enum {
 } RIOT_CRYPT_OP_TYPE;
 
 RIOT_STATUS
+RiotCrypt_SeedDRBG(
+    uint8_t     *bytes,             // IN: Pointer to byte buffer for DRBG Seed
+    size_t       size               // IN: Size of buffer in bytes
+);
+
+RIOT_STATUS
 RiotCrypt_Kdf(
     uint8_t        *result,         // OUT: Buffer to receive the derived bytes
     size_t          resultSize,     // IN:  Capacity of the result buffer

@@ -78,6 +78,7 @@ typedef affine_point_t ecc_publickey;
 typedef affine_point_t ecc_secret;
 typedef ECDSA_sig_t ecc_signature;
 
+void set_drbg_seed(uint8_t *buf, size_t length);
 //
 // Convert a number from big endian by uint8_t to bigval_t. If the
 // size of the input number is larger than the initialization size

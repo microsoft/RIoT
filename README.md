@@ -2,7 +2,7 @@
 ## Introduction
 Robust, Resilient, Recoverable Internet of Things (RIoT), from Microsoft Research, is an architecture for providing foundational trust services to computing devices. Device Identity Composition Engine (DICE) is an industry hardware/firmware standard that is the foundation on which RIoT is built.
 
-This repository contains a RIoT reference implementation for a DICE Architecture that provides cryptographically strong device identity and device attestation.  Together, DICE and RIoT also provide a foundation for device recovery and resiliency ([Cyber Resilient Platform Initiative](https://aka.ms/cyrep)), secure and verifiable updates, data at rest protection (sealing), and a host of other security-critical use cases.
+This repository contains a RIoT reference implementation for a DICE Architecture that provides cryptographically strong device identity and device attestation.  Together, DICE and RIoT also provide a foundation for device recovery and resiliency ([Cyber Resilient Platform Initiative](https://aka.ms/cyres)), secure and verifiable updates, data at rest protection (sealing), and a host of other security-critical use cases.
 
 The Device Provisioning Service (DPS) from Azure IoT uses DICE and RIoT for secure device identity and attestation.  The DPS X.509-based protocols rely on the cryptographic keys and certificates produced by RIoT and the Root of Trust for Measurement provided by DICE in hardware.
 

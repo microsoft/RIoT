@@ -263,7 +263,7 @@ DERAddIntegerFromArray(
     uint8_t             *Val,
     uint32_t            NumBytes
 )
-// Input integer is assumed unsigned with most signficant byte first.
+// Input integer is assumed unsigned with most significant byte first.
 // A leading zero will be added if the most significant input bit is set.
 // Leading zeros in the input number will be removed.
 {
@@ -278,6 +278,11 @@ DERAddIntegerFromArray(
             break;
         }
         numLeadingZeros++;
+    }
+
+    // Handle zero case. We do not want index outside the buffer.
+    if (numLeadingZeros == NumBytes) {
+        numLeadingZeros--;
     }
 
     negative = Val[numLeadingZeros] >= 128;

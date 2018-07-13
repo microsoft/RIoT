@@ -54,6 +54,9 @@
     <ClCompile Include="..\CyReP\tcps\TcpsId.c">
       <Filter>TCPS</Filter>
     </ClCompile>
+    <ClCompile Include="..\CyReP\tcps\cborhelper.c">
+      <Filter>TCPS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -95,6 +98,9 @@
       <Filter>TinyCBOR</Filter>
     </ClInclude>
     <ClInclude Include="..\CyReP\tcps\TcpsId.h">
+      <Filter>TCPS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CyReP\tcps\cborhelper.h">
       <Filter>TCPS</Filter>
     </ClInclude>
   </ItemGroup>

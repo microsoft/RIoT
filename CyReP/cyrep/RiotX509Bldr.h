@@ -84,9 +84,9 @@ X509GetDEREcc(
 
 int
 X509GetDERCsrTbs(
-    DERBuilderContext   *Context,
-    RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *DeviceIDPub
+    DERBuilderContext       *Context,
+    RIOT_X509_TBS_DATA      *TbsData,
+    const RIOT_ECC_PUBLIC   *DeviceIDPub
 );
 
 int
@@ -117,9 +117,9 @@ X509GetEccPub(
 
 int
 X509GetEccPrv(
-    DERBuilderContext   *Context,
-    ecc_publickey       *Pub,
-    ecc_privatekey      *Prv
+    DERBuilderContext       *Context,
+    const ecc_publickey     *Pub,
+    const ecc_privatekey    *Prv
 );
 
 #ifdef __cplusplus

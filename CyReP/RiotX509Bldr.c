@@ -283,12 +283,25 @@ X509GetDeviceCertTBS(
         CHK(                DERPopNesting(Tbs));
         CHK(            DERPopNesting(Tbs));
     }
-    if(PathLength <= 0)
+    if(PathLength > 0)
     {
         CHK(        DERStartSequenceOrSet(Tbs, true));
         CHK(            DERAddOID(Tbs, keyUsageOID));
         CHK(            DERStartEnvelopingOctetString(Tbs));
         CHK(                DERAddBitString(Tbs, keyUsageCA, sizeof(keyUsageCA)));
+        CHK(            DERPopNesting(Tbs));
+        CHK(        DERPopNesting(Tbs));
+    }
+    else
+    {
+        CHK(        DERStartSequenceOrSet(Tbs, true));
+        CHK(            DERAddOID(Tbs, extKeyUsageOID));
+        CHK(            DERAddBoolean(Tbs, true));
+        CHK(            DERStartEnvelopingOctetString(Tbs));
+        CHK(                DERStartSequenceOrSet(Tbs, true));
+        CHK(                    DERAddOID(Tbs, clientAuthOID));
+        CHK(                    DERAddOID(Tbs, serverAuthOID));
+        CHK(                DERPopNesting(Tbs));
         CHK(            DERPopNesting(Tbs));
         CHK(        DERPopNesting(Tbs));
     }
@@ -506,9 +519,9 @@ Error:
 
 int
 X509GetDERCsrTbs(
-    DERBuilderContext   *Context,
-    RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC*      DeviceIDPub
+    DERBuilderContext       *Context,
+    RIOT_X509_TBS_DATA      *TbsData,
+    const RIOT_ECC_PUBLIC   *DeviceIDPub
 )
 {
     uint8_t     encBuffer[65];
@@ -715,9 +728,9 @@ Error:
 
 int
 X509GetEccPrv(
-    DERBuilderContext   *Context,
-    ecc_publickey       *Pub,
-    ecc_privatekey      *Prv
+    DERBuilderContext       *Context,
+    const ecc_publickey     *Pub,
+    const ecc_privatekey    *Prv
 )
 {
     uint8_t     encBuffer[65];

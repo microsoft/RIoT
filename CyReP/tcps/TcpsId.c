@@ -11,19 +11,7 @@ Confidential Information
 #include <cbor.h>
 #include <stdlib.h>
 #include <RiotCrypt.h>
-
-
-// Ignore OutOfMemory to allow CBOR to gather size requirements.
-#define CLEANUP_ENCODER_ERR(_e) \
-    err = _e; \
-    if(err != CborErrorOutOfMemory && \
-       err != CborNoError) \
-    { goto Cleanup; }
-
-#define CLEANUP_DECODER_ERR(_e) \
-    err = (_e); \
-    if (err != CborNoError) \
-    { goto Cleanup; }
+#include <cborhelper.h>
 
 //  Stack size of max assertion in a single ID
 #define MAX_ASSERTION_COUNT        4
@@ -97,69 +85,6 @@ Cleanup:
 
     return status;
 }
-
-
-//
-//  cbor_value_ref_byte_string is written with the intent to at some point, move into 
-//  tinycbor. It takes a dependency on an internal function from that project.
-//
-#include "extract_number_p.h"
-
-CborError
-cbor_value_ref_byte_string(
-    CborValue *Cborstring,
-    const uint8_t **Bstr,
-    size_t *BstrSize,
-    CborValue *Next
-)
-
-/*++
-
-Routine Description:
-
-Returns a pointer to the bstr or text str located at Cborstring.
-The caller should NOT free the returned buffer.
-Advances the Value to the next cbor object.
-
---*/
-
-{
-    CborError err;
-    const uint8_t *ptr;
-    uint64_t len;
-
-    *Bstr = NULL;
-    *BstrSize = 0;
-
-    if (Cborstring == NULL ||
-        Bstr == NULL ||
-        BstrSize == NULL ||
-        Next == NULL)
-    {
-        return CborErrorInternalError;
-    }
-
-    if (!cbor_value_is_byte_string(Cborstring) &&
-        !cbor_value_is_text_string(Cborstring)) {
-        return CborErrorIllegalType;
-    }
-
-    // Utilize the API to validate the value as well as obtaining the size.
-    err = cbor_value_get_string_length(Cborstring, BstrSize);
-
-    if (err == CborNoError) {
-        ptr = Cborstring->ptr;
-        extract_number(&ptr, Cborstring->parser->end, &len);
-        if (len > 0) {
-            *Bstr = ptr;
-        }
-        assert(*BstrSize == len);
-        err = cbor_value_advance(Next);
-    }
-
-    return err;
-}
-
 
 CborError
 pDecodeAssertionKvP(

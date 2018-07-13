@@ -167,6 +167,7 @@
     <ClInclude Include="..\CyReP\CyReP\RiotStatus.h" />
     <ClInclude Include="..\CyReP\CyReP\RiotTarget.h" />
     <ClInclude Include="..\CyReP\CyReP\RiotX509Bldr.h" />
+    <ClInclude Include="..\CyReP\tcps\cborhelper.h" />
     <ClInclude Include="..\CyReP\tcps\TcpsId.h" />
     <ClInclude Include="..\External\tinycbor\src\cbor.h" />
     <ClInclude Include="stdafx.h" />
@@ -183,6 +184,7 @@
     <ClCompile Include="..\CyReP\RiotKdf.c" />
     <ClCompile Include="..\CyReP\RiotSha256.c" />
     <ClCompile Include="..\CyReP\RiotX509Bldr.c" />
+    <ClCompile Include="..\CyReP\tcps\cborhelper.c" />
     <ClCompile Include="..\CyReP\tcps\TcpsId.c" />
     <ClCompile Include="..\External\tinycbor\src\cborencoder.c" />
     <ClCompile Include="..\External\tinycbor\src\cborencoder_close_container_checked.c" />

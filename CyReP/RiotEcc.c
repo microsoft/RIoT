@@ -1667,7 +1667,7 @@ ECC_feature_list(void)
 
 
 #ifdef USES_EPHEMERAL
-#if defined(CONFIG_CYREP_UBOOT_BUILD)
+#if defined(CONFIG_CYREP_UBOOT_BUILD) || defined(CONFIG_CYREP_OPTEE_BUILD) || defined(CONFIG_CYREP_SGX_BUILD)
 COND_STATIC int
 get_random_bytes(uint8_t *buf, size_t len)
 {

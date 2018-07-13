@@ -107,5 +107,8 @@
     <ClCompile Include="..\..\..\..\External\tinycbor\src\cborpretty.c">
       <Filter>Source Files\TinyCBOR</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\CyReP\tcps\cborhelper.c">
+      <Filter>Source Files\CyReP\TCPS</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

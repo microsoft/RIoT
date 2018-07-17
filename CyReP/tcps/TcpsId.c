@@ -8,7 +8,6 @@ Confidential Information
 #include <RiotStatus.h>
 #include <RiotEcc.h>
 #include <TcpsId.h>
-#include <cbor.h>
 #include <stdlib.h>
 #include <RiotCrypt.h>
 #include <cborhelper.h>

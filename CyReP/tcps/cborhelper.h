@@ -1,5 +1,6 @@
 #pragma once
 
+#define CBOR_NO_PRETTY_API
 #include <cbor.h>
 
 #ifdef __cplusplus

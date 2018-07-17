@@ -1,10 +1,22 @@
-#include "cbor.h"
+/* Copyright (c) Microsoft Corporation.  All Rights Reserved. */
 #include "cborhelper.h"
 
-//
+/*++
+
+cbor_value_ref_byte_string/cbor_value_ref_text_string
 //  NOTE: These wrappers should go away. tinycbor will expose similar APIs
 //    to cbor_value_get_****_string_chunk, with improvments for single-chunk strings
-//
+
+Returns a pointer to the bstr or txt str located at Cborstring.
+The caller should NOT free returned pointer. Advances CborValue to the next cbor object.
+
+Both functions are wrappers around cbor_value_get_byte_string_chunk which is intended to work with chunked
+data streams. The API is designed to be called multiple times until the returned data pointer is null. As
+our data is in a contiguous buffer we control, the calling pattern is predictable. Both wrappers take advantage
+of that fact and expect the first call to return a valid pointer, and the second call to advance to the next 
+cbor object.
+
+--*/
 
 
 CborError
@@ -14,17 +26,6 @@ cbor_value_ref_byte_string(
     size_t *BstrSize,
     CborValue *Next
 )
-
-/*++
-
-Routine Description:
-
-Returns a pointer to the bstr or text str located at Cborstring.
-The caller should NOT free the returned buffer.
-Advances the Value to the next cbor object.
-
---*/
-
 {
     CborError err;
     const uint8_t *ptr;

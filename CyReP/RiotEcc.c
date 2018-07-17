@@ -1023,7 +1023,10 @@ big_divide(bigval_t *tgt, bigval_t const *num, bigval_t const *den,
 {
     bigval_t u, v, x1, x2;
 
-    u = *den;
+    // using memcpy instead of dereference with assignment, as the latter
+    // is crashing OPTEE TAs (issues with alignment)
+    // u = *den;
+    memcpy(&u, den, sizeof(u));
     v = *modulus;
     x1 = *num;
     x2 = big_zero;

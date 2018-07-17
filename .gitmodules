@@ -1,3 +1,4 @@
 [submodule "External/tinycbor"]
 	path = External/tinycbor
 	url = https://github.com/intel/tinycbor.git
+	branch = dev

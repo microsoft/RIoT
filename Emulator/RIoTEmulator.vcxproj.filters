@@ -48,9 +48,6 @@
     <ClCompile Include="..\External\tinycbor\src\cborparser_dup_string.c">
       <Filter>TinyCBOR</Filter>
     </ClCompile>
-    <ClCompile Include="..\External\tinycbor\src\cborpretty.c">
-      <Filter>TinyCBOR</Filter>
-    </ClCompile>
     <ClCompile Include="..\CyReP\tcps\TcpsId.c">
       <Filter>TCPS</Filter>
     </ClCompile>

@@ -409,7 +409,6 @@ Error:
     return -1;
 }
 
-
 int
 DERStartSequenceOrSet(
     DERBuilderContext   *Context,
@@ -446,6 +445,7 @@ DERStartExplicit(
 Error:
     return -1;
 }
+
 int
 DERStartEnvelopingOctetString(
     DERBuilderContext   *Context

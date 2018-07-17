@@ -344,7 +344,7 @@ CreateDeviceAuthBundle(
     else if (DeviceCertType == RIOT_CSR) {
         // Generating CSR
         DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
-        X509GetDERCsrTbs(&derCtx, &x509AliasTBSData, &deviceIDPub);
+        X509GetDERCsrTBS(&derCtx, &x509AliasTBSData, &deviceIDPub, NULL, 0);
 
         // Sign the Alias Key Certificate's TBS region
         RiotCrypt_Sign(&tbsSig, derCtx.Buffer, derCtx.Position, &deviceIDPriv);
@@ -427,6 +427,17 @@ CreateDeviceAuthBundle(
     printf("%s", PEM);
     WriteBinaryFile("R00tCrt.der", derCtx.Buffer, derCtx.Position);
     WriteBinaryFile("R00tCrt.cer", (uint8_t *)PEM, length);
+#endif
+
+    // print root private
+    length = sizeof(PEM);
+    DERInitContext(&derCtx, derBuffer, DER_MAX_TBS);
+    X509GetDEREcc(&derCtx, *(RIOT_ECC_PUBLIC*)eccRootPubBytes, *(RIOT_ECC_PRIVATE*)eccRootPrivBytes);
+    DERtoPEM(&derCtx, R_ECC_PRIVATEKEY_TYPE, PEM, &length);
+
+#ifdef DEBUG
+    PEM[length] = '\0'; // JUST FOR PRINTF
+    printf("%s", PEM);
 #endif
 
     return 0;

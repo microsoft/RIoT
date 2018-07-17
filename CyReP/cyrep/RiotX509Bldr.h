@@ -33,6 +33,14 @@ typedef struct
     const char *SubjectCountry;
 } RIOT_X509_TBS_DATA;
 
+
+typedef struct
+{
+    int* Oid;
+    uint8_t* DerBuffer;
+    uint32_t DerBufferSize;
+} RIOT_X509_OID;
+
 int
 X509GetDeviceCertTBS(
     DERBuilderContext   *Tbs,
@@ -83,10 +91,25 @@ X509GetDEREcc(
 );
 
 int
-X509GetDERCsrTbs(
+X509GetDERCsrTBS(
     DERBuilderContext       *Context,
     RIOT_X509_TBS_DATA      *TbsData,
-    const RIOT_ECC_PUBLIC   *DeviceIDPub
+    const RIOT_ECC_PUBLIC   *DeviceIDPub,
+    RIOT_X509_OID           *OidExtensions,
+    const size_t            OidExtensionsCount
+);
+
+int
+X509GetCSRCertTBS(
+    DERBuilderContext           *Tbs,
+    RIOT_X509_TBS_DATA          *TbsData,
+    const RIOT_ECC_PUBLIC       *CsrKeyPub,
+    const RIOT_ECC_PUBLIC       *AuthorityKeyPub,
+    int32_t                     PathLen,
+    const uint8_t               *SubjectKeyDerBuffer,
+    uint32_t                    SubjectKeyDerBufferSize,
+    const uint8_t               *ExtensionDerBuffer,
+    uint32_t                    ExtensionDerBufferSize
 );
 
 int

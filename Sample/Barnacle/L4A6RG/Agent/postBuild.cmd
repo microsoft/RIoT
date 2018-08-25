@@ -1,0 +1,2 @@
+arm-atollic-eabi-objcopy.exe -O ihex "${BuildArtifactFileBaseName}.elf" "${BuildArtifactFileBaseName}.hex"
+..\..\..\Shared\Tool\Release\BarT.exe SIGN Agent.hex -ct=ce778be2e9f4e73da5ba403b4b2146c44da82e49 -bn=..\inc\BuildNo.h

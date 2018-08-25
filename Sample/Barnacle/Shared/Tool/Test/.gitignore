@@ -1,0 +1,7 @@
+!*.cer
+!*.pfx
+!*.hex
+!*.dll
+*.dfu
+!devid-l4a6rg.dfu
+!devid-l476rg.dfu

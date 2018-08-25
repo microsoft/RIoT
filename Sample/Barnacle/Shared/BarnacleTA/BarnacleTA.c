@@ -7,6 +7,7 @@
 
 #include "main.h"
 #include "stm32l4xx_hal.h"
+#include "StmUtil.h"
 #include <cyrep/RiotTarget.h>
 #include <cyrep/RiotStatus.h>
 #include <cyrep/RiotSha256.h>
@@ -14,6 +15,7 @@
 #include <cyrep/RiotCrypt.h>
 #include <cyrep/RiotDerEnc.h>
 #include <cyrep/RiotX509Bldr.h>
+#include <cyrep/RiotBase64.h>
 #include <tcps/TcpsId.h>
 #include <AgentInfo.h>
 #include <BarnacleTA.h>
@@ -33,9 +35,15 @@ extern RNG_HandleTypeDef hrng;
 __attribute__((section(".AGENTHDR"))) const BARNACLE_AGENT_HDR AgentHdr = {{{{BARNACLEMAGIC, BARNACLEVERSION, sizeof(BARNACLE_AGENT_HDR)}, {AGENTNAME, AGENTVERSION, 0, AGENTTIMESTAMP, {0}}}, {{0}, {0}}}};
 #pragma GCC diagnostic pop
 
-#define RAM2START (0x10000000)
-PBARNACLE_IDENTITY_PRIVATE pCompoundId = (const PBARNACLE_IDENTITY_PRIVATE)RAM2START;
-PBARNACLE_CERTSTORE pCertStore = (const PBARNACLE_CERTSTORE)(RAM2START + sizeof(BARNACLE_IDENTITY_PRIVATE));
+#ifdef STM32L4A6xx
+#define PURWSTART (0x20000000)
+#elif STM32L476xx
+#define PURWSTART (0x10000000)
+#else
+#error Unknown MCU type.
+#endif
+PBARNACLE_IDENTITY_PRIVATE pCompoundId = (const PBARNACLE_IDENTITY_PRIVATE)PURWSTART;
+PBARNACLE_CERTSTORE pCertStore = (const PBARNACLE_CERTSTORE)(PURWSTART + sizeof(BARNACLE_IDENTITY_PRIVATE));
 
 void BarnacleTAPrintCertStore(void)
 {
@@ -47,6 +55,22 @@ void BarnacleTAPrintCertStore(void)
             fprintf(stderr, "%s", (char*)&pCertStore->certBag[pCertStore->info.certTable[n].start]);
         }
     }
+}
+
+void BarnacleTAGetCompoundID(RIOT_ECC_PUBLIC* key, char* idStr)
+{
+    uint8_t devicePub[65] = {0};
+    uint8_t deviceID[8] = {0};
+    char deviceIDStr[27] = {0};
+
+    RiotCrypt_ExportEccPub(key, devicePub, NULL);
+    for(uint32_t n = 0; n < 16; n++)
+    {
+        deviceID[n] = devicePub[n + 1] ^ devicePub[16 + n + 1] ^ devicePub[32 + n + 1] ^ devicePub[48 + n + 1];
+    }
+    Base64Encode(deviceID, 16, deviceIDStr, NULL);
+    deviceIDStr[24] = '\0';
+    strcpy(idStr, deviceIDStr);
 }
 
 bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySize)
@@ -74,7 +98,7 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
                                    &pCompoundId->info.privKey,
                                    sizeof(pCompoundId->info.privKey)))) == RIOT_SUCCESS)
     {
-        dbgPrint("ERROR: RiotCrypt2_Hash failed.\r\n");
+        logError("RiotCrypt2_Hash failed.\r\n");
         goto Cleanup;
     }
     if(!(result = (RiotCrypt_DeriveEccKey(&policyPubKey,
@@ -83,7 +107,7 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
                                           (const uint8_t *)RIOT_LABEL_IDENTITY,
                                           lblSize(RIOT_LABEL_IDENTITY)) == RIOT_SUCCESS)))
     {
-        dbgPrint("ERROR: RiotCrypt_DeriveEccKey failed.\r\n");
+        logError("RiotCrypt_DeriveEccKey failed.\r\n");
         goto Cleanup;
     }
 
@@ -97,7 +121,7 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
                                  lblSize(RIOT_LABEL_SERIAL),
                                  sizeof(digest)) == RIOT_SUCCESS)))
     {
-        dbgPrint("ERROR: RiotCrypt_Kdf failed.\r\n");
+        logError("RiotCrypt_Kdf failed.\r\n");
         goto Cleanup;
     }
     digest[0] &= 0x7F; // Ensure that the serial number is positive
@@ -110,7 +134,7 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
                                   agentPolicy,
                                   agentPolicySize))) == RIOT_SUCCESS)
     {
-        dbgPrint("ERROR: RiotCrypt2_Hash failed.\r\n");
+        logError("RiotCrypt2_Hash failed.\r\n");
         goto Cleanup;
     }
 
@@ -121,7 +145,7 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
                                           sizeof(tcps),
                                           &tcpsLen) == RIOT_SUCCESS)))
     {
-        dbgPrint("ERROR: BuildTCPSAliasIdentity failed.\r\n");
+        logError("BuildTCPSAliasIdentity failed.\r\n");
         goto Cleanup;
     }
 
@@ -136,7 +160,7 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
                                   0) == 0);
     if(!result)
     {
-        dbgPrint("ERROR: X509GetAliasCertTBS failed.\r\n");
+        logError("X509GetAliasCertTBS failed.\r\n");
         goto Cleanup;
     }
 
@@ -146,14 +170,14 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
                                   derCtx.Position,
                                   &pCompoundId->info.privKey) == RIOT_SUCCESS)))
     {
-        dbgPrint("ERROR: RiotCrypt_Sign failed.\r\n");
+        logError("RiotCrypt_Sign failed.\r\n");
         goto Cleanup;
     }
 
     // Generate compound key Certificate
     if(!(result = (X509MakeAliasCert(&derCtx, &tbsSig) == 0)))
     {
-        dbgPrint("ERROR: X509MakeAliasCert failed.\r\n");
+        logError("X509MakeAliasCert failed.\r\n");
         goto Cleanup;
     }
 
@@ -162,7 +186,7 @@ bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySi
     length = sizeof(pCertStore->certBag) - pCertStore->info.cursor;
     if(!(result = (DERtoPEM(&derCtx, R_CERT_TYPE, (char*)&pCertStore->certBag[pCertStore->info.cursor], &length) == 0)))
     {
-        dbgPrint("ERROR: DERtoPEM failed.\r\n");
+        logError("DERtoPEM failed.\r\n");
         goto Cleanup;
     }
     pCertStore->info.certTable[BARNACLE_CERTSTORE_POLICY].size = (uint16_t)length;

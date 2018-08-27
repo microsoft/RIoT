@@ -56,7 +56,7 @@ size_t RIOT_KDF_FIXED(
 {
     size_t          total = (((label) ? labelSize : 0) + ((context) ? contextSize : 0) + 5);
 
-    fixedSize; // unreferenced parameter
+    (void)fixedSize; // unreferenced parameter
     assert(fixedSize >= total);
 
     if (label) {

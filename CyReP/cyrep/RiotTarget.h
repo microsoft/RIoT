@@ -57,7 +57,7 @@ typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #define CYREP_PLATFORM_TRACE_ERROR(...) \
     DEBUG((DEBUG_ERROR, __VA_ARGS__))
 
-#elif defined(STM32L476xx)
+#elif defined(STM32L476xx) || defined(STM32L4A6xx)
 #include <string.h>
 #include <assert.h>
 #include "main.h"

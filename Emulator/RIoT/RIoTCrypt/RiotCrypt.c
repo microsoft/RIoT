@@ -41,8 +41,8 @@ RiotCrypt_Kdf(
         return RIOT_INVALID_PARAMETER;
     }
 
-    fixedSize = RIOT_KDF_FIXED(fixed, fixedSize, context, contextSize,
-                               label, labelSize, bytesToDerive * 8);
+    fixedSize = RIOT_KDF_FIXED(fixed, fixedSize, label, labelSize, 
+                               context, contextSize, bytesToDerive * 8);
 
     while (counter < (bytesToDerive / (RIOT_KEY_LENGTH))) {
 

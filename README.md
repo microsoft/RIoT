@@ -1,2 +1,2 @@
 # Robust Internet of Things, Microsoft Research
-README
+This is a translation to [CheckedC](<https://github.com/Microsoft/checked-c>) of the version of the RIoT code base used in Azure's [IOT C SDK](<https://github.com/Azure/azure-iot-sdk-c>) as of June 2018. DO **NOT** use this for production; it has not kept up with the mainline of RIoT. To compile it, use the [checkedc-clang compiler](<https://github.com/Microsoft/checkedc-clang>). For questions, issues, or more information about CheckedC or this translation, please post on one of the CheckedC repos.

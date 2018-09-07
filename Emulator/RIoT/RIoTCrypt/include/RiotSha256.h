@@ -52,18 +52,21 @@ typedef uint64_t hashMagic_t;
 #define HASH_MAGIC_VALUE    (0x6861736863747840LL)
 #endif
 
+#pragma CHECKED_SCOPE ON
+
 typedef struct _RIOT_SHA256_CONTEXT {
-    uint32_t    state[8];
+    uint32_t    state[8] : itype(uint32_t _Checked[8]);
     hashMagic_t magic;
     uint64_t    bitcount;
-    uint8_t     buffer[SHA256_BLOCK_LENGTH];
+    uint8_t     buffer[SHA256_BLOCK_LENGTH] : itype(uint8_t _Checked[SHA256_BLOCK_LENGTH]);
 } RIOT_SHA256_CONTEXT;
 
 //
 // Initialize the hash context
 // @param context the hash context
 //
-void RIOT_SHA256_Init(RIOT_SHA256_CONTEXT *context);
+void RIOT_SHA256_Init(RIOT_SHA256_CONTEXT *context : itype(_Ptr<RIOT_SHA256_CONTEXT>));
+
 
 //
 // Update the digest using the specific bytes
@@ -71,15 +74,17 @@ void RIOT_SHA256_Init(RIOT_SHA256_CONTEXT *context);
 // @param buf the bytes to digest
 // @param bufSize the number of bytes to digest
 //
-void RIOT_SHA256_Update(RIOT_SHA256_CONTEXT *context,
-                        const sha2_uint8_t *data, size_t len);
+void RIOT_SHA256_Update(RIOT_SHA256_CONTEXT *context : itype(_Ptr<RIOT_SHA256_CONTEXT>),
+                        const sha2_uint8_t *data : byte_count(len), 
+						size_t len);
 
 //
 // Retrieve the final digest
 // @param context the hash context
 // @param digest the buffer to hold the digest.  Must be of size SHA256_DIGEST_LENGTH
 //
-void RIOT_SHA256_Final(RIOT_SHA256_CONTEXT *context, sha2_uint8_t *digest);
+void RIOT_SHA256_Final(RIOT_SHA256_CONTEXT *context : itype(_Ptr<RIOT_SHA256_CONTEXT>), 
+					   sha2_uint8_t *digest : byte_count(SHA256_DIGEST_LENGTH));
 
 //
 // Hash a block of data
@@ -88,9 +93,9 @@ void RIOT_SHA256_Final(RIOT_SHA256_CONTEXT *context, sha2_uint8_t *digest);
 // @param bufSize the number of bytes in the buffer
 // @param digest the buffer to hold the digest.  Must be of size SHA256_DIGEST_LENGTH
 //
-void RIOT_SHA256_Block_ctx(RIOT_SHA256_CONTEXT *context,
-                           const uint8_t *buf, size_t bufSize,
-                           uint8_t *digest);
+void RIOT_SHA256_Block_ctx(RIOT_SHA256_CONTEXT *context : itype(_Ptr<RIOT_SHA256_CONTEXT>),
+                           const uint8_t *buf : itype(_Array_ptr<const sha2_uint8_t>) byte_count(bufSize), 
+						   size_t bufSize, uint8_t *digest : itype(_Array_ptr<uint8_t>) byte_count(SHA256_DIGEST_LENGTH));
 
 //
 // Hash a block of data
@@ -98,8 +103,10 @@ void RIOT_SHA256_Block_ctx(RIOT_SHA256_CONTEXT *context,
 // @param bufSize the number of bytes in the buffer
 // @param digest the buffer to hold the digest.  Must be of size SHA256_DIGEST_LENGTH
 //
-void RIOT_SHA256_Block(const uint8_t *buf, size_t bufSize,
-                       uint8_t *digest);
+void RIOT_SHA256_Block(const uint8_t *buf : itype(_Array_ptr<const uint8_t>) byte_count(bufSize), 
+					   size_t bufSize, uint8_t *digest : itype(_Array_ptr<uint8_t>) byte_count(SHA256_DIGEST_LENGTH));
+
+#pragma CHECKED_SCOPE OFF
 
 #endif
 

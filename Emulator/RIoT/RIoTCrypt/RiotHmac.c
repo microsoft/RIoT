@@ -19,10 +19,12 @@
 //
 #include "RiotHmac.h"
 
+#pragma CHECKED_SCOPE ON
+
 void
 RIOT_HMAC_SHA256_Init(
-    RIOT_HMAC_SHA256_CTX *ctx,
-    const uint8_t *key,
+    RIOT_HMAC_SHA256_CTX *ctx : itype(_Ptr<RIOT_HMAC_SHA256_CTX>),
+    const uint8_t *key : byte_count(keyLen),
     size_t keyLen
 )
 {
@@ -35,7 +37,9 @@ RIOT_HMAC_SHA256_Init(
         RIOT_SHA256_Block_ctx(&ctx->hashCtx, key, keyLen, ctx->opad);
         keyLen = SHA256_DIGEST_LENGTH;
     } else {
-        memcpy(ctx->opad, key, keyLen);
+        // otherwise it's less than 64 and fits in opad.
+        // TODO: Unsigned comparison, need dynamic bounds cast
+        memcpy(_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(ctx->opad, byte_count(keyLen)), key, keyLen);
     }
     //
     // the HMAC_SHA256 process
@@ -55,7 +59,9 @@ RIOT_HMAC_SHA256_Init(
     for (cnt = 0; cnt < keyLen; cnt++) {
         ctx->opad[cnt] ^= 0x36;
     }
-    memset(&ctx->opad[keyLen], 0x36, sizeof(ctx->opad) - keyLen);
+    // TODO: Going into the middle of buffer, need dynamic bounds cast
+    _Array_ptr<uint8_t> atKeyLen : byte_count(sizeof(ctx->opad) - keyLen) = _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&ctx->opad[keyLen], byte_count(sizeof(ctx->opad) - keyLen));
+    memset(atKeyLen, 0x36, sizeof(ctx->opad) - keyLen);
 
     RIOT_SHA256_Init(&ctx->hashCtx);
     RIOT_SHA256_Update(&ctx->hashCtx, ctx->opad, HMAC_SHA256_BLOCK_LENGTH);
@@ -68,8 +74,8 @@ RIOT_HMAC_SHA256_Init(
 
 void
 RIOT_HMAC_SHA256_Update(
-    RIOT_HMAC_SHA256_CTX *ctx,
-    const uint8_t *data,
+    RIOT_HMAC_SHA256_CTX *ctx : itype(_Ptr<RIOT_HMAC_SHA256_CTX>),
+    const uint8_t *data : byte_count(dataLen),
     size_t dataLen
 )
 {
@@ -79,8 +85,8 @@ RIOT_HMAC_SHA256_Update(
 
 void
 RIOT_HMAC_SHA256_Final(
-    RIOT_HMAC_SHA256_CTX *ctx,
-    uint8_t *digest
+    RIOT_HMAC_SHA256_CTX *ctx : itype(_Ptr<RIOT_HMAC_SHA256_CTX>),
+    uint8_t *digest : byte_count(SHA256_DIGEST_LENGTH)
 )
 {
     // complete inner hash SHA256(K XOR ipad, msg)
@@ -93,4 +99,7 @@ RIOT_HMAC_SHA256_Final(
     RIOT_SHA256_Final(&ctx->hashCtx, digest);
     return;
 }
+
+#pragma CHECKED_SCOPE OFF
+
 

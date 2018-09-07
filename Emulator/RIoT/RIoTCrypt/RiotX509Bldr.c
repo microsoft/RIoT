@@ -7,34 +7,36 @@ Confidential Information
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "RiotDerEnc.h"
-#include "RiotX509Bldr.h"
+#include "include/RiotDerEnc.h"
+#include "include/RiotX509Bldr.h"
+
+#pragma CHECKED_SCOPE ON
 
 #define ASRT(_X) if(!(_X))      {goto Error;}
 #define CHK(_X)  if(((_X)) < 0) {goto Error;}
 
 // OIDs.  Note that the encoder expects a -1 sentinel.
-static int riotOID[] = { 2,23,133,5,4,1,-1 };
-static int ecdsaWithSHA256OID[] = { 1,2,840,10045,4,3,2,-1 };
-static int ecPublicKeyOID[] = { 1,2,840,10045, 2,1,-1 };
-static int prime256v1OID[] = { 1,2,840,10045, 3,1,7,-1 };
-static int keyUsageOID[] = { 2,5,29,15,-1 };
-static int extKeyUsageOID[] = { 2,5,29,37,-1 };
-static int subjectAltNameOID[] = { 2,5,29,17,-1 };
-static int clientAuthOID[] = { 1,3,6,1,5,5,7,3,2,-1 };
-static int sha256OID[] = { 2,16,840,1,101,3,4,2,1,-1 };
-static int commonNameOID[] = { 2,5,4,3,-1 };
-static int countryNameOID[] = { 2,5,4,6,-1 };
-static int orgNameOID[] = { 2,5,4,10,-1 };
-static int basicConstraintsOID[] = { 2,5,29,19,-1 };
+static int riotOID _Checked[] = { 2,23,133,5,4,1,-1 };
+static int ecdsaWithSHA256OID _Checked[] = { 1,2,840,10045,4,3,2,-1 };
+static int ecPublicKeyOID _Checked[] = { 1,2,840,10045, 2,1,-1 };
+static int prime256v1OID _Checked[] = { 1,2,840,10045, 3,1,7,-1 };
+static int keyUsageOID _Checked[] = { 2,5,29,15,-1 };
+static int extKeyUsageOID _Checked[] = { 2,5,29,37,-1 };
+//static int subjectAltNameOID[] = { 2,5,29,17,-1 };
+static int clientAuthOID _Checked[] = { 1,3,6,1,5,5,7,3,2,-1 };
+static int sha256OID _Checked[] = { 2,16,840,1,101,3,4,2,1,-1 };
+static int commonNameOID _Checked[] = { 2,5,4,3,-1 };
+static int countryNameOID _Checked[] = { 2,5,4,6,-1 };
+static int orgNameOID _Checked[] = { 2,5,4,10,-1 };
+static int basicConstraintsOID _Checked[] = { 2,5,29,19,-1 };
 
 static int
 X509AddExtensions(
-    DERBuilderContext   *Tbs,
-    uint8_t             *DevIdPub,
-    uint32_t             DevIdPubLen,
-    uint8_t             *Fwid,
-    uint32_t             FwidLen
+    _Ptr<DERBuilderContext> Tbs,
+    _Array_ptr<uint8_t>     DevIdPub : byte_count((size_t)DevIdPubLen),
+    uint32_t                DevIdPubLen,
+    _Array_ptr<uint8_t>     Fwid : byte_count((size_t)FwidLen),
+    uint32_t                FwidLen
 )
 // Create the RIoT extensions.  The RIoT subject altName + extended key usage.
 {
@@ -78,10 +80,10 @@ Error:
 
 static int
 X509AddX501Name(
-    DERBuilderContext   *Context,
-    const char          *CommonName,
-    const char          *OrgName,
-    const char          *CountryName
+    _Ptr<DERBuilderContext>   Context,
+    _Nt_array_ptr<const char> CommonName,
+    _Nt_array_ptr<const char> OrgName,
+    _Nt_array_ptr<const char> CountryName
 )
 {
     CHK(    DERStartSequenceOrSet(Context, true));
@@ -113,12 +115,18 @@ Error:
 
 int
 X509GetDeviceCertTBS(
+<<<<<<< Updated upstream
     DERBuilderContext   *Tbs,
     RIOT_X509_TBS_DATA  *TbsData,
     RIOT_ECC_PUBLIC     *DevIdKeyPub
+=======
+    DERBuilderContext   *Tbs         : itype(_Ptr<DERBuilderContext>),
+    RIOT_X509_TBS_DATA  *TbsData     : itype(_Ptr<RIOT_X509_TBS_DATA>),
+    RIOT_ECC_PUBLIC     *DevIdKeyPub : itype(_Ptr<RIOT_ECC_PUBLIC>)
+>>>>>>> Stashed changes
 )
 {
-    uint8_t     encBuffer[65];
+    uint8_t     encBuffer _Checked[65];
     uint32_t    encBufferLen;
     uint8_t     keyUsage = RIOT_X509_KEY_USAGE;
 
@@ -140,7 +148,15 @@ X509GetDeviceCertTBS(
     CHK(            DERAddOID(Tbs, prime256v1OID));
     CHK(        DERPopNesting(Tbs));
                 RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen);
+<<<<<<< Updated upstream
     CHK(        DERAddBitString(Tbs, encBuffer, encBufferLen));
+=======
+                // encBufferLen will be set to (1 + 2*RIOT_ECC_COORD_BYTES), 
+                // which is 32, much less than the 65 encBuffer has
+    CHK(        DERAddBitString(Tbs, 
+                                _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&encBuffer[0], byte_count((size_t)encBufferLen)), 
+                                encBufferLen));
+>>>>>>> Stashed changes
     CHK(    DERPopNesting(Tbs));
     CHK(    DERStartExplicit(Tbs, 3));
     CHK(        DERStartSequenceOrSet(Tbs, true));
@@ -148,7 +164,10 @@ X509GetDeviceCertTBS(
     CHK(                DERAddOID(Tbs, keyUsageOID));
     CHK(                DERStartEnvelopingOctetString(Tbs));
                             encBufferLen = 1;
-    CHK(                    DERAddBitString(Tbs, &keyUsage, encBufferLen)); // Actually 6bits
+                            // TODO: encBufferLen is 1 here, why the complaint?
+    CHK(                    DERAddBitString(Tbs, 
+                                            _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&keyUsage, byte_count((size_t)encBufferLen)), 
+                                            encBufferLen)); // Actually 6bits
     CHK(                DERPopNesting(Tbs));
     CHK(            DERPopNesting(Tbs));
     CHK(            DERStartSequenceOrSet(Tbs, true));
@@ -174,13 +193,15 @@ Error:
 
 int
 X509MakeDeviceCert(
-    DERBuilderContext   *DeviceIDCert,
-    RIOT_ECC_SIGNATURE  *TbsSig
+    DERBuilderContext   *DeviceIDCert : itype(_Ptr<DERBuilderContext>),
+    RIOT_ECC_SIGNATURE  *TbsSig       : itype(_Ptr<RIOT_ECC_SIGNATURE>)
 )
 // Create a Device Certificate given a ready-to-sign TBS region in the context
 {
-    uint8_t     encBuffer[((BIGLEN - 1) * 4)];
     uint32_t    encBufferLen = ((BIGLEN - 1) * 4);
+    uint8_t     encBufferArr _Checked[(BIGLEN - 1) * 4];
+    _Array_ptr<uint8_t> encBufferPtr : byte_count((size_t)encBufferLen) = 
+        _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&encBufferArr[0], byte_count((size_t)encBufferLen));
 
     // Elevate the "TBS" block into a real certificate,
     // i.e., copy it into an enclosing sequence.
@@ -190,10 +211,10 @@ X509MakeDeviceCert(
     CHK(    DERPopNesting(DeviceIDCert));
     CHK(    DERStartEnvelopingBitString(DeviceIDCert));
     CHK(        DERStartSequenceOrSet(DeviceIDCert, true));
-                    BigValToBigInt(encBuffer, &TbsSig->r);
-    CHK(            DERAddIntegerFromArray(DeviceIDCert, encBuffer, encBufferLen));
-                    BigValToBigInt(encBuffer, &TbsSig->s);
-    CHK(            DERAddIntegerFromArray(DeviceIDCert, encBuffer, encBufferLen));
+                    BigValToBigInt(encBufferArr, &TbsSig->r);
+    CHK(            DERAddIntegerFromArray(DeviceIDCert, encBufferPtr, encBufferLen));
+                    BigValToBigInt(encBufferArr, &TbsSig->s);
+    CHK(            DERAddIntegerFromArray(DeviceIDCert, encBufferPtr, encBufferLen));
     CHK(        DERPopNesting(DeviceIDCert));
     CHK(    DERPopNesting(DeviceIDCert));
     CHK(DERPopNesting(DeviceIDCert));
@@ -207,15 +228,19 @@ Error:
 
 int
 X509GetAliasCertTBS(
-    DERBuilderContext   *Tbs,
-    RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *AliasKeyPub,
-    RIOT_ECC_PUBLIC     *DevIdKeyPub,
-    uint8_t             *Fwid,
+    DERBuilderContext   *Tbs         : itype(_Ptr<DERBuilderContext>),
+    RIOT_X509_TBS_DATA  *TbsData     : itype(_Ptr<RIOT_X509_TBS_DATA>),
+    RIOT_ECC_PUBLIC     *AliasKeyPub : itype(_Ptr<RIOT_ECC_PUBLIC>),
+    RIOT_ECC_PUBLIC     *DevIdKeyPub : itype(_Ptr<RIOT_ECC_PUBLIC>),
+    uint8_t             *Fwid        : byte_count((size_t)FwidLen),
     uint32_t             FwidLen
 )
 {
+<<<<<<< Updated upstream
     uint8_t     encBuffer[65];
+=======
+    uint8_t     encBuffer _Checked[65];
+>>>>>>> Stashed changes
     uint32_t    encBufferLen;
 
     CHK(DERStartSequenceOrSet(Tbs, true));
@@ -236,10 +261,17 @@ X509GetAliasCertTBS(
     CHK(            DERAddOID(Tbs, prime256v1OID));
     CHK(        DERPopNesting(Tbs));
                 RiotCrypt_ExportEccPub(AliasKeyPub, encBuffer, &encBufferLen);
-    CHK(        DERAddBitString(Tbs, encBuffer, encBufferLen));
+                // Again, encBufferLen is going to be smaller than the actual buffer
+    CHK(        DERAddBitString(Tbs, 
+                                _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(encBuffer, byte_count((size_t)encBufferLen)), 
+                                encBufferLen));
     CHK(    DERPopNesting(Tbs));
             RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen);
-    CHK(    X509AddExtensions(Tbs, encBuffer, encBufferLen, Fwid, FwidLen));
+    CHK(    X509AddExtensions(Tbs, 
+                              _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(encBuffer, byte_count((size_t)encBufferLen)), 
+                              encBufferLen, 
+                              Fwid, 
+                              FwidLen));
     CHK(DERPopNesting(Tbs));
     
     ASRT(DERGetNestingDepth(Tbs) == 0);
@@ -251,13 +283,15 @@ Error:
 
 int 
 X509MakeAliasCert(
-    DERBuilderContext   *AliasCert,
-    RIOT_ECC_SIGNATURE  *TbsSig
+    DERBuilderContext   *AliasCert : itype(_Ptr<DERBuilderContext>),
+    RIOT_ECC_SIGNATURE  *TbsSig    : itype(_Ptr<RIOT_ECC_SIGNATURE>)
 )
 // Create an Alias Certificate given a ready-to-sign TBS region in the context
 {
-    uint8_t     encBuffer[((BIGLEN - 1) * 4)];
+    uint8_t     encBufferArr _Checked[((BIGLEN - 1) * 4)];
     uint32_t    encBufferLen = ((BIGLEN - 1) * 4);
+    _Array_ptr<uint8_t> encBufferPtr : byte_count((size_t)encBufferLen) = 
+        _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&encBufferArr[0], byte_count((size_t)encBufferLen));
 
     // Elevate the "TBS" block into a real certificate,
     // i.e., copy it into an enclosing sequence.
@@ -267,10 +301,10 @@ X509MakeAliasCert(
     CHK(    DERPopNesting(AliasCert));
     CHK(    DERStartEnvelopingBitString(AliasCert));
     CHK(        DERStartSequenceOrSet(AliasCert, true));
-                    BigValToBigInt(encBuffer, &TbsSig->r);
-    CHK(            DERAddIntegerFromArray(AliasCert, encBuffer, encBufferLen));
-                    BigValToBigInt(encBuffer, &TbsSig->s);
-    CHK(            DERAddIntegerFromArray(AliasCert, encBuffer, encBufferLen));
+                    BigValToBigInt(encBufferArr, &TbsSig->r);
+    CHK(            DERAddIntegerFromArray(AliasCert, encBufferPtr, encBufferLen));
+                    BigValToBigInt(encBufferArr, &TbsSig->s);
+    CHK(            DERAddIntegerFromArray(AliasCert, encBufferPtr, encBufferLen));
     CHK(        DERPopNesting(AliasCert));
     CHK(    DERPopNesting(AliasCert));
     CHK(DERPopNesting(AliasCert));
@@ -284,11 +318,11 @@ Error:
 
 int
 X509GetDEREccPub(
-    DERBuilderContext   *Context,
+    DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
     RIOT_ECC_PUBLIC      Pub
 )
 {
-    uint8_t     encBuffer[65];
+    uint8_t     encBuffer _Checked[65];
     uint32_t    encBufferLen;
 
     CHK(DERStartSequenceOrSet(Context, true));
@@ -297,7 +331,9 @@ X509GetDEREccPub(
     CHK(        DERAddOID(Context, prime256v1OID));
     CHK(    DERPopNesting(Context));
             RiotCrypt_ExportEccPub(&Pub, encBuffer, &encBufferLen);
-    CHK(    DERAddBitString(Context, encBuffer, encBufferLen));
+    CHK(    DERAddBitString(Context, 
+                            _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(encBuffer, byte_count((size_t)encBufferLen)), 
+                            encBufferLen));
     CHK(DERPopNesting(Context));
 
     ASRT(DERGetNestingDepth(Context) == 0);
@@ -309,12 +345,12 @@ Error:
 
 int
 X509GetDEREcc(
-    DERBuilderContext   *Context,
+    DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
     RIOT_ECC_PUBLIC      Pub,
     RIOT_ECC_PRIVATE     Priv
 )
 {
-    uint8_t     encBuffer[65];
+    uint8_t     encBuffer _Checked[65];
     uint32_t    encBufferLen;
 
     CHK(DERStartSequenceOrSet(Context, true));
@@ -326,7 +362,9 @@ X509GetDEREcc(
     CHK(    DERPopNesting(Context));
     CHK(    DERStartExplicit(Context, 1));
                 RiotCrypt_ExportEccPub(&Pub, encBuffer, &encBufferLen);
-    CHK(        DERAddBitString(Context, encBuffer, encBufferLen));
+    CHK(        DERAddBitString(Context, 
+                                _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(encBuffer, byte_count((size_t)encBufferLen)), 
+                                encBufferLen));
     CHK(    DERPopNesting(Context));
     CHK(DERPopNesting(Context));
 
@@ -339,12 +377,12 @@ Error:
 
 int
 X509GetDERCsrTbs(
-    DERBuilderContext   *Context,
-    RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC*      DeviceIDPub
+    DERBuilderContext   *Context     : itype(_Ptr<DERBuilderContext>),
+    RIOT_X509_TBS_DATA  *TbsData     : itype(_Ptr<RIOT_X509_TBS_DATA>),
+    RIOT_ECC_PUBLIC     *DeviceIDPub : itype(_Ptr<RIOT_ECC_PUBLIC>)
 )
 {
-    uint8_t     encBuffer[65];
+    uint8_t     encBuffer _Checked[65];
     uint32_t    encBufferLen;
 
     CHK(DERStartSequenceOrSet(Context, true));
@@ -356,7 +394,9 @@ X509GetDERCsrTbs(
     CHK(            DERAddOID(Context, prime256v1OID));
     CHK(        DERPopNesting(Context));
                 RiotCrypt_ExportEccPub(DeviceIDPub, encBuffer, &encBufferLen);
-    CHK(        DERAddBitString(Context, encBuffer, encBufferLen));
+    CHK(        DERAddBitString(Context, 
+                                _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(encBuffer, byte_count((size_t)encBufferLen)), 
+                                encBufferLen));
     CHK(    DERPopNesting(Context));
     CHK(DERStartExplicit(Context,0));
     CHK(DERPopNesting(Context));
@@ -371,12 +411,15 @@ Error:
 
 int
 X509GetDERCsr(
-    DERBuilderContext   *Context,
-    RIOT_ECC_SIGNATURE  *Signature
+    DERBuilderContext   *Context   : itype(_Ptr<DERBuilderContext>),
+    RIOT_ECC_SIGNATURE  *Signature : itype(_Ptr<RIOT_ECC_SIGNATURE>)
 )
 {
-    uint8_t     encBuffer[((BIGLEN - 1) * 4)];
+    uint8_t     encBufferArr _Checked[((BIGLEN - 1) * 4)];
     uint32_t    encBufferLen = ((BIGLEN - 1) * 4);
+    _Array_ptr<uint8_t> encBufferPtr : byte_count((size_t)encBufferLen) = 
+        _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&encBufferArr[0], byte_count((size_t)encBufferLen));
+
 
     // Elevate the "TBS" block into a real certificate, i.e., copy it
     // into an enclosing sequence and then add the signature block.
@@ -386,10 +429,10 @@ X509GetDERCsr(
     CHK(    DERPopNesting(Context));
     CHK(    DERStartEnvelopingBitString(Context));
     CHK(        DERStartSequenceOrSet(Context, true));
-                    BigValToBigInt(encBuffer, &Signature->r);
-    CHK(            DERAddIntegerFromArray(Context, encBuffer, encBufferLen));
-                    BigValToBigInt(encBuffer, &Signature->s);
-    CHK(            DERAddIntegerFromArray(Context, encBuffer, encBufferLen));
+                    BigValToBigInt(encBufferArr, &Signature->r);
+    CHK(            DERAddIntegerFromArray(Context, encBufferPtr, encBufferLen));
+                    BigValToBigInt(encBufferArr, &Signature->s);
+    CHK(            DERAddIntegerFromArray(Context, encBufferPtr, encBufferLen));
     CHK(        DERPopNesting(Context));
     CHK(    DERPopNesting(Context));
     CHK(DERPopNesting(Context));
@@ -403,12 +446,12 @@ Error:
 
 int
 X509GetRootCertTBS(
-    DERBuilderContext   *Tbs,
-    RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *RootKeyPub
+    DERBuilderContext   *Tbs        : itype(_Ptr<DERBuilderContext>),
+    RIOT_X509_TBS_DATA  *TbsData    : itype(_Ptr<RIOT_X509_TBS_DATA>),
+    RIOT_ECC_PUBLIC     *RootKeyPub : itype(_Ptr<RIOT_ECC_PUBLIC>)
 )
 {
-    uint8_t     encBuffer[65];
+    uint8_t     encBuffer _Checked[65];
     uint32_t    encBufferLen;
     uint8_t     keyUsage = RIOT_X509_KEY_USAGE;
 
@@ -430,7 +473,9 @@ X509GetRootCertTBS(
     CHK(            DERAddOID(Tbs, prime256v1OID));
     CHK(        DERPopNesting(Tbs));
                 RiotCrypt_ExportEccPub(RootKeyPub, encBuffer, &encBufferLen);
-    CHK(        DERAddBitString(Tbs, encBuffer, encBufferLen));
+    CHK(        DERAddBitString(Tbs, 
+                                _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(encBuffer, byte_count((size_t)encBufferLen)), 
+                                encBufferLen));
     CHK(    DERPopNesting(Tbs));
     CHK(    DERStartExplicit(Tbs, 3));
     CHK(        DERStartSequenceOrSet(Tbs, true));
@@ -438,7 +483,9 @@ X509GetRootCertTBS(
     CHK(                DERAddOID(Tbs, keyUsageOID));
     CHK(                DERStartEnvelopingOctetString(Tbs));
                             encBufferLen = 1;
-    CHK(                    DERAddBitString(Tbs, &keyUsage, encBufferLen)); // Actually 6bits
+    CHK(                    DERAddBitString(Tbs, 
+                                            _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&keyUsage, byte_count((size_t)encBufferLen)), 
+                                            encBufferLen)); // Actually 6bits
     CHK(                DERPopNesting(Tbs));
     CHK(            DERPopNesting(Tbs));
     CHK(            DERStartSequenceOrSet(Tbs, true));
@@ -464,13 +511,16 @@ Error:
 
 int
 X509MakeRootCert(
-    DERBuilderContext   *RootCert,
-    RIOT_ECC_SIGNATURE  *TbsSig
+    DERBuilderContext   *RootCert : itype(_Ptr<DERBuilderContext>),
+    RIOT_ECC_SIGNATURE  *TbsSig   : itype(_Ptr<RIOT_ECC_SIGNATURE>)
 )
 // Create an Alias Certificate given a ready-to-sign TBS region in the context
 {
-    uint8_t     encBuffer[((BIGLEN - 1) * 4)];
+     uint8_t     encBufferArr _Checked[((BIGLEN - 1) * 4)];
     uint32_t    encBufferLen = ((BIGLEN - 1) * 4);
+    _Array_ptr<uint8_t> encBufferPtr : byte_count((size_t)encBufferLen) = 
+        _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&encBufferArr[0], byte_count((size_t)encBufferLen));
+
 
     // Elevate the "TBS" block into a real certificate,
     // i.e., copy it into an enclosing sequence.
@@ -480,10 +530,10 @@ X509MakeRootCert(
     CHK(    DERPopNesting(RootCert));
     CHK(    DERStartEnvelopingBitString(RootCert));
     CHK(        DERStartSequenceOrSet(RootCert, true));
-                    BigValToBigInt(encBuffer, &TbsSig->r);
-    CHK(            DERAddIntegerFromArray(RootCert, encBuffer, encBufferLen));
-                    BigValToBigInt(encBuffer, &TbsSig->s);
-    CHK(            DERAddIntegerFromArray(RootCert, encBuffer, encBufferLen));
+                    BigValToBigInt(encBufferArr, &TbsSig->r);
+    CHK(            DERAddIntegerFromArray(RootCert, encBufferPtr, encBufferLen));
+                    BigValToBigInt(encBufferArr, &TbsSig->s);
+    CHK(            DERAddIntegerFromArray(RootCert, encBufferPtr, encBufferLen));
     CHK(        DERPopNesting(RootCert));
     CHK(    DERPopNesting(RootCert));
     CHK(DERPopNesting(RootCert));

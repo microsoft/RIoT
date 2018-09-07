@@ -14,6 +14,9 @@ extern "C" {
 #include "RiotStatus.h"
 #include "RiotCrypt.h"
 
+
+#pragma CHECKED_SCOPE ON
+
 #define RIOT_SUCCESS(a) (a == (RIOT_OK))
 
 //
@@ -32,6 +35,8 @@ extern "C" {
 // Macro for label sizes (skip strlen()).
 //
 #define lblSize(a)          (sizeof(a) - 1)
+
+#pragma CHECKED_SCOPE OFF
 
 #ifdef __cplusplus
 }

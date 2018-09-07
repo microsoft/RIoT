@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include <stdint.h>
-#include <string.h>
+#include <string_checked.h>
 #include "RiotBase64.h"
+
+#pragma CHECKED_SCOPE ON
 
 #define splitInt(intVal, bytePos) (char)((intVal >> (bytePos << 3)) & 0xFF)
 #define joinChars(a, b, c, d) (uint32_t)((uint32_t)a        +   \
@@ -42,7 +44,7 @@ base64b16(
     unsigned char   Val
 )
 {
-    const uint32_t base64b16values[4] = {
+    const uint32_t base64b16values _Checked[4] = {
         joinChars('A', 'E', 'I', 'M'),
         joinChars('Q', 'U', 'Y', 'c'),
         joinChars('g', 'k', 'o', 's'),
@@ -63,7 +65,7 @@ base64b8(
 static int
 base64toValue(
     char             Base64Character,
-    unsigned char   *Val
+    unsigned char   *Val : itype(_Ptr<unsigned char>)
 )
 {
     int result = 0;
@@ -98,7 +100,7 @@ base64toValue(
 
 static uint32_t
 base64CharacterCount(
-    const char  *EncodedString
+    _Nt_array_ptr<const char>  EncodedString
 )
 {
     uint32_t length = 0;
@@ -113,7 +115,7 @@ base64CharacterCount(
 
 static uint32_t
 Base64DecodedLength(
-    const char  *EncodedString
+    _Nt_array_ptr<const char>  EncodedString
 )
 // Returns the count of original bytes before being base64 encoded. Notice
 // NO validation of the content of encodedString. Its length is validated
@@ -143,9 +145,9 @@ Base64DecodedLength(
 
 int
 Base64Decode(
-    const char      *Input,
-    unsigned char   *Output,
-    uint32_t        *OutLen
+    const char      *Input  : itype(_Nt_array_ptr<const char>),
+    unsigned char   *Output : itype(_Nt_array_ptr<unsigned char>) count(*OutLen),
+    uint32_t        *OutLen : itype(_Ptr<uint32_t>)
 )
 {
     uint32_t charsRemaining, reqLen;
@@ -222,10 +224,10 @@ Base64Decode(
 
 int
 Base64Encode(
-    const unsigned char *Input,
+    const unsigned char *Input  : itype(_Nt_array_ptr<const unsigned char>) byte_count(Length),
     uint32_t             Length,
-    char                *Output,
-    uint32_t            *OutLen
+    char                *Output : itype(_Nt_array_ptr<char>),
+    uint32_t            *OutLen : itype(_Ptr<uint32_t>)
 )
 // The data in Input is processed 3 characters at a time to produce 4 base64
 // encoded characters for as long as there are more than 3 characters still to
@@ -309,3 +311,5 @@ Base64Encode(
 
     return 0;
 }
+
+#pragma CHECKED_SCOPE OFF

@@ -24,6 +24,8 @@
 #include "RiotKdf.h"
 #include "RiotEcc.h"
 
+#pragma CHECKED_SCOPE ON
+
 // P256 is tested directly with known answer tests from example in
 // ANSI X9.62 Annex L.4.2.  (See item in pt_mpy_testcases below.)
 // Mathematica code, written in a non-curve-specific way, was also
@@ -97,7 +99,7 @@
 // It must return 0 on success, and -1 on error.  Feel free to rename
 // this function, if necessary.
 //
-static int get_random_bytes(uint8_t *buf, size_t len);
+static int get_random_bytes(_Array_ptr<uint8_t> buf : byte_count(len), size_t len);
 #endif
 
 //
@@ -141,7 +143,7 @@ static int get_random_bytes(uint8_t *buf, size_t len);
 #endif
 
 typedef struct {
-    int64_t data[2 * BIGLEN];
+    int64_t data _Checked[2 * BIGLEN];
 } dblbigval_t;
 
 // These values describe why the verify failed. This simplifies testing.
@@ -159,10 +161,10 @@ typedef enum {MOD_MODULUS = 0, MOD_ORDER} modulus_val_t;
 
 #define MSW (BIGLEN - 1)
 
-static void big_adjustP(bigval_t *tgt, bigval_t const *a, int64_t k);
-static void big_1wd_mpy(bigval_t *tgt, bigval_t const *a, int32_t k);
-static void big_sub(bigval_t *tgt, bigval_t const *a, bigval_t const *b);
-static void big_precise_reduce(bigval_t *tgt, bigval_t const *a, bigval_t const *modulus);
+static void big_adjustP(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> a, int64_t k);
+static void big_1wd_mpy(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> a, int32_t k);
+static void big_sub(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> a, _Ptr<const bigval_t> b);
+static void big_precise_reduce(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> a, _Ptr<const bigval_t> modulus);
 
 #define big_is_negative(a) ((int32_t)(a)->data[MSW] < 0)
 
@@ -298,7 +300,7 @@ static affine_point_t const baseP256 = {
 // (sum, carry) += a * b
 //
 static void
-mpy_accum(int *cumcarry, uint64_t *sum, uint32_t a, uint32_t b)
+mpy_accum(_Ptr<int> cumcarry, _Ptr<uint64_t> sum, uint32_t a, uint32_t b)
 {
     uint64_t product = (uint64_t)a * (uint64_t)b;
     uint64_t lsum = *sum;
@@ -316,7 +318,7 @@ mpy_accum(int *cumcarry, uint64_t *sum, uint32_t a, uint32_t b)
 // (sum, carry) += 2 * a * b.
 // Attempts to reduce writes and branches caused slowdown on windows machines.
 static void
-mpy_accum_dbl(int *cumcarry, uint64_t *sum, uint32_t a, uint32_t b)
+mpy_accum_dbl(_Ptr<int> cumcarry, _Ptr<uint64_t> sum, uint32_t a, uint32_t b)
 {
     uint64_t product = (uint64_t)a * (uint64_t)b;
     uint64_t lsum = *sum;
@@ -380,17 +382,18 @@ mpy_accum_dbl(int *cumcarry, uint64_t *sum, uint32_t a, uint32_t b)
 // depending on the modselect flag.
 //
 static void
-big_mpyP(bigval_t *tgt, bigval_t const *a, bigval_t const *b,
+big_mpyP(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> const a, _Ptr<const bigval_t> const b,
          modulus_val_t modselect)
 {
-    int64_t w[2 * BIGLEN];
+    int64_t w _Checked[2 * BIGLEN];
     int64_t s_accum; // signed
     int i, minj, maxj, a_words, b_words, cum_carry;
 #ifdef SMALL_CODE
     int j;
 #else
-    uint32_t const *ap;
-    uint32_t const *bp;
+    _Array_ptr<const uint32_t> ap : bounds(a->data, a->data + BIGLEN) = NULL;
+    _Array_ptr<const uint32_t> otherAP : bounds(a->data, a->data + BIGLEN) = NULL;
+    _Array_ptr<const uint32_t> bp : bounds(b->data, b->data + BIGLEN) = NULL;
 #endif
 
 #ifdef ARM7_ASM
@@ -545,35 +548,35 @@ big_mpyP(bigval_t *tgt, bigval_t const *a, bigval_t const *b,
             }
 #else // SMALL_CODE not defined
             ap = &a->data[i - minj];
-            bp = &a->data[minj];
+            otherAP = &a->data[minj];
 
             switch (8 - (maxj - minj)) {
                 case 0:
-                    ACCUMDBL(ap - 8, bp + 8); // j = 8
+                    ACCUMDBL(ap - 8, otherAP + 8); // j = 8
 
                 case 1:
-                    ACCUMDBL(ap - 7, bp + 7);
+                    ACCUMDBL(ap - 7, otherAP + 7);
 
                 case 2:
-                    ACCUMDBL(ap - 6, bp + 6);
+                    ACCUMDBL(ap - 6, otherAP + 6);
 
                 case 3:
-                    ACCUMDBL(ap - 5, bp + 5);
+                    ACCUMDBL(ap - 5, otherAP + 5);
 
                 case 4:
-                    ACCUMDBL(ap - 4, bp + 4);
+                    ACCUMDBL(ap - 4, otherAP + 4);
 
                 case 5:
-                    ACCUMDBL(ap - 3, bp + 3);
+                    ACCUMDBL(ap - 3, otherAP + 3);
 
                 case 6:
-                    ACCUMDBL(ap - 2, bp + 2);
+                    ACCUMDBL(ap - 2, otherAP + 2);
 
                 case 7:
-                    ACCUMDBL(ap - 1, bp + 1);
+                    ACCUMDBL(ap - 1, otherAP + 1);
 
                 case 8:
-                    ACCUMDBL(ap - 0, bp + 0); // j = 0
+                    ACCUMDBL(ap - 0, otherAP + 0); // j = 0
             }
 
             // Even numbered columns (zero based) have a middle element.
@@ -756,7 +759,7 @@ big_mpyP(bigval_t *tgt, bigval_t const *a, bigval_t const *b,
 // Adds k * modulusP to a and stores into target.  -2^62 <= k <= 2^62 .
 // (This is conservative.)
 static void
-big_adjustP(bigval_t *tgt, bigval_t const *a, int64_t k)
+big_adjustP(_Ptr<bigval_t> tgt, const _Ptr<const bigval_t> a, int64_t k)
 {
 #define RDCSTEP(i, adj)                         \
     w += a->data[i];                            \
@@ -785,7 +788,7 @@ big_adjustP(bigval_t *tgt, bigval_t const *a, int64_t k)
 // Computes k * a and stores into target.  Conditions:
 // product must be representable in bigval_t.
 static void
-big_1wd_mpy(bigval_t *tgt, bigval_t const *a, int32_t k)
+big_1wd_mpy(_Ptr<bigval_t> tgt, const _Ptr<const bigval_t> a, int32_t k)
 {
     int64_t w = 0;
     int64_t tmp;
@@ -806,7 +809,7 @@ big_1wd_mpy(bigval_t *tgt, bigval_t const *a, int32_t k)
 // Adds a to b as signed (2's complement) numbers.  Ok to use for
 // modular values if you don't let the sum overflow.
 COND_STATIC void
-big_add(bigval_t *tgt, bigval_t const *a, bigval_t const *b)
+big_add(_Ptr<bigval_t> tgt, const _Ptr<const bigval_t> a, const _Ptr<const bigval_t> b)
 {
     uint64_t v;
     int i;
@@ -823,7 +826,7 @@ big_add(bigval_t *tgt, bigval_t const *a, bigval_t const *b)
 //
 // modulo modulusP addition with approximate reduction.
 static void
-big_addP(bigval_t *tgt, bigval_t const *a, bigval_t const *b)
+big_addP(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> a, _Ptr<const bigval_t> b)
 {
     big_add(tgt, a, b);
     big_approx_reduceP(tgt, tgt);
@@ -831,7 +834,7 @@ big_addP(bigval_t *tgt, bigval_t const *a, bigval_t const *b)
 
 // 2's complement subtraction
 static void
-big_sub(bigval_t *tgt, bigval_t const *a, bigval_t const *b)
+big_sub(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> a, _Ptr<const bigval_t> b)
 {
     uint64_t v;
     int i;
@@ -850,7 +853,7 @@ big_sub(bigval_t *tgt, bigval_t const *a, bigval_t const *b)
 //
 //modulo modulusP subtraction with approximate reduction.
 static void
-big_subP(bigval_t *tgt, bigval_t const *a, bigval_t const *b)
+big_subP(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> a, _Ptr<const bigval_t> b)
 {
     big_sub(tgt, a, b);
     big_approx_reduceP(tgt, tgt);
@@ -861,7 +864,7 @@ big_subP(bigval_t *tgt, bigval_t const *a, bigval_t const *b)
 // a and b are 2's complement.  When applied to modular values,
 // args must be precisely reduced.
 static int
-big_cmp(bigval_t const *a, bigval_t const *b)
+big_cmp(_Ptr<const bigval_t> a, _Ptr<const bigval_t> b)
 {
     int i;
 
@@ -887,7 +890,7 @@ big_cmp(bigval_t const *a, bigval_t const *b)
 // Computes tgt = a mod modulus.  Only works with moduli slightly
 // less than 2**(32*(BIGLEN-1)).  Both modulusP and orderP qualify.
 static void
-big_precise_reduce(bigval_t *tgt, bigval_t const *a, bigval_t const *modulus)
+big_precise_reduce(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> a, _Ptr<const bigval_t> modulus)
 {
     //
     // src is a trick to avoid an extra copy of a to arg a to a
@@ -897,7 +900,7 @@ big_precise_reduce(bigval_t *tgt, bigval_t const *a, bigval_t const *modulus)
     // a case to handle the situation of no modifications having been
     // made.
     //
-    bigval_t const *src = a;
+    _Ptr<const bigval_t> src = a;
 
     // If tgt < 0, a positive value gets added in, so eventually tgt
     // will be >= 0.  If tgt > 0 and the MSW is non-zero, a non-zero
@@ -936,7 +939,7 @@ big_precise_reduce(bigval_t *tgt, bigval_t const *a, bigval_t const *modulus)
 
 // computes floor(a / 2), 2's complement.
 static void
-big_halve(bigval_t *tgt, bigval_t const *a)
+big_halve(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> a)
 {
     uint32_t shiftval;
     uint32_t new_shiftval;
@@ -961,7 +964,7 @@ big_halve(bigval_t *tgt, bigval_t const *a)
 // avoid passing over the data twice in the case of an odd value.
 //
 static void
-big_halveP(bigval_t *tgt, bigval_t const *a)
+big_halveP(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> a)
 {
     if (a->data[0] & 1) {
         // odd
@@ -975,7 +978,7 @@ big_halveP(bigval_t *tgt, bigval_t const *a)
 
 // returns true if a is zero
 static bool
-big_is_zero(bigval_t const *a)
+big_is_zero(_Ptr<const bigval_t> a)
 {
     int i;
 
@@ -989,7 +992,7 @@ big_is_zero(bigval_t const *a)
 
 // returns true if a is one
 static bool
-big_is_one(bigval_t const *a)
+big_is_one(_Ptr<const bigval_t> a)
 {
     int i;
 
@@ -1016,8 +1019,8 @@ big_is_one(bigval_t const *a)
 // If the denominator is zero, it will loop forever.  Be careful!
 // Modulus must be odd.  num and den must be positive.
 static void
-big_divide(bigval_t *tgt, bigval_t const *num, bigval_t const *den,
-           bigval_t const *modulus)
+big_divide(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> num, _Ptr<const bigval_t> den,
+           _Ptr<const bigval_t> modulus)
 {
     bigval_t u, v, x1, x2;
 
@@ -1059,7 +1062,7 @@ big_divide(bigval_t *tgt, bigval_t const *num, bigval_t const *den,
 
 
 static void
-big_triple(bigval_t *tgt, bigval_t const *a)
+big_triple(_Ptr<bigval_t> tgt, _Ptr<const bigval_t> a)
 {
     int i;
     uint64_t accum = 0;
@@ -1090,7 +1093,7 @@ big_triple(bigval_t *tgt, bigval_t const *a)
 #define jacobian_point_is_infinity(P) (big_is_zero(&(P)->Z))
 
 static void
-toJacobian(jacobian_point_t *tgt, affine_point_t const *a)
+toJacobian(_Ptr<jacobian_point_t> tgt, _Ptr<const affine_point_t> a)
 {
     tgt->X = a->x;
     tgt->Y = a->y;
@@ -1099,7 +1102,7 @@ toJacobian(jacobian_point_t *tgt, affine_point_t const *a)
 
 // a->Z must be precisely reduced
 static void
-toAffine(affine_point_t *tgt, jacobian_point_t const *a)
+toAffine(_Ptr<affine_point_t> tgt, _Ptr<const jacobian_point_t> a)
 {
     bigval_t zinv, zinvpwr;
 
@@ -1122,7 +1125,7 @@ toAffine(affine_point_t *tgt, jacobian_point_t const *a)
 // tgt = 2 * P.  P->Z must be precisely reduced and
 // tgt->Z will be precisely reduced
 static void
-pointDouble(jacobian_point_t *tgt, jacobian_point_t const *P)
+pointDouble(_Ptr<jacobian_point_t> tgt, _Ptr<const jacobian_point_t> P)
 {
     bigval_t x3loc, y3loc, z3loc, t1, t2, t3;
 
@@ -1176,8 +1179,8 @@ pointDouble(jacobian_point_t *tgt, jacobian_point_t const *P)
 // tgt = P + Q.  P->Z must be precisely reduced.
 // tgt->Z will be precisely reduced.  tgt and P can be aliased.
 static void
-pointAdd(jacobian_point_t *tgt, jacobian_point_t const *P,
-         affine_point_t const *Q)
+pointAdd(_Ptr<jacobian_point_t> tgt, _Ptr<const jacobian_point_t> P,
+         _Ptr<const affine_point_t> Q)
 {
     bigval_t t1, t2, t3, t4, x3loc;
 
@@ -1266,12 +1269,12 @@ pointAdd(jacobian_point_t *tgt, jacobian_point_t const *P,
 // k must be non-negative.  Negative values (incorrectly)
 // return the infinite point
 static void
-pointMpyP(affine_point_t *tgt, bigval_t const *k, affine_point_t const *P)
+pointMpyP(_Ptr<affine_point_t> tgt, _Ptr<const bigval_t> k, _Ptr<const affine_point_t> P)
 {
     int i;
     jacobian_point_t Q;
 #ifdef MPY2BITS
-    affine_point_t const *mpyset[4];
+    _Ptr<const affine_point_t> mpyset _Checked[4] = {NULL, NULL, NULL, NULL};
     affine_point_t twoP, threeP;
 #endif // MPY2BITS 
 
@@ -1311,7 +1314,7 @@ pointMpyP(affine_point_t *tgt, bigval_t const *k, affine_point_t const *P)
 #else // MPY2BITS defined 
     // multiply 2 bits at a time
     // pre-compute 1P, 2P, and 3P
-    mpyset[0] = (affine_point_t *)0;
+    mpyset[0] = (_Ptr<affine_point_t>)0;
     mpyset[1] = P;
     toJacobian(&Q, P);  // Q = P
     pointDouble(&Q, &Q); // now Q = 2P
@@ -1334,7 +1337,7 @@ pointMpyP(affine_point_t *tgt, bigval_t const *k, affine_point_t const *P)
         int mbits = big_get_2bits(k, i);
         pointDouble(&Q, &Q);
         pointDouble(&Q, &Q);
-        if (mpyset[mbits] != (affine_point_t *)0) {
+        if (mpyset[mbits] != (_Ptr<affine_point_t>)0) {
             pointAdd(&Q, &Q, mpyset[mbits]);
         }
     }
@@ -1345,7 +1348,7 @@ pointMpyP(affine_point_t *tgt, bigval_t const *k, affine_point_t const *P)
 }
 
 COND_STATIC bool
-on_curveP(affine_point_t const *P)
+on_curveP(_Ptr<const affine_point_t> P)
 {
     bigval_t sum, product;
 
@@ -1370,13 +1373,15 @@ on_curveP(affine_point_t const *P)
 // returns a bigval between 0 or 1 (depending on allow_zero)
 // and order-1, inclusive.  Returns 0 on success, -1 otherwise
 COND_STATIC int
-big_get_random_n(bigval_t *tgt, bool allow_zero)
+big_get_random_n(_Ptr<bigval_t> tgt, bool allow_zero)
 {
     int rv;
 
     tgt->data[BIGLEN - 1] = 0;
     do {
-        rv = get_random_bytes((uint8_t *) tgt, sizeof (uint32_t) * (BIGLEN - 1));
+        _Array_ptr<uint8_t> tgtBytes : byte_count(sizeof(uint32_t) * (BIGLEN - 1)) = 
+            _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(tgt, byte_count(sizeof(bigval_t)));
+        rv = get_random_bytes(tgtBytes, sizeof (uint32_t) * (BIGLEN - 1));
         if (rv < 0) {
             return (-1);
         }
@@ -1390,7 +1395,7 @@ big_get_random_n(bigval_t *tgt, bool allow_zero)
 // computes a secret value, k, and a point, P1, to send to the other
 // party.  Returns 0 on success, -1 on failure (of the RNG).
 int
-ECDH_generate(affine_point_t *P1, bigval_t *k)
+ECDH_generate(_Ptr<affine_point_t> P1, _Ptr<bigval_t> k)
 {
     int rv;
 
@@ -1407,11 +1412,14 @@ ECDH_generate(affine_point_t *P1, bigval_t *k)
 //
 //Derives a secret value, k, and a point, P1, from the values of src and label.
 void
-ECDH_derive(affine_point_t *P1, bigval_t *k,
-            bigval_t *src, const uint8_t *label, size_t labelSize)
+ECDH_derive(_Ptr<affine_point_t> P1, _Ptr<bigval_t> k,
+            _Ptr<bigval_t> src, _Nt_array_ptr<const uint8_t> label : byte_count(labelSize), size_t labelSize)
 {
-    uint8_t     fixed[RIOT_ECC_PRIVATE_BYTES + 5];
-    size_t      fixedSize = sizeof(fixed);
+    uint8_t     fixedTmp _Checked[RIOT_ECC_PRIVATE_BYTES + 5];
+    size_t      fixedSize = sizeof(fixedTmp);
+    //TODO: Compiler doens't understand the above line, so add this one
+    _Array_ptr<uint8_t> fixed : byte_count(fixedSize) = 
+        _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&fixedTmp[0], byte_count(fixedSize));
 
     assert(SHA256_DIGEST_LENGTH >= RIOT_ECC_PRIVATE_BYTES);
 
@@ -1422,7 +1430,7 @@ ECDH_derive(affine_point_t *P1, bigval_t *k,
     do {
         fixedSize = RIOT_KDF_FIXED(fixed, fixedSize,  label, labelSize,
                                    NULL, 0, RIOT_ECC_PRIVATE_BYTES * 8);
-        RIOT_KDF_SHA256((uint8_t *)k, (uint8_t *)src, RIOT_ECC_PRIVATE_BYTES,
+        RIOT_KDF_SHA256((_Array_ptr<uint8_t>)k, (_Array_ptr<uint8_t>)src, RIOT_ECC_PRIVATE_BYTES,
                         NULL, fixed, fixedSize);
     } while (big_is_zero(k) || (big_cmp(k, &orderP) >= 0));
 
@@ -1436,7 +1444,7 @@ ECDH_derive(affine_point_t *P1, bigval_t *k,
 // but safe.
 
 COND_STATIC bool
-ECDH_derive_pt(affine_point_t *tgt, bigval_t const *k, affine_point_t const *Q)
+ECDH_derive_pt(_Ptr<affine_point_t> tgt, _Ptr<const bigval_t> k, _Ptr<const affine_point_t> Q)
 {
     if (Q->infinity) {
         return (false);
@@ -1477,9 +1485,9 @@ ECDH_derive_pt(affine_point_t *tgt, bigval_t const *k, affine_point_t const *Q)
 // This function sets the r and s fields of sig.  The implementation
 // follows HMV Algorithm 4.29.
 static int
-ECDSA_sign(bigval_t const *msgdgst,
-           bigval_t const *privkey,
-           ECDSA_sig_t *sig)
+ECDSA_sign(_Ptr<const bigval_t> msgdgst,
+           _Ptr<const bigval_t> privkey,
+           _Ptr<ECDSA_sig_t> sig)
 {
     int rv;
     affine_point_t P1;
@@ -1515,9 +1523,9 @@ startpoint:
 // Returns true if the signature is valid.
 // The implementation follow HMV Algorithm 4.30.
 static verify_res_t
-ECDSA_verify_inner(bigval_t const *msgdgst,
-                   affine_point_t const *pubkey,
-                   ECDSA_sig_t const *sig)
+ECDSA_verify_inner(_Ptr<const bigval_t> msgdgst,
+                   _Ptr<const affine_point_t> pubkey,
+                   _Ptr<const ECDSA_sig_t> sig)
 {
 
 // We could reuse variables and save stack space.  If stack space
@@ -1572,9 +1580,9 @@ ECDSA_verify_inner(bigval_t const *msgdgst,
 }
 
 bool
-ECDSA_verify(bigval_t const *msgdgst,
-             affine_point_t const *pubkey,
-             ECDSA_sig_t const *sig)
+ECDSA_verify(_Ptr<const bigval_t> msgdgst,
+             _Ptr<const affine_point_t> pubkey,
+             _Ptr<const ECDSA_sig_t> sig)
 {
     if (ECDSA_verify_inner(msgdgst, pubkey, sig) == V_SUCCESS) {
         return true;
@@ -1593,7 +1601,9 @@ ECDSA_verify(bigval_t const *msgdgst,
 // @param inSize  number of bytes in the big-endian value
 //
 void
-BigIntToBigVal(bigval_t *tgt, void const *in, size_t inSize)
+BigIntToBigVal(bigval_t *tgt : itype(_Ptr<bigval_t>), 
+			   const void *in : byte_count(inSize), 
+			   size_t inSize)
 {
     unsigned int i;
 
@@ -1608,7 +1618,7 @@ BigIntToBigVal(bigval_t *tgt, void const *in, size_t inSize)
     // move one uint8_t at a time starting with least significant uint8_t
     for (i = 0; i < inSize; ++i) {
         tgt->data[i / 4] |=
-            ((uint8_t *)in)[inSize - 1 - i] << (8 * (i % 4));
+            ((_Array_ptr<uint8_t>)in)[inSize - 1 - i] << (8 * (i % 4));
     }
 
 }
@@ -1622,17 +1632,18 @@ BigIntToBigVal(bigval_t *tgt, void const *in, size_t inSize)
 // @param in   pointer to the bigval_t to convert
 //
 void
-BigValToBigInt(void *out, const bigval_t *src)
+BigValToBigInt(void *out : byte_count((BIGLEN - 1) * 4), 
+			   const bigval_t *in : itype(_Ptr<const bigval_t>))
 {
     int i;
     // Start with the most significant word and work down.
     // Initialize i with the number of bytes to move - 1.
 
     uint8_t unused;
-    uint8_t* intermediate = (uint8_t*)out;
+    _Array_ptr<uint8_t> intermediate : byte_count((BIGLEN - 1) * 4) = (_Array_ptr<uint8_t>)out;
     for (i = ((BIGLEN - 1) * 4) - 1; i >= 0; i--) 
     {
-        *intermediate = (uint8_t)(src->data[i / 4] >> (8 * (i % 4)));
+        *intermediate = (uint8_t)(in->data[i / 4] >> (8 * (i % 4)));
         unused = *(intermediate)++;
     }
 }
@@ -1666,10 +1677,22 @@ ECC_feature_list(void)
 
 
 #if USES_EPHEMERAL
-#include <stdlib.h>
-#include <time.h>
+// Headers have their own commands to turn checked scoping on and off
+#undef __TURN_ON_CHECKED_SCOPE
+#if CHECKED_SCOPE == ON
+#define __TURN_ON_CHECKED_SCOPE
+#pragma CHECKED_SCOPE OFF
+#endif
+
+#include <stdlib_checked.h>
+#include <time_checked.h>
+
+#ifdef __TURN_ON_CHECKED_SCOPE
+#undef __TURN_ON_CHECKED_SCOPE
+#pragma CHECKED_SCOPE ON
+#endif
 static int
-get_random_bytes(uint8_t *buf, size_t len)
+get_random_bytes(_Array_ptr<uint8_t> buf : byte_count(len), size_t len)
 {
     srand((unsigned)time(NULL));
     for (; len; len--)
@@ -1695,7 +1718,8 @@ get_random_bytes(uint8_t *buf, size_t len)
 //          - RIOT_FAILURE otherwise
 //
 RIOT_STATUS
-RIOT_GenerateDHKeyPair(ecc_publickey *publicKey, ecc_privatekey *privateKey)
+RIOT_GenerateDHKeyPair(ecc_publickey *publicKey : itype(_Ptr<ecc_publickey>), 
+					   ecc_privatekey *privateKey : itype(_Ptr<ecc_privatekey>))
 {
     if (ECDH_generate(publicKey, privateKey) == 0) {
         return RIOT_SUCCESS;
@@ -1715,9 +1739,9 @@ RIOT_GenerateDHKeyPair(ecc_publickey *publicKey, ecc_privatekey *privateKey)
 //          - RIOT_FAILURE otherwise
 //
 RIOT_STATUS
-RIOT_GenerateShareSecret(ecc_publickey *peerPublicKey,
-                         ecc_privatekey *privateKey,
-                         ecc_secret *secret)
+RIOT_GenerateShareSecret(ecc_publickey *peerPublicKey : itype(_Ptr<ecc_publickey>),
+                         ecc_privatekey *privateKey : itype(_Ptr<ecc_privatekey>),
+                         ecc_secret *secret : itype(_Ptr<ecc_secret>))
 {
     bool derive_rv;
 
@@ -1742,7 +1766,8 @@ RIOT_GenerateShareSecret(ecc_publickey *peerPublicKey,
 //          - RIOT_FAILURE otherwise
 //
 RIOT_STATUS
-RIOT_GenerateDSAKeyPair(ecc_publickey *publicKey, ecc_privatekey *privateKey)
+RIOT_GenerateDSAKeyPair(ecc_publickey *publicKey : itype(_Ptr<ecc_publickey>), 
+					    ecc_privatekey *privateKey : itype(_Ptr<ecc_privatekey>))
 {
     if (ECDH_generate(publicKey, privateKey) == 0) {
         return RIOT_SUCCESS;
@@ -1761,8 +1786,11 @@ RIOT_GenerateDSAKeyPair(ecc_publickey *publicKey, ecc_privatekey *privateKey)
 // @return  - RIOT_SUCCESS
 
 RIOT_STATUS
-RIOT_DeriveDsaKeyPair(ecc_publickey *publicKey, ecc_privatekey *privateKey,
-                      bigval_t *srcVal, const uint8_t *label, size_t labelSize)
+RIOT_DeriveDsaKeyPair(ecc_publickey *publicKey : itype(_Ptr<ecc_publickey>), 
+					  ecc_privatekey *privateKey : itype(_Ptr<ecc_privatekey>),
+                      bigval_t *srcVal : itype(_Ptr<bigval_t>), 
+					  const uint8_t *label : itype(_Nt_array_ptr<const uint8_t>) byte_count(labelSize), 
+					  size_t labelSize)
 {
     ECDH_derive(publicKey, privateKey, srcVal, label, labelSize);
     return RIOT_SUCCESS;
@@ -1776,7 +1804,9 @@ RIOT_DeriveDsaKeyPair(ecc_publickey *publicKey, ecc_privatekey *privateKey,
 // @return  - RIOT_SUCCESS if the signing process succeeds
 //          - RIOT_FAILURE otherwise
 RIOT_STATUS
-RIOT_DSASignDigest(const uint8_t *digest, const ecc_privatekey *signingPrivateKey, ecc_signature *sig)
+RIOT_DSASignDigest(const uint8_t *digest : byte_count(SHA256_DIGEST_LENGTH), 
+				   const ecc_privatekey *signingPrivateKey : itype(_Ptr<const ecc_privatekey>), 
+				   ecc_signature *sig : itype(_Ptr<ecc_signature>))
 {
     bigval_t source;
 
@@ -1796,9 +1826,12 @@ RIOT_DSASignDigest(const uint8_t *digest, const ecc_privatekey *signingPrivateKe
 // @return  - RIOT_SUCCESS if the signine process succeeds
 //          - RIOT_FAILURE otherwisw
 RIOT_STATUS
-RIOT_DSASign(const uint8_t *buf, uint16_t len, const ecc_privatekey *signingPrivateKey, ecc_signature *sig)
+RIOT_DSASign(const uint8_t *buf : byte_count((size_t)len), 
+			 uint16_t len, 
+			 const ecc_privatekey *signingPrivateKey : itype(_Ptr<const ecc_privatekey>), 
+			 ecc_signature *sig : itype(_Ptr<ecc_signature>))
 {
-    uint8_t digest[SHA256_DIGEST_LENGTH];
+    uint8_t digest _Checked[SHA256_DIGEST_LENGTH];
 
     RIOT_SHA256_Block(buf, len, digest);
 
@@ -1815,9 +1848,9 @@ RIOT_DSASign(const uint8_t *buf, uint16_t len, const ecc_privatekey *signingPriv
 // @return  - RIOT_SUCCESS if the signature verification succeeds
 //          - RIOT_FAILURE otherwise
 RIOT_STATUS
-RIOT_DSAVerifyDigest(const uint8_t *digest,
-                     const ecc_signature *sig,
-                     const ecc_publickey *pubKey)
+RIOT_DSAVerifyDigest(const uint8_t *digest : byte_count(SHA256_DIGEST_LENGTH), 
+					 const ecc_signature *sig : itype(_Ptr<const ecc_signature>), 
+					 const ecc_publickey *pubKey : itype(_Ptr<const ecc_publickey>))
 {
     bigval_t source;
 
@@ -1837,14 +1870,17 @@ RIOT_DSAVerifyDigest(const uint8_t *digest,
 // @return  - RIOT_SUCCESS if the signature verification succeeds
 //          - RIOT_FAILURE otherwise
 RIOT_STATUS
-RIOT_DSAVerify(const uint8_t *buf, uint16_t len,
-               const ecc_signature *sig,
-               const ecc_publickey *pubKey)
+RIOT_DSAVerify(const uint8_t *buf : byte_count((size_t)len), 
+			   uint16_t len, 
+			   const ecc_signature *sig : itype(_Ptr<const ecc_signature>), 
+			   const ecc_publickey *pubKey : itype(_Ptr<const ecc_publickey>))
 {
-    uint8_t digest[SHA256_DIGEST_LENGTH];
+    uint8_t digest _Checked[SHA256_DIGEST_LENGTH];
 
     RIOT_SHA256_Block(buf, len, digest);
 
     return RIOT_DSAVerifyDigest(digest, sig, pubKey);
 }
 #endif
+
+#pragma CHECKED_SCOPE OFF

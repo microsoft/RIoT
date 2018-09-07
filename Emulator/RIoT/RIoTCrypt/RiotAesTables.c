@@ -18,10 +18,12 @@
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
 
+#pragma CHECKED_SCOPE ON
+
 #ifdef _AES_COMPILE_
 
 /* The Rijndael S-box matrix */
-static const uint8_t sbox[256] = {
+static const uint8_t sbox _Checked[256] = {
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5,
     0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
     0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0,
@@ -56,7 +58,7 @@ static const uint8_t sbox[256] = {
     0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
 };
 
-static const uint32_t ftable[256] = {
+static const uint32_t ftable _Checked[256] = {
     0xa56363c6, 0x847c7cf8, 0x997777ee, 0x8d7b7bf6,
     0x0df2f2ff, 0xbd6b6bd6, 0xb16f6fde, 0x54c5c591,
     0x50303060, 0x03010102, 0xa96767ce, 0x7d2b2b56,
@@ -123,13 +125,16 @@ static const uint32_t ftable[256] = {
     0xcbb0b07b, 0xfc5454a8, 0xd6bbbb6d, 0x3a16162c
 };
 
-static const uint32_t Rconst[12] = {
+static const uint32_t Rconst _Checked[12] = {
     0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8
 };
 
 #else
-
+#pragma CHECKED_SCOPE OFF
 #include "stdint.h"
-extern const uint32_t ftable[];
+#pragma CHECKED_SCOPE ON
+extern const uint32_t ftable[] : itype(const uint32_t _Checked[]);
 
 #endif
+
+#pragma CHECKED_SCOPE OFF

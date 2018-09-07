@@ -20,6 +20,8 @@
 #include "stdint.h"
 #include "RiotKdf.h"
 
+#pragma CHECKED_SCOPE ON
+
 #if HOST_IS_LITTLE_ENDIAN
 #define UINT32_TO_BIGENDIAN(i)          \
         ( ((i) & 0xff000000ULL >> 24)      \
@@ -42,30 +44,33 @@
 // @param numberOfBits the number of bits to be produced
 //
 size_t RIOT_KDF_FIXED(
-    uint8_t         *fixed,
-    size_t          fixedSize,
-    const uint8_t   *label,
-    size_t          labelSize,
-    const uint8_t   *context,
-    size_t          contextSize,
-    uint32_t        numberOfBits
+	uint8_t         *fixed   : byte_count(fixedSize),
+	size_t          fixedSize,
+	const uint8_t   *label : itype(_Nt_array_ptr<const uint8_t>) byte_count(labelSize),
+	size_t          labelSize,
+	const uint8_t   *context : byte_count(contextSize),
+	size_t          contextSize,
+	uint32_t        numberOfBits
 )
 {
     size_t          total = (((label) ? labelSize : 0) + ((context) ? contextSize : 0) + 5);
 
     assert(fixedSize >= total);
+    
+    // TODO: since total is > than both labelSize and contextSize, the memcpys are safe
+    // This might be hard for the compiler to reason about, not just simple unsigned comparison
 
     if (label) {
-        memcpy(fixed, label, labelSize);
+        memcpy(_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(fixed, byte_count(labelSize)), label, labelSize);
         fixed += labelSize;
     }
     *fixed++ = 0;
     if (context) {
-        memcpy(fixed, context, contextSize);
+        memcpy(_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(fixed, byte_count(contextSize)), context, contextSize);
         fixed += contextSize;
     }
     numberOfBits = UINT32_TO_BIGENDIAN(numberOfBits);
-    memcpy(fixed, &numberOfBits, 4);
+    memcpy(_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(fixed, byte_count(4)), &numberOfBits, 4);
     return total;
 }
 
@@ -82,11 +87,11 @@ size_t RIOT_KDF_FIXED(
 // @param fixedSize
 //
 void RIOT_KDF_SHA256(
-    uint8_t         *out,
-    const uint8_t   *key,
+    uint8_t         *out     : byte_count(SHA256_DIGEST_LENGTH),
+    const uint8_t   *key     : byte_count(keySize),
     size_t          keySize,
-    uint32_t        *counter,
-    const uint8_t   *fixed,
+    uint32_t        *counter : itype(_Ptr<uint32_t>),
+    const uint8_t   *fixed   : byte_count(fixedSize),
     size_t          fixedSize
 )
 {
@@ -99,8 +104,11 @@ void RIOT_KDF_SHA256(
     RIOT_HMAC_SHA256_Init(&ctx, key, keySize);
     // Add the counter
     ctr = UINT32_TO_BIGENDIAN(ctr);
-    RIOT_HMAC_SHA256_Update(&ctx, (uint8_t *)&ctr, 4);
+    // TODO: Compiler has trouble with the cast to uint8 * from uint32 *. Does not cast the size with it.
+    RIOT_HMAC_SHA256_Update(&ctx, _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&ctr, byte_count(4)), 4);
     // Add fixed stuff
     RIOT_HMAC_SHA256_Update(&ctx, fixed, fixedSize);
     RIOT_HMAC_SHA256_Final(&ctx, out);
 }
+
+#pragma CHECKED_SCOPE OFF

@@ -33,8 +33,12 @@ RiotCrypt_Kdf(
         return RIOT_INVALID_PARAMETER;
     }
 
-    fixedSize = RIOT_KDF_FIXED(fixed, fixedSize, context, contextSize,
-                               label, labelSize, bytesToDerive * 8);
+    // Fixed a bug in the call to RIOT_KDF_FIXED below: 
+    // the argument pairs (label, labelSize) and (context, contextSize)
+    // had been swapped previously. Caught by making label of type
+    // _Nt_array_ptr (aka a string) when converting Emulator to CheckedC.
+    fixedSize = RIOT_KDF_FIXED(fixed, fixedSize, label, labelSize, 
+                               context, contextSize, bytesToDerive * 8);
 
     while (counter < (bytesToDerive / (RIOT_KEY_LENGTH))) {
 

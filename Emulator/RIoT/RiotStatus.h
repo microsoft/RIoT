@@ -9,6 +9,8 @@ Confidential Information
 
 #ifdef __cplusplus
 extern "C" {
+#else 
+#pragma CHECKED_SCOPE ON
 #endif
 
 typedef enum RIOT_STATUS {
@@ -36,6 +38,8 @@ typedef enum RIOT_STATUS {
 
 #ifdef __cplusplus
 }
+#else
+#pragma CHECKED_SCOPE OFF
 #endif
 
 #endif

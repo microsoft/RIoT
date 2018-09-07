@@ -27,12 +27,14 @@
 extern "C" {
 #endif
 
+#pragma CHECKED_SCOPE ON
+
 #define HMAC_SHA256_DIGEST_LENGTH SHA256_DIGEST_LENGTH
 #define HMAC_SHA256_BLOCK_LENGTH  64
 
 typedef struct _RIOT_HMAC_SHA256_CTX {
     RIOT_SHA256_CONTEXT hashCtx;
-    uint8_t opad[HMAC_SHA256_BLOCK_LENGTH];
+    uint8_t opad[HMAC_SHA256_BLOCK_LENGTH] : itype(uint8_t _Checked[HMAC_SHA256_BLOCK_LENGTH]);
 } RIOT_HMAC_SHA256_CTX;
 
 //
@@ -41,7 +43,9 @@ typedef struct _RIOT_HMAC_SHA256_CTX {
 // @param key the key
 // @param keyLen the length of the key
 //
-void RIOT_HMAC_SHA256_Init(RIOT_HMAC_SHA256_CTX *ctx, const uint8_t *key, size_t keyLen);
+void RIOT_HMAC_SHA256_Init(RIOT_HMAC_SHA256_CTX *ctx : itype(_Ptr<RIOT_HMAC_SHA256_CTX>), 
+	                       const uint8_t *key : byte_count(keyLen), 
+						   size_t keyLen);
 
 //
 // Update the hash with data
@@ -50,14 +54,19 @@ void RIOT_HMAC_SHA256_Init(RIOT_HMAC_SHA256_CTX *ctx, const uint8_t *key, size_t
 // @param dataLen the length of the data
 // @return
 //
-void RIOT_HMAC_SHA256_Update(RIOT_HMAC_SHA256_CTX *ctx, const uint8_t *data, size_t dataLen);
+void RIOT_HMAC_SHA256_Update(RIOT_HMAC_SHA256_CTX *ctx : itype(_Ptr<RIOT_HMAC_SHA256_CTX>), 
+							 const uint8_t *data : byte_count(dataLen), 
+							 size_t dataLen);
 
 //
 // Retrieve the final digest for the HMAC
 // @param ctx the HMAC context
 // @param digest the buffer to hold the digest.  Must be of size SHA256_DIGEST_LENGTH
 //
-void RIOT_HMAC_SHA256_Final(RIOT_HMAC_SHA256_CTX *ctx, uint8_t *digest);
+void RIOT_HMAC_SHA256_Final(RIOT_HMAC_SHA256_CTX *ctx : itype(_Ptr<RIOT_HMAC_SHA256_CTX>), 
+	                        uint8_t *digest : byte_count(SHA256_DIGEST_LENGTH));
+
+#pragma CHECKED_SCOPE OFF
 
 #ifdef __cplusplus
 }

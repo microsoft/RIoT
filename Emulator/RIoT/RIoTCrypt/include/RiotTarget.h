@@ -19,16 +19,20 @@
 //
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
-#include <stdlib.h>
-#include <stdio.h>
+#include <stdlib_checked.h>
+#include <stdio_checked.h>
 #include <stddef.h>
-#include <string.h>
+#include <string_checked.h>
 
 // TODO: Fix this so we actually get asserts on non-MSFT platforms
 #ifndef _MSC_VER
 #define assert(expr)    ((void)0)
 #else
-#include <assert.h>
+#include <assert_checked.h>
+#endif
+
+#ifndef __cplusplus
+#pragma CHECKED_SCOPE ON
 #endif
 
 #ifndef _MSC_VER
@@ -107,4 +111,9 @@ extern uint8_t dbgTARGET_UTIL;
 #ifdef ALL_SYMBOLS
 # define    static
 #endif
+
+#ifndef __cplusplus
+#pragma CHECKED_SCOPE OFF
+#endif
+
 #endif

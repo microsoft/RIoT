@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+#pragma CHECKED_SCOPE ON
+
 #define RIOT_X509_SNUM_LEN  0x05
 
 // KeyUsage :: = BIT STRING{
@@ -23,86 +25,89 @@ extern "C" {
 // Const x509 "to be signed" data
 typedef struct
 {
-    uint8_t SerialNum[RIOT_X509_SNUM_LEN];
-    const char *IssuerCommon;
-    const char *IssuerOrg;
-    const char *IssuerCountry;
-    const char *ValidFrom;
-    const char *ValidTo;
-    const char *SubjectCommon;
-    const char *SubjectOrg;
-    const char *SubjectCountry;
+    uint8_t SerialNum[RIOT_X509_SNUM_LEN] : itype(uint8_t _Checked[RIOT_X509_SNUM_LEN]);
+    const char *IssuerCommon              : itype(_Nt_array_ptr<const char>);
+    const char *IssuerOrg                 : itype(_Nt_array_ptr<const char>);
+    const char *IssuerCountry             : itype(_Nt_array_ptr<const char>);
+    const char *ValidFrom                 : itype(_Nt_array_ptr<const char>);
+    const char *ValidTo                   : itype(_Nt_array_ptr<const char>);
+    const char *SubjectCommon             : itype(_Nt_array_ptr<const char>);
+    const char *SubjectOrg                : itype(_Nt_array_ptr<const char>);
+    const char *SubjectCountry            : itype(_Nt_array_ptr<const char>);
 } RIOT_X509_TBS_DATA;
 
 int
 X509GetDeviceCertTBS(
-    DERBuilderContext   *Tbs,
-    RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *DevIdKeyPub
+    DERBuilderContext   *Tbs         : itype(_Ptr<DERBuilderContext>),
+    RIOT_X509_TBS_DATA  *TbsData     : itype(_Ptr<RIOT_X509_TBS_DATA>),
+    RIOT_ECC_PUBLIC     *DevIdKeyPub : itype(_Ptr<RIOT_ECC_PUBLIC>)
 );
 
 int
 X509MakeDeviceCert(
-    DERBuilderContext   *DeviceIDCert,
-    RIOT_ECC_SIGNATURE  *TbsSig
+    DERBuilderContext   *DeviceIDCert : itype(_Ptr<DERBuilderContext>),
+    RIOT_ECC_SIGNATURE  *TbsSig       : itype(_Ptr<RIOT_ECC_SIGNATURE>)
 );
 
 int
 X509GetAliasCertTBS(
-    DERBuilderContext   *Tbs,
-    RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *AliasKeyPub,
-    RIOT_ECC_PUBLIC     *DevIdKeyPub,
-    uint8_t             *Fwid,
+    DERBuilderContext   *Tbs         : itype(_Ptr<DERBuilderContext>),
+    RIOT_X509_TBS_DATA  *TbsData     : itype(_Ptr<RIOT_X509_TBS_DATA>),
+    RIOT_ECC_PUBLIC     *AliasKeyPub : itype(_Ptr<RIOT_ECC_PUBLIC>),
+    RIOT_ECC_PUBLIC     *DevIdKeyPub : itype(_Ptr<RIOT_ECC_PUBLIC>),
+    uint8_t             *Fwid        : byte_count((size_t)FwidLen),
     uint32_t             FwidLen
 );
 
 int
 X509MakeAliasCert(
-    DERBuilderContext   *AliasCert,
-    RIOT_ECC_SIGNATURE  *TbsSig
+    DERBuilderContext   *AliasCert : itype(_Ptr<DERBuilderContext>),
+    RIOT_ECC_SIGNATURE  *TbsSig    : itype(_Ptr<RIOT_ECC_SIGNATURE>)
 );
 
 int
 X509GetDEREccPub(
-    DERBuilderContext   *Context,
+    DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
     RIOT_ECC_PUBLIC      Pub
 );
 
 int
 X509GetDEREcc(
-    DERBuilderContext   *Context,
+    DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
     RIOT_ECC_PUBLIC      Pub,
     RIOT_ECC_PRIVATE     Priv
 );
 
 int
 X509GetDERCsrTbs(
-    DERBuilderContext   *Context,
-    RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *DeviceIDPub
+    DERBuilderContext   *Context     : itype(_Ptr<DERBuilderContext>),
+    RIOT_X509_TBS_DATA  *TbsData     : itype(_Ptr<RIOT_X509_TBS_DATA>),
+    RIOT_ECC_PUBLIC     *DeviceIDPub : itype(_Ptr<RIOT_ECC_PUBLIC>)
 );
 
 int
 X509GetDERCsr(
-    DERBuilderContext   *Context,
-    RIOT_ECC_SIGNATURE  *Signature
+    DERBuilderContext   *Context   : itype(_Ptr<DERBuilderContext>),
+    RIOT_ECC_SIGNATURE  *Signature : itype(_Ptr<RIOT_ECC_SIGNATURE>)
 );
 
 int
 X509GetRootCertTBS(
-    DERBuilderContext   *Tbs,
-    RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *RootKeyPub
+    DERBuilderContext   *Tbs        : itype(_Ptr<DERBuilderContext>),
+    RIOT_X509_TBS_DATA  *TbsData    : itype(_Ptr<RIOT_X509_TBS_DATA>),
+    RIOT_ECC_PUBLIC     *RootKeyPub : itype(_Ptr<RIOT_ECC_PUBLIC>)
 );
 
 int
 X509MakeRootCert(
-    DERBuilderContext   *AliasCert,
-    RIOT_ECC_SIGNATURE  *TbsSig
+    DERBuilderContext   *RootCert  : itype(_Ptr<DERBuilderContext>),
+    RIOT_ECC_SIGNATURE  *TbsSig    : itype(_Ptr<RIOT_ECC_SIGNATURE>)
 );
+
+#pragma CHECKED_SCOPE OFF
 
 #ifdef __cplusplus
 }
 #endif
+
 #endif

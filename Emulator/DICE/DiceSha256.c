@@ -47,9 +47,10 @@
 // 4-MAY-2015; Adaptation (DennisMa;MSFT).
 //
 #include "stdint.h"
-#include "string.h" // memcpy/memset
+#include "string_checked.h" // memcpy/memset
 #include "DiceSha256.h"
 
+#pragma CHECKED_SCOPE ON
 /*** SHA-256 Machine Architecture Definitions *****************/
 /*
  * BYTE_ORDER NOTE:
@@ -205,11 +206,11 @@
  * library -- they are intended for private internal visibility/use
  * only.
  */
-static void SHA256_Transform(DICE_SHA256_CONTEXT *, const dice_sha2_word32 *);
+static void SHA256_Transform(_Ptr<DICE_SHA256_CONTEXT> context, _Array_ptr<const dice_sha2_word32> data : count(16));
 
 /*** SHA-XYZ INITIAL HASH VALUES AND CONSTANTS ************************/
 /* Hash constant words K for SHA-256: */
-static const dice_sha2_word32 K256[64] = {
+static const dice_sha2_word32 K256 _Checked[64] = {
     0x428a2f98UL, 0x71374491UL, 0xb5c0fbcfUL, 0xe9b5dba5UL,
     0x3956c25bUL, 0x59f111f1UL, 0x923f82a4UL, 0xab1c5ed5UL,
     0xd807aa98UL, 0x12835b01UL, 0x243185beUL, 0x550c7dc3UL,
@@ -229,7 +230,7 @@ static const dice_sha2_word32 K256[64] = {
 };
 
 /* Initial hash value H for SHA-256: */
-static const dice_sha2_word32 sha256_initial_hash_value[8] = {
+static const dice_sha2_word32 sha256_initial_hash_value _Checked[8] = {
     0x6a09e667UL,
     0xbb67ae85UL,
     0x3c6ef372UL,
@@ -247,9 +248,9 @@ static const dice_sha2_word32 sha256_initial_hash_value[8] = {
 //static const char *sha2_hex_digits = "0123456789abcdef";
 
 /*** SHA-256: *********************************************************/
-void DICE_SHA256_Init(DICE_SHA256_CONTEXT *context)
+void DICE_SHA256_Init(DICE_SHA256_CONTEXT *context : itype(_Ptr<DICE_SHA256_CONTEXT>))
 {
-    if (context == (DICE_SHA256_CONTEXT *)0) {
+    if (context == (_Ptr<DICE_SHA256_CONTEXT>)0) {
         return;
     }
     context->magic = HASH_MAGIC_VALUE;
@@ -258,13 +259,13 @@ void DICE_SHA256_Init(DICE_SHA256_CONTEXT *context)
     context->bitcount = 0;
 }
 
-static void SHA256_Transform(DICE_SHA256_CONTEXT *context, const dice_sha2_word32 *data)
+static void SHA256_Transform(_Ptr<DICE_SHA256_CONTEXT> context, _Array_ptr<const dice_sha2_word32> data : count(16))
 {
     dice_sha2_word32 a, b, c, d, e, f, g, h, s0, s1;
-    dice_sha2_word32 T1, T2, *W256;
+    dice_sha2_word32 T1, T2;
     int     j;
 
-    W256 = (dice_sha2_word32 *)context->buffer;
+    _Array_ptr<dice_sha2_word32> W256 : byte_count(SHA256_BLOCK_LENGTH) = (_Array_ptr<dice_sha2_word32>)context->buffer;
 
     /* Initialize registers with the prev. intermediate value */
     a = context->state[0];
@@ -285,7 +286,8 @@ static void SHA256_Transform(DICE_SHA256_CONTEXT *context, const dice_sha2_word3
         T1 = h + Sigma1_256(e) + Ch(e, f, g) + K256[j] + W256[j];
 #else /* BYTE_ORDER == LITTLE_ENDIAN */
         /* Apply the SHA-256 compression function to update a..h with copy */
-        T1 = h + Sigma1_256(e) + Ch(e, f, g) + K256[j] + (W256[j] = *data++);
+		W256[j] = *data++;
+        T1 = h + Sigma1_256(e) + Ch(e, f, g) + K256[j] + W256[j];
 #endif /* BYTE_ORDER == LITTLE_ENDIAN */
         T2 = Sigma0_256(a) + Maj(a, b, c);
         h = g;
@@ -337,7 +339,7 @@ static void SHA256_Transform(DICE_SHA256_CONTEXT *context, const dice_sha2_word3
     a = b = c = d = e = f = g = h = T1 = T2 = 0;
 }
 
-void DICE_SHA256_Update(DICE_SHA256_CONTEXT *context, const dice_sha2_uint8_t *data, size_t len)
+void DICE_SHA256_Update(DICE_SHA256_CONTEXT *context : itype(_Ptr<DICE_SHA256_CONTEXT>), const dice_sha2_uint8_t *data : itype(_Array_ptr<const dice_sha2_uint8_t>) byte_count(len), size_t len)
 {
     unsigned int    freespace, usedspace;
 
@@ -353,14 +355,21 @@ void DICE_SHA256_Update(DICE_SHA256_CONTEXT *context, const dice_sha2_uint8_t *d
 
         if (len >= freespace) {
             /* Fill the buffer completely and process it */
-            MEMCPY_BCOPY(&context->buffer[usedspace], data, freespace);
+			// TODO: Unsigned integer >= not yet supported, so needs cast!
+			_Array_ptr<uint8_t> midBuffer : byte_count((size_t)freespace) = 
+				_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&context->buffer[usedspace], byte_count((size_t)freespace));
+			_Array_ptr<const dice_sha2_uint8_t> tmpData: byte_count((size_t)freespace) = 
+				_Dynamic_bounds_cast<_Array_ptr<const dice_sha2_uint8_t>>(data, byte_count((size_t)freespace));
+            MEMCPY_BCOPY(midBuffer, tmpData, freespace);
             context->bitcount += freespace << 3;
             len -= freespace;
             data += freespace;
-            SHA256_Transform(context, (dice_sha2_word32 *)context->buffer);
+            SHA256_Transform(context, (_Array_ptr<const dice_sha2_word32>)context->buffer);
         } else {
             /* The buffer is not yet full */
-            MEMCPY_BCOPY(&context->buffer[usedspace], data, len);
+			_Array_ptr<uint8_t> midBuffer : byte_count(len) = 
+				_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&context->buffer[usedspace], byte_count(len));
+            MEMCPY_BCOPY(midBuffer, data, len);
             context->bitcount += len << 3;
             /* Clean up: */
             usedspace = freespace = 0;
@@ -369,27 +378,31 @@ void DICE_SHA256_Update(DICE_SHA256_CONTEXT *context, const dice_sha2_uint8_t *d
     }
     while (len >= SHA256_BLOCK_LENGTH) {
         /* Process as many complete blocks as we can */
-        SHA256_Transform(context, (dice_sha2_word32 *)data);
+		_Array_ptr<const dice_sha2_word32> blockOfData : count(16) = 
+			_Dynamic_bounds_cast<_Array_ptr<const dice_sha2_word32>>(data, count(16));
+        SHA256_Transform(context, blockOfData);
         context->bitcount += SHA256_BLOCK_LENGTH << 3;
         len -= SHA256_BLOCK_LENGTH;
         data += SHA256_BLOCK_LENGTH;
     }
     if (len > 0) {
         /* There's left-overs, so save 'em */
-        MEMCPY_BCOPY(context->buffer, data, len);
+		// Since len no longer >= SHA256_BLOCK_LENGTH it definitely fits
+		_Array_ptr<uint8_t> beginBuffer : byte_count(len) = _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(context->buffer, byte_count(len));
+        MEMCPY_BCOPY(beginBuffer, data, len);
         context->bitcount += len << 3;
     }
     /* Clean up: */
     usedspace = freespace = 0;
 }
 
-void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context, dice_sha2_uint8_t *digest)
+void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context : itype(_Ptr<DICE_SHA256_CONTEXT>), dice_sha2_uint8_t *digest : itype(_Array_ptr<dice_sha2_uint8_t>) byte_count(SHA256_DIGEST_LENGTH))
 {
-    dice_sha2_word32 *d = (dice_sha2_word32 *)digest;
+    _Array_ptr<dice_sha2_word32> d : byte_count(SHA256_DIGEST_LENGTH) = (_Array_ptr<dice_sha2_word32>)digest;
     unsigned int    usedspace;
 
     /* If no digest buffer is passed, we don't bother doing this: */
-    if (digest != (dice_sha2_uint8_t *)0) {
+    if (digest != (_Array_ptr<dice_sha2_uint8_t>)0) {
         usedspace = (context->bitcount >> 3) % SHA256_BLOCK_LENGTH;
 #if BYTE_ORDER == LITTLE_ENDIAN
         /* Convert FROM host uint8_t order */
@@ -401,13 +414,18 @@ void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context, dice_sha2_uint8_t *digest)
 
             if (usedspace <= SHA256_SHORT_BLOCK_LENGTH) {
                 /* Set-up for the last transform: */
-                MEMSET_BZERO(&context->buffer[usedspace], SHA256_SHORT_BLOCK_LENGTH - usedspace);
+				_Array_ptr<char> midBuffer : count((size_t)SHA256_SHORT_BLOCK_LENGTH - usedspace) = 
+					_Dynamic_bounds_cast<_Array_ptr<char>>(&context->buffer[usedspace], count((size_t)SHA256_SHORT_BLOCK_LENGTH - usedspace));
+                MEMSET_BZERO(midBuffer, (size_t)SHA256_SHORT_BLOCK_LENGTH - usedspace);
             } else {
                 if (usedspace < SHA256_BLOCK_LENGTH) {
-                    MEMSET_BZERO(&context->buffer[usedspace], SHA256_BLOCK_LENGTH - usedspace);
+					// TODO: Not exactly sure why the compiler is confused here
+					_Array_ptr<char> midBuffer : count((size_t)SHA256_BLOCK_LENGTH - usedspace) = 
+						_Dynamic_bounds_cast<_Array_ptr<char>>(&context->buffer[usedspace], count((size_t)SHA256_BLOCK_LENGTH - usedspace));
+                    MEMSET_BZERO(midBuffer, (size_t)SHA256_BLOCK_LENGTH - usedspace);
                 }
                 /* Do second-to-last transform: */
-                SHA256_Transform(context, (dice_sha2_word32 *)context->buffer);
+                SHA256_Transform(context, (_Array_ptr<dice_sha2_word32>)context->buffer);
 
                 /* And set-up for the last transform: */
                 MEMSET_BZERO(context->buffer, SHA256_SHORT_BLOCK_LENGTH);
@@ -420,10 +438,13 @@ void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context, dice_sha2_uint8_t *digest)
             *context->buffer = 0x80;
         }
         /* Set the bit count: */
-        *(dice_sha2_word64 *)&context->buffer[SHA256_SHORT_BLOCK_LENGTH] = context->bitcount;
+		// TODO: This was complicated to reason about: how many bits to make a word64, and why isn't it obvious that (64 - (64 - 8)) is the right amount?
+		_Array_ptr<uint8_t> bitArrayCountSpot : count(SHA256_BLOCK_LENGTH - SHA256_SHORT_BLOCK_LENGTH) = _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&context->buffer[SHA256_SHORT_BLOCK_LENGTH], count(SHA256_BLOCK_LENGTH - SHA256_SHORT_BLOCK_LENGTH));
+		_Ptr<dice_sha2_word64> bitCountSpot = (_Ptr<dice_sha2_word64>)bitArrayCountSpot;
+        *bitCountSpot = context->bitcount;
 
         /* Final transform: */
-        SHA256_Transform(context, (dice_sha2_word32 *)context->buffer);
+        SHA256_Transform(context, (_Array_ptr<dice_sha2_word32>)context->buffer);
 
 #if BYTE_ORDER == LITTLE_ENDIAN
         {
@@ -444,14 +465,14 @@ void DICE_SHA256_Final(DICE_SHA256_CONTEXT *context, dice_sha2_uint8_t *digest)
     usedspace = 0;
 }
 
-void DiceSHA256Ctx(DICE_SHA256_CONTEXT *context, const uint8_t *buf, size_t bufSize, uint8_t *digest)
+void DiceSHA256Ctx(DICE_SHA256_CONTEXT *context : itype(_Ptr<DICE_SHA256_CONTEXT>), const uint8_t *buf : itype(_Array_ptr<const uint8_t>) byte_count(bufSize), size_t bufSize, uint8_t *digest : itype(_Array_ptr<uint8_t>) byte_count(SHA256_DIGEST_LENGTH))
 {
     DICE_SHA256_Init(context);
     DICE_SHA256_Update(context, buf, bufSize);
     DICE_SHA256_Final(context, digest);
 }
 
-void DiceSHA256(const uint8_t *buf, size_t bufSize, uint8_t *digest)
+void DiceSHA256(const uint8_t *buf : itype(_Array_ptr<const uint8_t>) byte_count(bufSize), size_t bufSize, uint8_t *digest : itype(_Array_ptr<uint8_t>) byte_count(SHA256_DIGEST_LENGTH))
 {
     DICE_SHA256_CONTEXT context;
     DICE_SHA256_Init(&context);
@@ -459,7 +480,7 @@ void DiceSHA256(const uint8_t *buf, size_t bufSize, uint8_t *digest)
     DICE_SHA256_Final(&context, digest);
 }
 
-void DiceSHA256_2(const uint8_t *buf1, size_t bufSize1, const uint8_t *buf2, size_t bufSize2, uint8_t *digest)
+void DiceSHA256_2(const uint8_t *buf1 : itype(_Array_ptr<const uint8_t>) byte_count(bufSize1), size_t bufSize1, const uint8_t *buf2 : itype(_Array_ptr<const uint8_t>) byte_count(bufSize2), size_t bufSize2, uint8_t *digest : itype(_Array_ptr<uint8_t>) byte_count(SHA256_DIGEST_LENGTH))
 {
     DICE_SHA256_CONTEXT context;
     DICE_SHA256_Init(&context);
@@ -467,3 +488,5 @@ void DiceSHA256_2(const uint8_t *buf1, size_t bufSize1, const uint8_t *buf2, siz
     DICE_SHA256_Update(&context, buf2, bufSize2);
     DICE_SHA256_Final(&context, digest);
 }
+
+#pragma CHECKED_SCOPE OFF

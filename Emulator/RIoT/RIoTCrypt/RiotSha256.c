@@ -48,8 +48,10 @@
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
 #include "stdint.h"
-#include "string.h" // memcpy/memset
+#include "string_checked.h" // memcpy/memset
 #include "RiotSha256.h"
+
+#pragma CHECKED_SCOPE ON
 
 /*** SHA-256 Machine Architecture Definitions *****************/
 /*
@@ -206,11 +208,11 @@
  * library -- they are intended for private internal visibility/use
  * only.
  */
-static void SHA256_Transform(RIOT_SHA256_CONTEXT *, const sha2_word32 *);
+static void SHA256_Transform(_Ptr<RIOT_SHA256_CONTEXT>, _Array_ptr<const sha2_word32> data : byte_count(16));
 
 /*** SHA-XYZ INITIAL HASH VALUES AND CONSTANTS ************************/
 /* Hash constant words K for SHA-256: */
-static const sha2_word32 K256[64] = {
+static const sha2_word32 K256 _Checked[64] = {
     0x428a2f98UL, 0x71374491UL, 0xb5c0fbcfUL, 0xe9b5dba5UL,
     0x3956c25bUL, 0x59f111f1UL, 0x923f82a4UL, 0xab1c5ed5UL,
     0xd807aa98UL, 0x12835b01UL, 0x243185beUL, 0x550c7dc3UL,
@@ -230,7 +232,7 @@ static const sha2_word32 K256[64] = {
 };
 
 /* Initial hash value H for SHA-256: */
-static const sha2_word32 sha256_initial_hash_value[8] = {
+static const sha2_word32 sha256_initial_hash_value _Checked[8] = {
     0x6a09e667UL,
     0xbb67ae85UL,
     0x3c6ef372UL,
@@ -248,9 +250,9 @@ static const sha2_word32 sha256_initial_hash_value[8] = {
 //static const char *sha2_hex_digits = "0123456789abcdef";
 
 /*** SHA-256: *********************************************************/
-void RIOT_SHA256_Init(RIOT_SHA256_CONTEXT *context)
+void RIOT_SHA256_Init(RIOT_SHA256_CONTEXT *context : itype(_Ptr<RIOT_SHA256_CONTEXT>))
 {
-    if (context == (RIOT_SHA256_CONTEXT *)0) {
+    if (context == (_Ptr<RIOT_SHA256_CONTEXT>)0) {
         return;
     }
     context->magic = HASH_MAGIC_VALUE;
@@ -259,13 +261,14 @@ void RIOT_SHA256_Init(RIOT_SHA256_CONTEXT *context)
     context->bitcount = 0;
 }
 
-static void SHA256_Transform(RIOT_SHA256_CONTEXT *context, const sha2_word32 *data)
+static void SHA256_Transform(_Ptr<RIOT_SHA256_CONTEXT> context, _Array_ptr<const sha2_word32> data : byte_count(16))
 {
     sha2_word32 a, b, c, d, e, f, g, h, s0, s1;
-    sha2_word32 T1, T2, *W256;
+	sha2_word32 T1, T2;
+	_Array_ptr<sha2_word32> W256 : byte_count(16) = NULL;
     int     j;
 
-    W256 = (sha2_word32 *)context->buffer;
+    W256 = (_Array_ptr<sha2_word32>)context->buffer;
 
     /* Initialize registers with the prev. intermediate value */
     a = context->state[0];
@@ -338,7 +341,9 @@ static void SHA256_Transform(RIOT_SHA256_CONTEXT *context, const sha2_word32 *da
     a = b = c = d = e = f = g = h = T1 = T2 = 0;
 }
 
-void RIOT_SHA256_Update(RIOT_SHA256_CONTEXT *context, const sha2_uint8_t *data, size_t len)
+void RIOT_SHA256_Update(RIOT_SHA256_CONTEXT *context : itype(_Ptr<RIOT_SHA256_CONTEXT>), 
+	                    const sha2_uint8_t *data : byte_count(len), 
+						size_t len)
 {
     unsigned int    freespace, usedspace;
 
@@ -348,7 +353,8 @@ void RIOT_SHA256_Update(RIOT_SHA256_CONTEXT *context, const sha2_uint8_t *data, 
     }
 
     /* Sanity check: */
-    assert(context != (RIOT_SHA256_CONTEXT *)0 && data != (sha2_uint8_t *)0 && context->magic == HASH_MAGIC_VALUE);
+
+	assert(context != (_Ptr<RIOT_SHA256_CONTEXT>)0 && data != (_Ptr<sha2_uint8_t>)0 && context->magic == HASH_MAGIC_VALUE);
 
     usedspace = (context->bitcount >> 3) % SHA256_BLOCK_LENGTH;
     if (usedspace > 0) {
@@ -357,14 +363,22 @@ void RIOT_SHA256_Update(RIOT_SHA256_CONTEXT *context, const sha2_uint8_t *data, 
 
         if (len >= freespace) {
             /* Fill the buffer completely and process it */
-            MEMCPY_BCOPY(&context->buffer[usedspace], data, freespace);
+			// TODO: Unsigned integer >= not yet supported, so needs cast!
+            // TODO: What I don't understand is why all these casting to size_t is needed for the byte_counts
+			_Array_ptr<uint8_t> midBuffer : byte_count((size_t)freespace) = 
+				_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&context->buffer[usedspace], byte_count((size_t)freespace));
+			_Array_ptr<const sha2_uint8_t> tmpData: byte_count((size_t)freespace) = 
+				_Dynamic_bounds_cast<_Array_ptr<const sha2_uint8_t>>(data, byte_count((size_t)freespace));
+			MEMCPY_BCOPY(midBuffer, tmpData, freespace);
             context->bitcount += freespace << 3;
             len -= freespace;
             data += freespace;
-            SHA256_Transform(context, (sha2_word32 *)context->buffer);
+            SHA256_Transform(context, (_Array_ptr<sha2_word32>)context->buffer);
         } else {
             /* The buffer is not yet full */
-            MEMCPY_BCOPY(&context->buffer[usedspace], data, len);
+			_Array_ptr<uint8_t> midBuffer : byte_count(len) = 
+				_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&context->buffer[usedspace], byte_count(len));
+            MEMCPY_BCOPY(midBuffer, data, len);
             context->bitcount += len << 3;
             /* Clean up: */
             usedspace = freespace = 0;
@@ -373,30 +387,35 @@ void RIOT_SHA256_Update(RIOT_SHA256_CONTEXT *context, const sha2_uint8_t *data, 
     }
     while (len >= SHA256_BLOCK_LENGTH) {
         /* Process as many complete blocks as we can */
-        SHA256_Transform(context, (sha2_word32 *)data);
+		_Array_ptr<const sha2_word32> blockOfData : count(16) =
+			_Dynamic_bounds_cast<_Array_ptr<const sha2_word32>>(data, count(16));
+        SHA256_Transform(context, blockOfData);
         context->bitcount += SHA256_BLOCK_LENGTH << 3;
         len -= SHA256_BLOCK_LENGTH;
         data += SHA256_BLOCK_LENGTH;
     }
     if (len > 0) {
         /* There's left-overs, so save 'em */
-        MEMCPY_BCOPY(context->buffer, data, len);
-        context->bitcount += len << 3;
+		// Since len no longer >= SHA256_BLOCK_LENGTH it definitely fits
+		_Array_ptr<uint8_t> beginBuffer : byte_count(len) = _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(context->buffer, byte_count(len));
+		MEMCPY_BCOPY(beginBuffer, data, len);
+		context->bitcount += len << 3;
     }
     /* Clean up: */
     usedspace = freespace = 0;
 }
 
-void RIOT_SHA256_Final(RIOT_SHA256_CONTEXT *context, sha2_uint8_t *digest)
+void RIOT_SHA256_Final(RIOT_SHA256_CONTEXT *context : itype(_Ptr<RIOT_SHA256_CONTEXT>), 
+	                   sha2_uint8_t *digest : byte_count(SHA256_DIGEST_LENGTH))
 {
-    sha2_word32 *d = (sha2_word32 *)digest;
+    _Array_ptr<sha2_word32> d : byte_count(SHA256_DIGEST_LENGTH) = (_Array_ptr<sha2_word32>)digest;
     unsigned int    usedspace;
 
     /* Sanity check: */
-    assert(context != (RIOT_SHA256_CONTEXT *)0 && context->magic == HASH_MAGIC_VALUE);
+    //assert(context != (_Ptr<RIOT_SHA256_CONTEXT>)0 && context->magic == HASH_MAGIC_VALUE);
 
     /* If no digest buffer is passed, we don't bother doing this: */
-    if (digest != (sha2_uint8_t *)0) {
+    if (digest != (_Ptr<sha2_uint8_t>)0) {
         usedspace = (context->bitcount >> 3) % SHA256_BLOCK_LENGTH;
 #if BYTE_ORDER == LITTLE_ENDIAN
         /* Convert FROM host uint8_t order */
@@ -408,13 +427,17 @@ void RIOT_SHA256_Final(RIOT_SHA256_CONTEXT *context, sha2_uint8_t *digest)
 
             if (usedspace <= SHA256_SHORT_BLOCK_LENGTH) {
                 /* Set-up for the last transform: */
-                MEMSET_BZERO(&context->buffer[usedspace], SHA256_SHORT_BLOCK_LENGTH - usedspace);
+				_Array_ptr<char> midBuffer : count((size_t)(SHA256_SHORT_BLOCK_LENGTH - usedspace)) = 
+					_Dynamic_bounds_cast<_Array_ptr<char>>(&context->buffer[usedspace], count((size_t)(SHA256_SHORT_BLOCK_LENGTH - usedspace)));
+                MEMSET_BZERO(midBuffer, SHA256_SHORT_BLOCK_LENGTH - usedspace);
             } else {
                 if (usedspace < SHA256_BLOCK_LENGTH) {
-                    MEMSET_BZERO(&context->buffer[usedspace], SHA256_BLOCK_LENGTH - usedspace);
+					_Array_ptr<char> midBuffer : count((size_t)(SHA256_BLOCK_LENGTH - usedspace)) =
+						_Dynamic_bounds_cast<_Array_ptr<char>>(&context->buffer[usedspace], count((size_t)(SHA256_BLOCK_LENGTH - usedspace)));
+                    MEMSET_BZERO(midBuffer, SHA256_BLOCK_LENGTH - usedspace);
                 }
                 /* Do second-to-last transform: */
-                SHA256_Transform(context, (sha2_word32 *)context->buffer);
+                SHA256_Transform(context, (_Array_ptr<sha2_word32>)context->buffer);
 
                 /* And set-up for the last transform: */
                 MEMSET_BZERO(context->buffer, SHA256_SHORT_BLOCK_LENGTH);
@@ -427,10 +450,13 @@ void RIOT_SHA256_Final(RIOT_SHA256_CONTEXT *context, sha2_uint8_t *digest)
             *context->buffer = 0x80;
         }
         /* Set the bit count: */
-        *(sha2_word64 *)&context->buffer[SHA256_SHORT_BLOCK_LENGTH] = context->bitcount;
+		// TODO: This was complicated to reason about: how many bits to make a word64, and why isn't it obvious that (64 - (64 - 8)) is the right amount?
+		_Array_ptr<uint8_t> bitArrayCountSpot : count(SHA256_BLOCK_LENGTH - SHA256_SHORT_BLOCK_LENGTH) = _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(&context->buffer[SHA256_SHORT_BLOCK_LENGTH], count(SHA256_BLOCK_LENGTH - SHA256_SHORT_BLOCK_LENGTH));
+		_Ptr<sha2_word64> bitCountSpot = (_Ptr<sha2_word64>)bitArrayCountSpot;
+		*bitCountSpot = context->bitcount;
 
         /* Final transform: */
-        SHA256_Transform(context, (sha2_word32 *)context->buffer);
+        SHA256_Transform(context, (_Array_ptr<sha2_word32>)context->buffer);
 
 #if BYTE_ORDER == LITTLE_ENDIAN
         {
@@ -451,17 +477,23 @@ void RIOT_SHA256_Final(RIOT_SHA256_CONTEXT *context, sha2_uint8_t *digest)
     usedspace = 0;
 }
 
-void RIOT_SHA256_Block_ctx(RIOT_SHA256_CONTEXT *context, const uint8_t *buf, size_t bufSize, uint8_t *digest)
+void RIOT_SHA256_Block_ctx(RIOT_SHA256_CONTEXT *context : itype(_Ptr<RIOT_SHA256_CONTEXT>), 
+						   const uint8_t *buf : byte_count(bufSize),
+						   size_t bufSize, 
+                           uint8_t *digest : byte_count(SHA256_DIGEST_LENGTH))
 {
     RIOT_SHA256_Init(context);
     RIOT_SHA256_Update(context, buf, bufSize);
     RIOT_SHA256_Final(context, digest);
 }
 
-void RIOT_SHA256_Block(const uint8_t *buf, size_t bufSize, uint8_t *digest)
+void RIOT_SHA256_Block(const uint8_t *buf : byte_count(bufSize), 
+	                   size_t bufSize, uint8_t *digest : byte_count(SHA256_DIGEST_LENGTH))
 {
     RIOT_SHA256_CONTEXT context;
     RIOT_SHA256_Init(&context);
     RIOT_SHA256_Update(&context, buf, bufSize);
     RIOT_SHA256_Final(&context, digest);
 }
+
+#pragma CHECKED_SCOPE OFF

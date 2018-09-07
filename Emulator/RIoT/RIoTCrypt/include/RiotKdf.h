@@ -22,6 +22,8 @@
 extern "C" {
 #endif
 
+#pragma CHECKED_SCOPE ON
+
 // *
 // Create the fixed content for a KDF
 // @param fixed  buffer to receive the fixed content
@@ -33,11 +35,11 @@ extern "C" {
 // @param numberOfBits the number of bits to be produced
 //
 size_t RIOT_KDF_FIXED(
-    uint8_t         *fixed,
+    uint8_t         *fixed   : byte_count(fixedSize),
     size_t          fixedSize,
-    const uint8_t   *label,
+    const uint8_t   *label   : itype(_Nt_array_ptr<const uint8_t>) byte_count(labelSize),
     size_t          labelSize,
-    const uint8_t   *context,
+    const uint8_t   *context : byte_count(contextSize),
     size_t          contextSize,
     uint32_t        numberOfBits
 );
@@ -53,13 +55,15 @@ size_t RIOT_KDF_FIXED(
 // @param fixedSize
 //
 void RIOT_KDF_SHA256(
-    uint8_t         *out,
-    const uint8_t   *key,
+    uint8_t         *out     : byte_count(SHA256_DIGEST_LENGTH),
+    const uint8_t   *key     : byte_count(keySize),
     size_t          keySize,
-    uint32_t        *counter,
-    const uint8_t   *fixed,
+    uint32_t        *counter : itype(_Ptr<uint32_t>),
+    const uint8_t   *fixed   : byte_count(fixedSize),
     size_t          fixedSize
 );
+
+#pragma CHECKED_SCOPE OFF
 
 #ifdef __cplusplus
 }

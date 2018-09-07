@@ -23,6 +23,8 @@
 #define _AES_COMPILE_
 #include "RiotAesTables.c"
 
+#pragma CHECKED_SCOPE ON
+
 #define ROTL8(x)  ((((uint32_t)(x)) << 8)  | (((uint32_t)(x)) >> 24))
 #define ROTL16(x) ((((uint32_t)(x)) << 16) | (((uint32_t)(x)) >> 16))
 #define ROTL24(x) ((((uint32_t)(x)) << 24) | (((uint32_t)(x)) >> 8))
@@ -66,7 +68,8 @@
     y2 = lastround_column(x2, x3, x0, x1) ^ *key++;     \
     y3 = lastround_column(x3, x0, x1, x2) ^ *key++;
 
-static void Pack32(uint32_t *u32, const uint8_t *u8)
+static void Pack32(_Array_ptr<uint32_t> u32 : byte_count(AES_BLOCK_SIZE), 
+	               _Array_ptr<const uint8_t> u8 : byte_count(AES_BLOCK_SIZE))
 {
 #if HOST_IS_LITTLE_ENDIAN
     memcpy(u32, u8, 16);
@@ -78,7 +81,8 @@ static void Pack32(uint32_t *u32, const uint8_t *u8)
 #endif
 }
 
-static void Unpack32(uint8_t *u8, const uint32_t *u32)
+static void Unpack32(_Array_ptr<uint8_t> u8 : byte_count(16), 
+	                 _Array_ptr<const uint32_t> u32 : byte_count(16))
 {
 #if HOST_IS_LITTLE_ENDIAN
     memcpy(u8, u32, 16);
@@ -103,7 +107,9 @@ static uint32_t SubBytes(uint32_t a)
 
 #define ROUNDS 10
 
-static void EncryptRounds(uint32_t *out, uint32_t *in, uint32_t *key)
+static void EncryptRounds(_Array_ptr<uint32_t> out : count(4), 
+	                      _Array_ptr<uint32_t> in  : count(4), 
+	                      _Array_ptr<uint32_t> key : count(AES128_ENCRYPT_SCHEDULE_LEN))
 {
     int i;
     uint32_t x0 = in[0] ^ key[0];
@@ -130,12 +136,17 @@ static void EncryptRounds(uint32_t *out, uint32_t *in, uint32_t *key)
     out[3] = x3;
 }
 
-void RIOT_AES128_Enable(const uint8_t *key, aes128EncryptKey_t *aesEncryptKey)
+void RIOT_AES128_Enable(const uint8_t *key : byte_count(AES_BLOCK_SIZE), 
+						aes128EncryptKey_t *aesEncryptKey : itype(_Ptr<aes128EncryptKey_t_ch>))
 {
     int i;
-    uint32_t *fkey = (uint32_t *)aesEncryptKey;
+    _Array_ptr<uint32_t> beginKey : byte_count(AES_BLOCK_SIZE) = 
+		(_Array_ptr<uint32_t>)aesEncryptKey;
 
-    Pack32(fkey, key);
+    Pack32(beginKey, key);
+
+	_Array_ptr<uint32_t> fkey : byte_count(sizeof(aes128EncryptKey_t_ch)) = (_Array_ptr<uint32_t>)aesEncryptKey;
+
     for (i = 0; i <= ROUNDS; ++i, fkey += 4) {
         fkey[4] = fkey[0] ^ SubBytes(ROTL24(fkey[3])) ^ Rconst[i];
         fkey[5] = fkey[1] ^ fkey[4];
@@ -145,21 +156,24 @@ void RIOT_AES128_Enable(const uint8_t *key, aes128EncryptKey_t *aesEncryptKey)
 }
 
 
-void RIOT_AES128_Disable(aes128EncryptKey_t *aesEncryptionKey)
+void RIOT_AES128_Disable(aes128EncryptKey_t *aesEncryptionKey : itype(_Ptr<aes128EncryptKey_t_ch>))
 {
     memset(aesEncryptionKey, 0, sizeof(aes128EncryptKey_t));
 }
 
 #if AES_CTR_MODE
-void RIOT_AES_CTR_128(const aes128EncryptKey_t *aes128EncryptKey, const uint8_t *in,
-                      uint8_t *out, uint32_t len, uint8_t *ctr)
+void RIOT_AES_CTR_128(const aes128EncryptKey_t *aes128EncryptKey : itype(_Ptr<const aes128EncryptKey_t_ch>),
+	const uint8_t *in : byte_count(len),
+	uint8_t *out : byte_count(len), 
+    uint32_t len,
+	uint8_t *ctr : byte_count(AES_BLOCK_SIZE))
 {
-    uint32_t     counter[4];
+    uint32_t     counter _Checked[4];
 #if HOST_IS_LITTLE_ENDIAN
     // Point to the big endian counter at the end of the IV
-    uint8_t     *pCtr = (uint8_t *)(&counter[3]);
+    _Array_ptr<uint8_t> pCtr : bounds(counter, counter + 4) = (_Array_ptr<uint8_t>)(&counter[3]);
 #endif
-    uint32_t     tmp[4];
+    uint32_t     tmp _Checked[4];
 
     // Counter is really the IV for the encryption. The counter will take the
     // low-order 4 octets of the IV and use that as a counter.
@@ -169,8 +183,10 @@ void RIOT_AES_CTR_128(const aes128EncryptKey_t *aes128EncryptKey, const uint8_t 
 
         // DJM: DICE (min->MIN)
         uint32_t n = MIN(len, 16);
-        uint8_t *p = (uint8_t *)tmp;
-        EncryptRounds(tmp, counter, (uint32_t *)aes128EncryptKey);
+		// TODO: casting ints to bytes, need a dynamic bounds cast
+        _Array_ptr<uint8_t> p : byte_count(n) = 
+			_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(tmp, byte_count(n));
+        EncryptRounds(tmp, counter, (_Array_ptr<uint32_t>)&(*aes128EncryptKey));
         len -= n;
         while (n--) {
             *out++ = *p++ ^ *in++;
@@ -196,27 +212,34 @@ void RIOT_AES_CTR_128(const aes128EncryptKey_t *aes128EncryptKey, const uint8_t 
 #endif
 
 #if AES_CBC_MODE
-void RIOT_AES_CBC_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,
-                              const uint8_t *in, uint8_t *out, uint32_t len,
-                              uint8_t *iv)
+void RIOT_AES_CBC_128_ENCRYPT(
+    const aes128EncryptKey_t *aes128EncryptKey : itype(_Ptr<const aes128EncryptKey_t_ch>), 
+    const uint8_t *in : byte_count(len),
+    uint8_t *out : byte_count(len), 
+    uint32_t len,
+    uint8_t *iv : count(AES_BLOCK_SIZE))
 {
-    uint32_t xorbuf[4];
-    uint32_t ivt[4];
+    uint32_t xorbuf _Checked[AES_BLOCK_SIZE/sizeof(uint32_t)];
+    uint32_t ivt _Checked[AES_BLOCK_SIZE/sizeof(uint32_t)];
 
-    assert((len % 16) == 0);
+    assert(len > 0 && (len % AES_BLOCK_SIZE) == 0);
 
     Pack32(ivt, iv);
     while (len) {
-        int i;
-        Pack32(xorbuf, in);
-        for (i = 0; i < 4; ++i) {
+        uint32_t i;
+		// We know from the assert that len is a multiple of AES_BLOCK_SIZE
+        Pack32(xorbuf, _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(in, byte_count(AES_BLOCK_SIZE)));
+        for (i = 0; i < AES_BLOCK_SIZE / sizeof(uint32_t); ++i) {
             xorbuf[i] ^= ivt[i];
         }
-        EncryptRounds(ivt, xorbuf, (uint32_t *)aes128EncryptKey);
-        Unpack32(out, ivt);
-        out += 16;
-        in += 16;
-        len -= 16;
+
+        // TODO: need bundled block here
+        EncryptRounds(ivt, xorbuf, (_Array_ptr<uint32_t>)aes128EncryptKey);
+		// We know from the assert that len is a multiple of AES_BLOCK_SIZE
+        Unpack32(_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(out, byte_count(AES_BLOCK_SIZE)), ivt);
+        out += AES_BLOCK_SIZE;
+        in += AES_BLOCK_SIZE;
+        len -= AES_BLOCK_SIZE;
     }
     Unpack32(iv, ivt);
 }
@@ -224,18 +247,20 @@ void RIOT_AES_CBC_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,
 
 
 #if AES_ECB_MODE
-void RIOT_AES_ECB_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,
-                              const uint8_t *in, uint8_t *out, size_t size)
+void RIOT_AES_ECB_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey : itype(_Ptr<const aes128EncryptKey_t_ch>),
+	const uint8_t *in : byte_count(size),
+	uint8_t *out : byte_count(size), size_t size)
 {
-    uint32_t in32[4];
-    uint32_t out32[4];
+    uint32_t in32 _Checked[4];
+    uint32_t out32 _Checked[4];
 
-    assert((size % AES_BLOCK_SIZE) == 0);
+    assert(size > 0 && (size % AES_BLOCK_SIZE) == 0);
 
     for (; size != 0; size -= AES_BLOCK_SIZE) {
-        Pack32(in32, in);
-        EncryptRounds(out32, in32, (uint32_t *)aes128EncryptKey);
-        Unpack32(out, out32);
+		// We know from the assert that size is a multiple of AES_BLOCK_SIZE
+        Pack32(in32, _Dynamic_bounds_cast<_Array_ptr<uint8_t>>(in, byte_count(AES_BLOCK_SIZE)));
+        EncryptRounds(out32, in32, (_Array_ptr<uint32_t>)aes128EncryptKey);
+        Unpack32(_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(out, byte_count(AES_BLOCK_SIZE)), out32);
         in += AES_BLOCK_SIZE;
         out += AES_BLOCK_SIZE;
     }
@@ -250,7 +275,7 @@ void RIOT_AES_ECB_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,
 //#define CRYPTO_TESTS
 #ifdef CRYPTO_TESTS
 
-const char *modes[] = {
+_Nt_array_ptr<const char> modes _Checked[] = {
 #if AES_CTR_MODE
     "CTR",
 #endif
@@ -263,9 +288,11 @@ const char *modes[] = {
     ""
 };
 
-const char **riot_aes_modes(void)
+_Array_ptr<_Nt_array_ptr<const char>> riot_aes_modes(void)
 {
     return &modes[0];
 }
+
+#pragma CHECKED_SCOPE OFF
 
 #endif

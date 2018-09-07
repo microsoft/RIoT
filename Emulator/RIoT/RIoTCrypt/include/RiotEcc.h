@@ -20,11 +20,13 @@
 // 4-MAY-2015; RIoT adaptation (DennisMa;MSFT).
 //
 #include "RiotTarget.h"
-#include "RiotStatus.h"
+#include "../../RiotStatus.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#pragma CHECKED_SCOPE ON
 
 #define     ECDSA_SIGN      YES
 #define     ECDSA_VERIFY    YES
@@ -54,7 +56,7 @@ extern "C" {
 // 4 is in lieu of sizeof(uint32_t), so that the macro is usable in #if conditions
 //
 typedef struct {
-    uint32_t data[BIGLEN];
+    uint32_t data[BIGLEN] : itype(uint32_t _Checked[BIGLEN]);
 } bigval_t;
 
 
@@ -84,18 +86,21 @@ typedef ECDSA_sig_t ecc_signature;
 // @param inSize  number of bytes in the big-endian value
 //
 void
-BigIntToBigVal(bigval_t *tgt, const void *in, size_t inSize);
+BigIntToBigVal(bigval_t *tgt  : itype(_Ptr<bigval_t>), 
+			   const void *in : byte_count(inSize), 
+			   size_t inSize);
 
 //
 // Convert a number from bigval_t to big endian by uint8_t.
 // The conversion will stop after the first (BIGLEN - 1) words have been converted.
-// The output size must be (BIGLEN = 1) * 4 bytes long.
+// The output size must be (BIGLEN - 1) * 4 bytes long.
 //
 // @param out  pointer to the big endian value to be produced
 // @param in   pointer to the bigval_t to convert
 //
 void
-BigValToBigInt(void *out, const bigval_t *tgt);
+BigValToBigInt(void *out : byte_count((BIGLEN - 1) * 4), 
+			   const bigval_t *in : itype(_Ptr<const bigval_t>));
 
 //
 // Generates the Ephemeral Diffie-Hellman key pair.
@@ -106,7 +111,8 @@ BigValToBigInt(void *out, const bigval_t *tgt);
 // @return  - RIOT_SUCCESS if the key pair is successfully generated.
 //          - RIOT_ERR_SECURITY otherwise
 //
-RIOT_STATUS RIOT_GenerateDHKeyPair(ecc_publickey *publicKey, ecc_privatekey *privateKey);
+RIOT_STATUS RIOT_GenerateDHKeyPair(ecc_publickey *publicKey : itype(_Ptr<ecc_publickey>), 
+								   ecc_privatekey *privateKey : itype(_Ptr<ecc_privatekey>));
 
 //
 // Generates the Diffie-Hellman share secret.
@@ -118,9 +124,9 @@ RIOT_STATUS RIOT_GenerateDHKeyPair(ecc_publickey *publicKey, ecc_privatekey *pri
 // @return  - RIOT_SUCCESS if the share secret is successfully generated.
 //          - RIOT_ERR_SECURITY otherwise
 //
-RIOT_STATUS RIOT_GenerateShareSecret(ecc_publickey *peerPublicKey,
-                                     ecc_privatekey *privateKey,
-                                     ecc_secret *secret);
+RIOT_STATUS RIOT_GenerateShareSecret(ecc_publickey *peerPublicKey : itype(_Ptr<ecc_publickey>),
+                                     ecc_privatekey *privateKey : itype(_Ptr<ecc_privatekey>),
+                                     ecc_secret *secret : itype(_Ptr<ecc_secret>));
 //
 // Generates the DSA key pair.
 //
@@ -129,7 +135,8 @@ RIOT_STATUS RIOT_GenerateShareSecret(ecc_publickey *peerPublicKey,
 // @return  - RIOT_SUCCESS if the key pair is successfully generated
 //          - RIOT_ERR_SECURITY otherwise
 //
-RIOT_STATUS RIOT_GenerateDSAKeyPair(ecc_publickey *publicKey, ecc_privatekey *privateKey);
+RIOT_STATUS RIOT_GenerateDSAKeyPair(ecc_publickey *publicKey : itype(_Ptr<ecc_publickey>), 
+								    ecc_privatekey *privateKey : itype(_Ptr<ecc_privatekey>));
 
 // *
 // Derives a DSA key pair from the supplied value and label
@@ -142,8 +149,11 @@ RIOT_STATUS RIOT_GenerateDSAKeyPair(ecc_publickey *publicKey, ecc_privatekey *pr
 // @return  - RIOT_SUCCESS
 //
 RIOT_STATUS
-RIOT_DeriveDsaKeyPair(ecc_publickey *publicKey, ecc_privatekey *privateKey,
-                      bigval_t *srcVal, const uint8_t *label, size_t labelSize);
+RIOT_DeriveDsaKeyPair(ecc_publickey *publicKey : itype(_Ptr<ecc_publickey>), 
+					  ecc_privatekey *privateKey : itype(_Ptr<ecc_privatekey>),
+                      bigval_t *srcVal : itype(_Ptr<bigval_t>), 
+					  const uint8_t *label : itype(_Nt_array_ptr<const uint8_t>) byte_count(labelSize), 
+					  size_t labelSize);
 
 //
 // Sign a digest using the DSA key
@@ -153,7 +163,9 @@ RIOT_DeriveDsaKeyPair(ecc_publickey *publicKey, ecc_privatekey *privateKey,
 // @return  - RIOT_SUCCESS if the signing process succeeds
 //          - RIOT_ERR_SECURITY otherwise
 //
-RIOT_STATUS RIOT_DSASignDigest(const uint8_t *digest, const ecc_privatekey *signingPrivateKey, ecc_signature *sig);
+RIOT_STATUS RIOT_DSASignDigest(const uint8_t *digest : byte_count(SHA256_DIGEST_LENGTH), 
+							   const ecc_privatekey *signingPrivateKey : itype(_Ptr<const ecc_privatekey>), 
+							   ecc_signature *sig : itype(_Ptr<ecc_signature>));
 
 //
 // Sign a buffer using the DSA key
@@ -164,7 +176,10 @@ RIOT_STATUS RIOT_DSASignDigest(const uint8_t *digest, const ecc_privatekey *sign
 // @return  - RIOT_SUCCESS if the signing process succeeds
 //          - RIOT_ERR_SECURITY otherwise
 //
-RIOT_STATUS RIOT_DSASign(const uint8_t *buf, uint16_t len, const ecc_privatekey *signingPrivateKey, ecc_signature *sig);
+RIOT_STATUS RIOT_DSASign(const uint8_t *buf : byte_count((size_t)len), 
+						 uint16_t len, 
+						 const ecc_privatekey *signingPrivateKey : itype(_Ptr<const ecc_privatekey>), 
+						 ecc_signature *sig : itype(_Ptr<ecc_signature>));
 
 //
 // Verify DSA signature of a digest
@@ -174,7 +189,9 @@ RIOT_STATUS RIOT_DSASign(const uint8_t *buf, uint16_t len, const ecc_privatekey 
 // @return  - RIOT_SUCCESS if the signature verification succeeds
 //          - RIOT_ERR_SECURITY otherwise
 //
-RIOT_STATUS RIOT_DSAVerifyDigest(const uint8_t *digest, const ecc_signature *sig, const ecc_publickey *pubKey);
+RIOT_STATUS RIOT_DSAVerifyDigest(const uint8_t *digest : byte_count(SHA256_DIGEST_LENGTH), 
+								 const ecc_signature *sig : itype(_Ptr<const ecc_signature>), 
+								 const ecc_publickey *pubKey : itype(_Ptr<const ecc_publickey>));
 
 //
 // Verify DSA signature of a buffer
@@ -185,7 +202,12 @@ RIOT_STATUS RIOT_DSAVerifyDigest(const uint8_t *digest, const ecc_signature *sig
 // @return  - RIOT_SUCCESS if the signature verification succeeds
 //          - RIOT_ERR_SECURITY otherwise
 //
-RIOT_STATUS RIOT_DSAVerify(const uint8_t *buf, uint16_t len, const ecc_signature *sig, const ecc_publickey *pubKey);
+RIOT_STATUS RIOT_DSAVerify(const uint8_t *buf : byte_count((size_t)len), 
+						   uint16_t len, 
+						   const ecc_signature *sig : itype(_Ptr<const ecc_signature>), 
+						   const ecc_publickey *pubKey : itype(_Ptr<const ecc_publickey>));
+
+#pragma CHECKED_SCOPE OFF
 
 #ifdef __cplusplus
 }

@@ -6,18 +6,20 @@ Confidential Information
 */
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
+#include <string_checked.h>
 
 #ifdef WIN32
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
     #include <winsock2.h> // TODO: REMOVE THIS
 #else
-    #include <arpa/inet.h>
+    #include <arpa/inet_checked.h>
 #endif
 
 #include "RiotDerEnc.h"
 #include "RiotBase64.h"
+
+#pragma CHECKED_SCOPE ON
 
 // 
 // This file contains basic DER-encoding routines that are sufficient to create
@@ -70,7 +72,7 @@ Error:
 
 static int
 EncodeInt(
-    uint8_t     *Buffer,
+    _Array_ptr<uint8_t> Buffer : count(sizeof(int)),
     int          Val
 )
 // DER-encode Val into buffer. Function assumes the caller knows how many
@@ -96,9 +98,9 @@ Error:
 
 void
 DERInitContext(
-    DERBuilderContext   *Context,
-    uint8_t             *Buffer,
-    uint32_t             Length
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
+	uint8_t             *Buffer  : byte_count((size_t)Length),
+	uint32_t             Length
 )
 // Intialize the builder context.  The caller manages the encoding buffer.
 // Note that the encoding routines do conservative checks that the encoding
@@ -107,8 +109,8 @@ DERInitContext(
 // be in an indeterminate state, and the encoding must be restarted.
 {
     int j;
-    Context->Buffer = Buffer;
-    Context->Length = Length;
+	Context->Length = Length;
+	// The lengths are now the same, so dynamic bounds cast to the right one
     Context->Position = 0;
     memset(Buffer, 0, Length);
     for (j = 0; j < DER_MAX_NESTED; j++) {
@@ -120,17 +122,18 @@ DERInitContext(
 
 int
 DERGetEncodedLength(
-    DERBuilderContext   *Context
+    DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>)
 )
 // Get the length of encoded data.
 {
     return Context->Position;
 }
 
-int
+// TODO: -1 terminator is not safe. Unchecked
+_Unchecked int
 DERAddOID(
-    DERBuilderContext   *Context,
-    int                 *Values
+    DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
+    int                 *Values  : itype(_Array_ptr<int>)
 )
 // Add an OID. The OID is an int-array (max 16) terminated with -1
 {
@@ -202,8 +205,8 @@ Error:
 
 int
 DERAddUTF8String(
-    DERBuilderContext   *Context,
-    const char          *Str
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
+	const char          *Str : itype(_Nt_array_ptr<const char>)
 )
 {
     uint32_t j, numChar = (uint32_t)strlen(Str);
@@ -224,8 +227,8 @@ Error:
 
 int
 DERAddPrintableString(
-    DERBuilderContext   *Context,
-    const char          *Str
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
+	const char          *Str : itype(_Nt_array_ptr<const char>)
 )
 {
     uint32_t j, numChar = (uint32_t)strlen(Str);
@@ -246,8 +249,8 @@ Error:
 
 int
 DERAddUTCTime(
-    DERBuilderContext   *Context,
-    const char          *Str
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
+	const char          *Str : itype(_Nt_array_ptr<const char>)
 )
 // Format of time MUST be YYMMDDhhmmssZ
 {
@@ -269,9 +272,9 @@ Error:
 
 int
 DERAddIntegerFromArray(
-    DERBuilderContext   *Context,
-    uint8_t             *Val,
-    uint32_t            NumBytes
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
+	uint8_t             *Val : byte_count((size_t)NumBytes),
+	uint32_t            NumBytes
 )
 // Input integer is assumed unsigned with most signficant byte first.
 // A leading zero will be added if the most significant input bit is set.
@@ -310,19 +313,19 @@ Error:
 
 int
 DERAddInteger(
-    DERBuilderContext   *Context,
-    int                  Val
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
+	int                 Val
 )
 {
     long valx = htonl(Val); // TODO: REMOVE USAGE
-    int res = DERAddIntegerFromArray(Context, (uint8_t*)&valx, 4);
+    int res = DERAddIntegerFromArray(Context, (_Array_ptr<uint8_t>)&valx, 4);
     return res;
 }
 
 int
 DERAddShortExplicitInteger(
-    DERBuilderContext   *Context,
-    int                  Val
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
+	int                  Val
 )
 {
     long valx;
@@ -332,15 +335,15 @@ DERAddShortExplicitInteger(
     Context->Buffer[Context->Position++] = 3;
 
     valx = htonl(Val);
-    return (DERAddIntegerFromArray(Context, (uint8_t*)&valx, 4));
+    return (DERAddIntegerFromArray(Context, (_Array_ptr<uint8_t>)&valx, 4));
 Error:
     return -1;
 }
 
 int
 DERAddBoolean(
-    DERBuilderContext   *Context,
-    bool                 Val
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
+	bool                 Val
 )
 {
     CHECK_SPACE(Context);
@@ -358,19 +361,27 @@ Error:
 
 int
 DERAddBitString(
-    DERBuilderContext   *Context,
-    uint8_t             *BitString,
-    uint32_t             BitStringNumBytes
+	DERBuilderContext   *Context   : itype(_Ptr<DERBuilderContext>),
+	uint8_t             *BitString : byte_count((size_t)BitStringNumBytes),
+	uint32_t             BitStringNumBytes
 )
 {
     int len = BitStringNumBytes + 1;
 
     CHECK_SPACE2(Context, BitStringNumBytes);
     Context->Buffer[Context->Position++] = 0x03;
-    EncodeInt(Context->Buffer + Context->Position, len);
+
+	// CHECK_SPACE2 says enough space, so temp for the midpoint
+	_Array_ptr<uint8_t> lenInsertPoint : byte_count(sizeof(int)) =
+		_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(Context->Buffer + Context->Position, byte_count(sizeof(int)));
+    EncodeInt(lenInsertPoint, len);
     Context->Position += GetIntEncodedNumBytes(len);
     Context->Buffer[Context->Position++] = 0;
-    memcpy(Context->Buffer + Context->Position, BitString, BitStringNumBytes);
+
+	// Another temp
+	_Array_ptr<uint8_t> bitStringInsertPoint : byte_count((size_t)BitStringNumBytes) = 
+		_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(Context->Buffer + Context->Position, byte_count((size_t)BitStringNumBytes));
+    memcpy(bitStringInsertPoint, BitString, BitStringNumBytes);
     Context->Position += BitStringNumBytes;
     return 0;
 Error:
@@ -379,16 +390,24 @@ Error:
 
 int
 DERAddOctetString(
-    DERBuilderContext   *Context,
-    uint8_t             *OctetString,
-    uint32_t             OctetStringLen
+	DERBuilderContext   *Context     : itype(_Ptr<DERBuilderContext>),
+	uint8_t             *OctetString : byte_count((size_t)OctetStringLen),
+	uint32_t             OctetStringLen
 )
 {
     CHECK_SPACE2(Context, OctetStringLen);
     Context->Buffer[Context->Position++] = 0x04;
-    EncodeInt(Context->Buffer + Context->Position, OctetStringLen);
+
+	// TODO: CHECK_SPACE2 says enough space, so temp for the midpoint
+	_Array_ptr<uint8_t> lenInsertPoint : byte_count(sizeof(int)) =
+		_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(Context->Buffer + Context->Position, byte_count(sizeof(int)));
+    EncodeInt(lenInsertPoint, OctetStringLen);
     Context->Position += GetIntEncodedNumBytes(OctetStringLen);
-    memcpy(Context->Buffer + Context->Position, OctetString, OctetStringLen);
+
+	// TODO: Another temp
+	_Array_ptr<uint8_t> octetStringInsertPoint : byte_count((size_t)OctetStringLen) =
+		_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(Context->Buffer + Context->Position, byte_count((size_t)OctetStringLen));
+    memcpy(octetStringInsertPoint, OctetString, OctetStringLen);
     Context->Position += OctetStringLen;
     return 0;
 Error:
@@ -398,8 +417,8 @@ Error:
 
 int
 DERStartSequenceOrSet(
-    DERBuilderContext   *Context,
-    bool                 Sequence
+	DERBuilderContext   *Context  : itype(_Ptr<DERBuilderContext>),
+	bool                 Sequence
 )
 {
     uint8_t tp = Sequence ? 0x30 : 0x31;
@@ -419,8 +438,8 @@ Error:
 
 int
 DERStartExplicit(
-    DERBuilderContext   *Context,
-    uint32_t             Num
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
+	uint32_t             Num
 )
 {
     CHECK_SPACE(Context);
@@ -434,7 +453,7 @@ Error:
 }
 int
 DERStartEnvelopingOctetString(
-    DERBuilderContext   *Context
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>)
 )
 {
     CHECK_SPACE(Context);
@@ -449,7 +468,7 @@ Error:
 
 int
 DERStartEnvelopingBitString(
-    DERBuilderContext   *Context
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>)
 )
 {
     CHECK_SPACE(Context);
@@ -470,7 +489,7 @@ Error:
 
 int
 DERPopNesting(
-    DERBuilderContext   *Context
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>)
 )
 {
     int startPos, numBytes, encodedLenSize;
@@ -480,17 +499,25 @@ DERPopNesting(
 
     startPos = Context->CollectionStart[--Context->CollectionPos];
     numBytes = Context->Position - startPos;
+	_Dynamic_check(numBytes > 0);
 
     // How big is the length field?
     encodedLenSize = GetIntEncodedNumBytes(numBytes);
 
     // Make space for the length
-    memmove(Context->Buffer + startPos + encodedLenSize,
-            Context->Buffer + startPos,
+	// TODO: Temp variables for the right points - need to cast numBytes to unsigned
+	_Array_ptr<uint8_t> destPoint : byte_count((size_t)numBytes) =
+		_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(Context->Buffer + startPos + encodedLenSize, byte_count((size_t)numBytes));
+	_Array_ptr<uint8_t> srcPoint : byte_count((size_t)numBytes) =
+		_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(Context->Buffer + startPos, byte_count((size_t)numBytes));
+    memmove(destPoint,
+            srcPoint,
             numBytes);
 
     // Fill in the length
-    EncodeInt(Context->Buffer + startPos, numBytes);
+	_Array_ptr<uint8_t> lenInsertPoint : byte_count(sizeof(int)) =
+		_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(srcPoint, byte_count(sizeof(int)));
+    EncodeInt(lenInsertPoint, numBytes);
 
     // Bump up the next-pointer
     Context->Position += encodedLenSize;
@@ -502,7 +529,7 @@ Error:
 
 int
 DERTbsToCert(
-    DERBuilderContext   *Context
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>)
 )
 // This function assumes that Context contains a fully-formed "to be signed"
 // region of a certificate. DERTbsToCert copies the existing TBS region into
@@ -514,7 +541,12 @@ DERTbsToCert(
 
     // Move up one byte to leave room for the SEQUENCE tag.
     // The length is filled in when the sequence is popped.
-    memmove(Context->Buffer + 1, Context->Buffer, Context->Position);
+
+	_Array_ptr<uint8_t> destPoint : byte_count((size_t)Context->Position) =
+		_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(Context->Buffer + 1, byte_count((size_t)Context->Position));
+	_Array_ptr<uint8_t> srcPoint : byte_count((size_t)Context->Position) =
+		_Dynamic_bounds_cast<_Array_ptr<uint8_t>>(Context->Buffer, byte_count((size_t)Context->Position));
+	memmove(destPoint, srcPoint, Context->Position);
 
     // Fix up the length
     Context->Position++;
@@ -533,7 +565,7 @@ Error:
 
 int
 DERGetNestingDepth(
-    DERBuilderContext   *Context
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>)
 )
 {
     return Context->CollectionPos;
@@ -543,12 +575,12 @@ typedef struct
 {
     uint16_t    hLen;
     uint16_t    fLen;
-    const char *header;
-    const char *footer;
+    const char *header : itype(_Nt_array_ptr<const char>) byte_count((size_t)hLen);
+    const char *footer : itype(_Nt_array_ptr<const char>) byte_count((size_t)fLen);
 } PEMHeadersFooters;
 
 // We only have a small subset of potential PEM encodings
-const PEMHeadersFooters PEMhf[LAST_CERT_TYPE] = {
+const PEMHeadersFooters PEMhf[LAST_CERT_TYPE] : itype(const PEMHeadersFooters _Checked[LAST_CERT_TYPE]) = {
     {28, 26, "-----BEGIN CERTIFICATE-----\n", "-----END CERTIFICATE-----\n"},
     {27, 25, "-----BEGIN PUBLIC KEY-----\n", "-----END PUBLIC KEY-----\n\0"},
     {31, 29, "-----BEGIN EC PRIVATE KEY-----\n", "-----END EC PRIVATE KEY-----\n"},
@@ -557,10 +589,10 @@ const PEMHeadersFooters PEMhf[LAST_CERT_TYPE] = {
 
 int
 DERtoPEM(
-    DERBuilderContext   *Context,
-    uint32_t            Type,
-    char                *PEM,
-    uint32_t            *Length
+	DERBuilderContext   *Context : itype(_Ptr<DERBuilderContext>),
+	uint32_t            Type,
+	char                *PEM : itype(_Nt_array_ptr<char>) count(*Length),
+	uint32_t            *Length : itype(_Ptr<uint32_t>)
 )
 // Note that this function does not support extra header information for
 // encrypted keys. Expand the header buffer to ~128 bytes to support this.
@@ -583,15 +615,34 @@ DERtoPEM(
     }
 
     // Place header
-    memcpy(PEM, PEMhf[Type].header, PEMhf[Type].hLen);
+	// TODO: Shrink the bounds to just the header
+	_Nt_array_ptr<char> pemForHeader : byte_count((size_t)PEMhf[Type].hLen) =
+		_Dynamic_bounds_cast<_Nt_array_ptr<char>>(PEM, byte_count((size_t)PEMhf[Type].hLen));
+	// TODO: I have no idea why this next one is needed; compiler couldn't prove bounds
+	// despite the expected and inferred bounds appearing identical on the screen
+	_Nt_array_ptr<const char> actualHeader : byte_count((size_t)PEMhf[Type].hLen) =
+		_Dynamic_bounds_cast<_Nt_array_ptr<char>>(PEMhf[Type].header, byte_count((size_t)PEMhf[Type].hLen));
+    memcpy(pemForHeader, actualHeader, (size_t)PEMhf[Type].hLen);
     PEM += PEMhf[Type].hLen;
     
     // Encode bytes
-    Base64Encode(Context->Buffer, Context->Position, PEM, NULL);
+	// TODO: We know the buffer's length > position (aka count) but the compiler doesn't
+	_Nt_array_ptr<const unsigned char> bufferToEncode : byte_count(Context->Position) =
+		_Dynamic_bounds_cast<_Nt_array_ptr<const unsigned char>>(Context->Buffer, byte_count(Context->Position));
+	// TODO: Compiler can't tell the unsigned *Length > 0		
+	_Nt_array_ptr<char> pemForContents =	
+		_Dynamic_bounds_cast<_Nt_array_ptr<char>>(PEM, count(0));
+	Base64Encode(bufferToEncode, Context->Position, pemForContents, NULL);
     PEM += b64Len;
 
     // Place footer
-    memcpy(PEM, PEMhf[Type].footer, PEMhf[Type].fLen);
+	_Nt_array_ptr<char> pemForFooter : byte_count((size_t)PEMhf[Type].fLen) =
+		_Dynamic_bounds_cast<_Nt_array_ptr<char>>(PEM, byte_count((size_t)PEMhf[Type].fLen));
+	// TODO: I have no idea why this next one is needed; compiler couldn't prove bounds
+	// despite the expected and inferred bounds appearing identical on the screen
+	_Nt_array_ptr<const char> actualFooter : byte_count((size_t)PEMhf[Type].fLen) =
+		_Dynamic_bounds_cast<_Nt_array_ptr<char>>(PEMhf[Type].footer, byte_count((size_t)PEMhf[Type].fLen));
+    memcpy(pemForFooter, actualFooter, PEMhf[Type].fLen);
     PEM += PEMhf[Type].fLen;
 
     // Output buffer length
@@ -601,3 +652,5 @@ DERtoPEM(
 
     return 0;
 }
+
+#pragma CHECKED_SCOPE OFF

@@ -36,17 +36,22 @@ extern "C" {
 
 typedef uint32_t aes128EncryptKey_t[AES128_ENCRYPT_SCHEDULE_LEN];
 
+#pragma CHECKED_SCOPE ON
+
+typedef uint32_t aes128EncryptKey_t_ch _Checked[AES128_ENCRYPT_SCHEDULE_LEN];
+
 //
 // Enable AES allocating any resources required
 //
 // @param key  The key in case this is required
 //
-void RIOT_AES128_Enable(const uint8_t *key, aes128EncryptKey_t *aes128EncryptKey);
+void RIOT_AES128_Enable(const uint8_t *key : byte_count(AES_BLOCK_SIZE),
+	aes128EncryptKey_t *aes128EncryptKey : itype(_Ptr<aes128EncryptKey_t_ch>));
 
 //
 // Disable AES freeing any resources that were allocated
 //
-void RIOT_AES128_Disable(aes128EncryptKey_t *aes128EncryptKey);
+void RIOT_AES128_Disable(aes128EncryptKey_t *aes128EncryptKey : itype(_Ptr<aes128EncryptKey_t_ch>));
 
 //
 // AES counter mode encryption/decryption. Note that in
@@ -58,18 +63,29 @@ void RIOT_AES128_Disable(aes128EncryptKey_t *aes128EncryptKey);
 // @param len  The length of the input data, must be multiple of 16
 // @param ctr  Pointer to a 16 uint8_t counter block
 //
-void RIOT_AES_CTR_128(const aes128EncryptKey_t *aes128EncryptKey, const uint8_t *in,
-                      uint8_t *out, uint32_t len, uint8_t *ctr);
+void RIOT_AES_CTR_128(
+	const aes128EncryptKey_t *aes128EncryptKey : itype(_Ptr<const aes128EncryptKey_t_ch>), 
+	const uint8_t *in : byte_count(len), 
+	uint8_t *out : byte_count(len), 
+	uint32_t len,
+	uint8_t *ctr : byte_count(AES_BLOCK_SIZE));
 
-void RIOT_AES_CBC_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,
-                              const uint8_t *in, uint8_t *out, uint32_t len,
-                              uint8_t *iv);
+void RIOT_AES_CBC_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey : itype(_Ptr<const aes128EncryptKey_t_ch>), 
+	const uint8_t *in : byte_count(len),
+	uint8_t *out : byte_count(len), uint32_t len,
+	uint8_t *iv : count(AES_BLOCK_SIZE));
 
-void RIOT_AES_ECB_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey,
-                              const uint8_t *in, uint8_t *out, size_t size);
+void RIOT_AES_ECB_128_ENCRYPT(const aes128EncryptKey_t *aes128EncryptKey : itype(_Ptr<const aes128EncryptKey_t_ch>),
+	const uint8_t *in : byte_count(size),
+	uint8_t *out : byte_count(size), 
+	size_t size);
 
+#pragma CHECKED_SCOPE OFF
 
 #ifdef __cplusplus
 }
 #endif
+
 #endif
+
+

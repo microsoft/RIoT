@@ -33,6 +33,8 @@ Confidential Information
 #include "RiotEcc.h"
 #include "RiotBase64.h"
 
+#pragma CHECKED_SCOPE ON
+
 // Size, in bytes, of a RIoT digest using the chosen hash algorithm.
 #define RIOT_DIGEST_LENGTH      SHA256_DIGEST_LENGTH
 
@@ -76,133 +78,135 @@ typedef enum {
 
 RIOT_STATUS
 RiotCrypt_Kdf(
-    uint8_t        *result,         // OUT: Buffer to receive the derived bytes
-    size_t          resultSize,     // IN:  Capacity of the result buffer
-    const uint8_t  *source,         // IN:  Initial data for derivation
-    size_t          sourceSize,     // IN:  Size of the source data in bytes
-    const uint8_t  *context,        // IN:  Derivation context (may be NULL)
-    size_t          contextSize,    // IN:  Size of the context in bytes
-    const uint8_t  *label,          // IN:  Label for derivation (may be NULL)
-    size_t          labelSize,      // IN:  Size of the label in bytes
-    uint32_t        bytesToDerive   // IN:  Number of bytes to be produced
+    uint8_t        *result  : byte_count(resultSize),                                         // OUT: Buffer to receive the derived bytes
+    size_t          resultSize,                                                               // IN:  Capacity of the result buffer
+    const uint8_t  *source  : byte_count(sourceSize),                                         // IN:  Initial data for derivation
+    size_t          sourceSize,                                                               // IN:  Size of the source data in bytes
+    const uint8_t  *context : byte_count(contextSize),                                        // IN:  Derivation context (may be NULL)
+    size_t          contextSize,                                                              // IN:  Size of the context in bytes
+    const uint8_t  *label   : itype(_Nt_array_ptr<const uint8_t>) byte_count(labelSize),  // IN:  Label for derivation (may be NULL)
+    size_t          labelSize,                                                                // IN:  Size of the label in bytes
+    uint32_t        bytesToDerive                                                             // IN:  Number of bytes to be produced
 );
 
 RIOT_STATUS
 RiotCrypt_Hash(
-    uint8_t        *result,         // OUT: Buffer to receive the digest
-    size_t          resultSize,     // IN:  Capacity of the result buffer
-    const void     *data,           // IN:  Data to hash
-    size_t          dataSize        // IN:  Data size in bytes
+    uint8_t        *result : byte_count(resultSize),            // OUT: Buffer to receive the digest
+    size_t          resultSize,                                 // IN:  Capacity of the result buffer
+    const void     *data   : byte_count(dataSize),              // IN:  Data to hash
+    size_t          dataSize                                                                  // IN:  Data size in bytes
 );
 
 RIOT_STATUS
 RiotCrypt_Hash2(
-    uint8_t        *result,         // OUT: Buffer to receive the digest
-    size_t          resultSize,     // IN:  Capacity of the result buffer
-    const void     *data1,          // IN:  1st operand to hash
-    size_t          data1Size,      // IN:  1st operand size in bytes
-    const void     *data2,          // IN:  2nd operand to hash
-    size_t          data2Size       // IN:  2nd operand size in bytes
+    uint8_t        *result : byte_count(resultSize),            // OUT: Buffer to receive the digest
+    size_t          resultSize,                                 // IN:  Capacity of the result buffer
+    const void     *data1  : byte_count(data1Size),             // IN:  1st operand to hash
+    size_t          data1Size,                                  // IN:  1st operand size in bytes
+    const void     *data2  : byte_count(data2Size),             // IN:  2nd operand to hash
+    size_t          data2Size                                   // IN:  2nd operand size in bytes
 );
 
 RIOT_STATUS
 RiotCrypt_Hmac(
-    uint8_t        *result,         // OUT: Buffer to receive the HMAC
-    size_t          resultCapacity, // IN:  Capacity of the result buffer
-    const void     *data,           // IN:  Data to HMAC
-    size_t          dataSize,       // IN:  Data size in bytes
-    const uint8_t  *key,            // IN:  HMAK key
-    size_t          keySize         // IN:  HMAC key size in bytes
+    uint8_t        *result : byte_count(resultCapacity),        // OUT: Buffer to receive the HMAC
+    size_t          resultCapacity,                             // IN:  Capacity of the result buffer
+    const void     *data   : byte_count(dataSize),              // IN:  Data to HMAC
+    size_t          dataSize,                                   // IN:  Data size in bytes
+    const uint8_t  *key    : byte_count(keySize),               // IN:  HMAC key
+    size_t          keySize                                     // IN:  HMAC key size in bytes
 );
 
 RIOT_STATUS
 RiotCrypt_Hmac2(
-    uint8_t        *result,         // OUT: Buffer to receive the HMAK
-    size_t          resultCapacity, // IN:  Capacity of the result buffer
-    const void     *data1,          // IN:  1st operand to HMAC
-    size_t          data1Size,      // IN:  1st operand size in bytes
-    const void     *data2,          // IN:  2nd operand to HMAC
-    size_t          data2Size,      // IN:  2nd operand size in bytes
-    const uint8_t  *key,            // IN:  HMAK key
-    size_t          keySize         // IN:  HMAC key size in bytes
+    uint8_t        *result : byte_count(resultCapacity),        // OUT: Buffer to receive the HMAC
+    size_t          resultCapacity,                             // IN:  Capacity of the result buffer
+    const void     *data1  : byte_count(data1Size),             // IN:  1st operand to HMAC
+    size_t          data1Size,                                  // IN:  1st operand size in bytes
+    const void     *data2  : byte_count(data2Size),             // IN:  2nd operand to HMAC
+    size_t          data2Size,                                  // IN:  2nd operand size in bytes
+    const uint8_t  *key    : byte_count(keySize),               // IN:  HMAC key
+    size_t          keySize                                     // IN:  HMAC key size in bytes
 );
 
 RIOT_STATUS
 RiotCrypt_DeriveEccKey(
-    RIOT_ECC_PUBLIC    *publicPart,     // OUT: TODO
-    RIOT_ECC_PRIVATE   *privatePart,    // OUT: TODO
-    const void         *srcData,        // IN:  TODO
-    size_t              srcDataSize,    // IN:  TODO
-    const uint8_t      *label,          // IN:  TODO
-    size_t              labelSize       // IN:  TODO
+    RIOT_ECC_PUBLIC    *publicPart  : itype(_Ptr<RIOT_ECC_PUBLIC>),    // OUT: Derived public key
+    RIOT_ECC_PRIVATE   *privatePart : itype(_Ptr<RIOT_ECC_PRIVATE>),   // OUT: Derived private key
+    const void         *srcData     : byte_count(srcDataSize),         // IN:  Initial data for derivation
+    size_t              srcDataSize,                                   // IN:  Size of the source data in bytes
+    const uint8_t      *label       : itype(_Nt_array_ptr<const uint8_t>) byte_count(labelSize),           // IN:  Label for derivation (may be NULL)
+    size_t              labelSize                                      // IN:  Size of the label in bytes
 );
 
 void
 RiotCrypt_ExportEccPub(
-    RIOT_ECC_PUBLIC     *a,     // IN:  TODO
-    uint8_t             *b,     // OUT: TODO
-    uint32_t            *s      // OUT: TODO
+    RIOT_ECC_PUBLIC     *a : itype(_Ptr<RIOT_ECC_PUBLIC>),           // IN:  ECC Public Key to export
+    uint8_t             *b : byte_count(1 + 2*RIOT_ECC_COORD_BYTES), // OUT: Buffer to receive the public key
+    uint32_t            *s : itype(_Ptr<uint32_t>)                   // OUT: Pointer to receive the buffer size (may be NULL)
 );
 
 RIOT_STATUS
 RiotCrypt_Sign(
-    RIOT_ECC_SIGNATURE     *sig,        // OUT: TODO
-    const void             *data,       // IN:  TODO
-    size_t                  dataSize,   // IN:  TODO
-    const RIOT_ECC_PRIVATE *key         // IN:  TODO
+    RIOT_ECC_SIGNATURE     *sig  : itype(_Ptr<RIOT_ECC_SIGNATURE>),    // OUT: Signature of data
+    const void             *data : byte_count(dataSize),               // IN:  Data to sign
+    size_t                  dataSize,                                  // IN:  Data size in bytes
+    const RIOT_ECC_PRIVATE *key  : itype(_Ptr<const RIOT_ECC_PRIVATE>) // IN:  Signing key
 );
 
 RIOT_STATUS
 RiotCrypt_SignDigest(
-    RIOT_ECC_SIGNATURE     *sig,            // OUT: TODO
-    const uint8_t          *digest,         // IN:  TODO
-    size_t                  digestSize,     // IN:  TODO
-    const RIOT_ECC_PRIVATE *key             // IN:  TODO
+    RIOT_ECC_SIGNATURE     *sig    : itype(_Ptr<RIOT_ECC_SIGNATURE>),      // OUT: Signature of digest
+    const uint8_t          *digest : byte_count(digestSize),               // IN:  Digest to sign
+    size_t                  digestSize,                                    // IN:  Size of the digest in bytes
+    const RIOT_ECC_PRIVATE *key    : itype(_Ptr<const RIOT_ECC_PRIVATE>)   // IN:  Signing key
 );
 
 RIOT_STATUS
 RiotCrypt_Verify(
-    const void                 *data,       // IN: TODO
-    size_t                      dataSize,   // IN: TODO
-    const RIOT_ECC_SIGNATURE   *sig,        // IN: TODO
-    const RIOT_ECC_PUBLIC      *key         // IN: TODO
+    const void                 *data : byte_count(dataSize),    // IN: Data to verify signature of
+    size_t                      dataSize,                                                     // IN: Size of data in bytes
+    const RIOT_ECC_SIGNATURE   *sig  : itype(_Ptr<const RIOT_ECC_SIGNATURE>),                 // IN: Signature to verify
+    const RIOT_ECC_PUBLIC      *key  : itype(_Ptr<const RIOT_ECC_PUBLIC>)                     // IN: ECC public key of signer
 );
 
 RIOT_STATUS
 RiotCrypt_VerifyDigest(
-    const uint8_t              *digest,     // IN: TODO
-    size_t                      digestSize, // IN: TODO
-    const RIOT_ECC_SIGNATURE   *sig,        // IN: TODO
-    const RIOT_ECC_PUBLIC      *key         // IN: TODO
+    const uint8_t              *digest : byte_count(digestSize),                 // IN: Digest to verify signature of
+    size_t                      digestSize,                                      // IN: Size of the digest
+    const RIOT_ECC_SIGNATURE   *sig    : itype(_Ptr<const RIOT_ECC_SIGNATURE>),  // IN: Signature to verify
+    const RIOT_ECC_PUBLIC      *key    : itype(_Ptr<const RIOT_ECC_PUBLIC>)      // IN: ECC public key of signer
 );
 
 RIOT_STATUS
 RiotCrypt_EccEncrypt(
-    uint8_t                *result,         // OUT: Buffer to receive encrypted data
-    size_t                  resultCapacity, // IN:  Capacity of the result buffer
-    RIOT_ECC_PUBLIC        *ephKey,         // OUT: Ephemeral key to produce
-    const void             *data,           // IN:  Data to encrypt
-    size_t                  dataSize,       // IN:  Data size in bytes
-    const RIOT_ECC_PUBLIC  *key             // IN:  Encryption key
+    uint8_t                *result : byte_count(resultCapacity),         // OUT: Buffer to receive encrypted data
+    size_t                  resultCapacity,                              // IN:  Capacity of the result buffer
+    RIOT_ECC_PUBLIC        *ephKey : itype(_Ptr<RIOT_ECC_PUBLIC>),       // OUT: Ephemeral key to produce
+    const void             *data   : byte_count(dataSize),               // IN:  Data to encrypt
+    size_t                  dataSize,                                    // IN:  Data size in bytes
+    const RIOT_ECC_PUBLIC  *key    : itype(_Ptr<const RIOT_ECC_PUBLIC>)  // IN:  Encryption key
 );
 
 RIOT_STATUS
 RiotCrypt_EccDecrypt(
-    uint8_t                *result,         // OUT: Buffer to receive decrypted data
-    size_t                  resultCapacity, // IN:  Capacity of the result buffer
-    const void             *data,           // IN:  Data to decrypt
-    size_t                  dataSize,       // IN:  Data size in bytes
-    RIOT_ECC_PUBLIC        *ephKey,         // IN:  Ephemeral key to produce
-    const RIOT_ECC_PRIVATE *key             // IN:  Decryption key
+    uint8_t                *result : byte_count(resultCapacity),          // OUT: Buffer to receive decrypted data
+    size_t                  resultCapacity,                               // IN:  Capacity of the result buffer
+    const void             *data   : byte_count(dataSize),                // IN:  Data to decrypt
+    size_t                  dataSize,                                     // IN:  Data size in bytes
+    RIOT_ECC_PUBLIC        *ephKey : itype(_Ptr<RIOT_ECC_PUBLIC>),        // IN:  Ephemeral key to produce
+    const RIOT_ECC_PRIVATE *key    : itype(_Ptr<const RIOT_ECC_PRIVATE>)  // IN:  Decryption key
 );
 
 RIOT_STATUS
 RiotCrypt_SymEncryptDecrypt(
-    void       *outData,                  // OUT: Output data
-    size_t      outSize,                  // IN:  Size of output data
-    const void *inData,                   // IN:  Input data
-    size_t      inSize,                   // IN:  Size of input data
-    uint8_t     key[RIOT_SYM_KEY_LENGTH]  // IN/OUT: Symmetric key & IV
+    void       *outData                  : byte_count(outSize),                                // OUT: Output data
+    size_t      outSize,                                                                       // IN:  Size of output data in bytes
+    const void *inData                   : byte_count(inSize),                                 // IN:  Input data
+    size_t      inSize,                                                                        // IN:  Size of input data in bytes
+    uint8_t     key[RIOT_SYM_KEY_LENGTH] : itype(uint8_t _Checked[RIOT_SYM_KEY_LENGTH])        // IN/OUT: Symmetric key & IV
 );
+
+#pragma CHECKED_SCOPE OFF
 
 #endif

@@ -497,6 +497,9 @@ big_mpyP(bigval_t *tgt, bigval_t const *a, bigval_t const *b,
 
                 case 8:
                     ACCUM(ap - 0, bp + 0); // j = 0
+
+				default:
+					break;
             }
 #endif // SMALL_CODE not defined
 
@@ -576,6 +579,9 @@ big_mpyP(bigval_t *tgt, bigval_t const *a, bigval_t const *b,
 
                 case 8:
                     ACCUMDBL(ap - 0, bp + 0); // j = 0
+
+				default:
+					break;
             }
 
             // Even numbered columns (zero based) have a middle element.
@@ -1411,6 +1417,7 @@ ECDH_generate(affine_point_t *P1, bigval_t *k)
 
 //
 //Derives a secret value, k, and a point, P1, from the values of src and label.
+static
 void
 ECDH_derive(affine_point_t *P1, bigval_t *k,
             bigval_t *src, const uint8_t *label, size_t labelSize)
@@ -1576,6 +1583,7 @@ ECDSA_verify_inner(bigval_t const *msgdgst,
     return (V_SUCCESS);
 }
 
+static
 bool
 ECDSA_verify(bigval_t const *msgdgst,
              affine_point_t const *pubkey,
@@ -1675,7 +1683,8 @@ COND_STATIC int
 get_random_bytes(uint8_t *buf, size_t len)
 {
     // [mlotfy] FIXME: implement pseudo random number generation
-    uint8_t seed = 0x00;
+    // [jordanrh] In OPTEE, use get_rng_array() when IMX adds RNG support
+	uint8_t seed = 0x00;
     for (; len; len--)
     {
         *buf++ = seed++;

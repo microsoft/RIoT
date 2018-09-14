@@ -11,6 +11,7 @@ Confidential Information
 #include <RiotKdf.h>
 #include <RiotEcc.h>
 #include <RiotAes128.h>
+#include <RiotDerEnc.h>
 #include <RiotCrypt.h>
 
 #define RIOT_MAX_KDF_FIXED_SIZE     RIOT_MAX_KDF_CONTEXT_LENGTH + \
@@ -191,8 +192,8 @@ RiotCrypt_DeriveEccKey(
 
 RIOT_STATUS
 RiotCrypt_ImportEccPub(
-    uint8_t             *b, // IN: TODO
-    uint32_t            s,  // IN: TODO
+    const uint8_t       *b, // IN: TODO
+    const uint32_t      s,  // IN: TODO
     ecc_publickey       *a  // OUT: TODO
 )
 {
@@ -384,6 +385,36 @@ RiotCrypt_SymEncryptDecrypt(
     RIOT_AES128_Enable(key, &aesKey);
     RIOT_AES_CTR_128((const aes128EncryptKey_t*) &aesKey, inData, outData, (uint32_t)inSize, iv);
     RIOT_AES128_Disable(&aesKey);
+
+    return RIOT_SUCCESS;
+}
+
+RIOT_STATUS
+RiotCrypt_DERDecodeECCSignature( 
+    const unsigned char *DerSig,
+    uint DerSize,
+    RIOT_ECC_SIGNATURE *Sig
+)
+{
+    DERDecoderContext       ddc = { 0 };
+    uint8_t                 encBuffer[((BIGLEN - 1) * 4)];
+    uint32_t                encSize = ((BIGLEN - 1) * 4);
+    uint32_t                seqSize;
+
+    DERInitDecoder(&ddc, DerSig, DerSize);
+    if (DERGetSequenceOrSetLength(&ddc, true, &seqSize) < 0) {
+        return RIOT_BAD_FORMAT;
+    }
+
+    if (DERGetIntegerToArray(&ddc, encBuffer, encSize, &seqSize) < 0) {
+        return RIOT_BAD_FORMAT;
+    }
+    BigIntToBigVal(&Sig->r, encBuffer, seqSize);
+
+    if (DERGetIntegerToArray(&ddc, encBuffer, encSize, &seqSize) < 0) {
+        return RIOT_BAD_FORMAT;
+    }
+    BigIntToBigVal(&Sig->s, encBuffer, seqSize);
 
     return RIOT_SUCCESS;
 }

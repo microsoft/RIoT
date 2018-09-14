@@ -130,8 +130,8 @@ RiotCrypt_DeriveEccKey(
 
 RIOT_STATUS
 RiotCrypt_ImportEccPub(
-    uint8_t             *b, // IN: TODO
-    uint32_t            s,  // IN: TODO
+    const uint8_t       *b, // IN: TODO
+    const uint32_t      s,  // IN: TODO
     ecc_publickey       *a  // OUT: TODO
 );
 
@@ -201,6 +201,13 @@ RiotCrypt_SymEncryptDecrypt(
     const void *inData,                   // IN:  Input data
     size_t      inSize,                   // IN:  Size of input data
     uint8_t     key[RIOT_SYM_KEY_LENGTH]  // IN/OUT: Symmetric key & IV
+);
+
+RIOT_STATUS
+RiotCrypt_DERDecodeECCSignature(
+    const unsigned char    *DerSig,       // IN:  DER encoded ECC Signature buffer
+    uint                   DerSize,       // IN:  Input data size
+    RIOT_ECC_SIGNATURE     *Sig           // OUT: Decided signature
 );
 
 #ifdef __cplusplus

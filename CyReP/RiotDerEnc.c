@@ -563,10 +563,17 @@ typedef struct
 
 // We only have a small subset of potential PEM encodings
 const PEMHeadersFooters PEMhf[R_LAST_CERT_TYPE] = {
+#ifdef USE_CR_NL
     {29, 27, "-----BEGIN CERTIFICATE-----\r\n", "-----END CERTIFICATE-----\r\n"},
     {28, 26, "-----BEGIN PUBLIC KEY-----\r\n", "-----END PUBLIC KEY-----\r\n"},
     {32, 30, "-----BEGIN EC PRIVATE KEY-----\r\n", "-----END EC PRIVATE KEY-----\r\n"},
     {37, 35, "-----BEGIN CERTIFICATE REQUEST-----\r\n", "-----END CERTIFICATE REQUEST-----\r\n"}
+#else
+    {28, 26, "-----BEGIN CERTIFICATE-----\n", "-----END CERTIFICATE-----\n"},
+    {27, 25, "-----BEGIN PUBLIC KEY-----\n", "-----END PUBLIC KEY-----\n\0"},
+    {31, 29, "-----BEGIN EC PRIVATE KEY-----\n", "-----END EC PRIVATE KEY-----\n"},
+    {36, 34, "-----BEGIN CERTIFICATE REQUEST-----\n", "-----END CERTIFICATE REQUEST-----\n"}
+#endif
 };
 
 int
@@ -614,4 +621,121 @@ DERtoPEM(
     }
 
     return 0;
+}
+
+// 
+// Basic DER-decoding routines that are sufficient to parse
+// limited number of DER encoded buffers.
+//
+// Routines in this file encode the following types:
+//    SEQUENCE
+//    SET
+//    INTEGER
+void
+DERInitDecoder(
+    DERDecoderContext   *Context,
+    const uint8_t       *EncodedBuffer,
+    uint32_t            Length
+)
+{
+    Context->Buffer = EncodedBuffer;
+    Context->Length = Length;
+    Context->Position = 0;
+}
+
+int
+DERGetObjectLen(
+    DERDecoderContext   *Context,
+    uint32_t            *Len
+)
+{
+    uint32_t bCount;
+    uint32_t length;
+    uint8_t bLen;
+
+    length = 0;
+    bLen = Context->Buffer[Context->Position++];
+    if (bLen < 128) {
+        // Short form
+        length = bLen;
+    }
+    else
+    {
+        // Long form. Number of additional octets.
+        bCount = bLen & 0x7F;
+        CHECK_SPACE2( Context, bCount );
+
+        // Handle each octet.
+        while (bCount-- != 0) {
+            length = Context->Buffer[Context->Position++] | (length << 8);
+        }
+    }
+
+    *Len = length;
+    return 0;
+
+Error:
+
+    return -1;
+}
+
+int
+DERGetSequenceOrSetLength(
+    DERDecoderContext   *Context,
+    bool                 Sequence,
+    uint32_t            *Len
+)
+{
+    CHECK_SPACE( Context );
+    if ((Sequence && (Context->Buffer[Context->Position] == 0x30)) ||
+        (!Sequence && (Context->Buffer[Context->Position] == 0x31))) {
+        Context->Position++;
+        return DERGetObjectLen( Context, Len );
+    }
+
+Error:
+    return -1;
+}
+
+int
+DERGetIntegerToArray(
+    DERDecoderContext   *Context,
+    uint8_t             *Val,
+    uint32_t            NumBytes,
+    uint32_t            *UsedBytes
+)
+{
+    uint32_t s;
+
+    // Make sure this is actually an encoded integer.
+    if (Context->Buffer[Context->Position++] != 0x02) {
+        // unexpected. Should be an integar
+        goto Error;
+    }
+
+    // Validate the caller has enough space.
+    if (DERGetObjectLen( Context, &s ) < 0) {
+        goto Error;
+    }
+
+    // Leading zero is added if the most significant input bit was set.
+    if (Context->Buffer[Context->Position] == 0x0) {
+        Context->Position++; s--;
+        ASRT( Context->Buffer[Context->Position] >= 128 );
+    }
+
+    if (s > NumBytes) {
+        goto Error;
+    }
+
+    // We are ready to attempt to extract the number.
+    // Move the context position.
+    CHECK_SPACE2( Context, s );
+    memcpy( Val, &Context->Buffer[Context->Position], s );
+    Context->Position += s;
+    *UsedBytes = s;
+    return 0;
+
+Error:
+    return -1;
 }

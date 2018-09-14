@@ -173,6 +173,42 @@ DERtoPEM(
     uint32_t            *Length
 );
 
+
+typedef struct
+{
+    const uint8_t     *Buffer;        // Encoded data
+    uint32_t          Length;        // Size, in bytes, of Buffer
+    uint32_t          Position;      // Current buffer position
+} DERDecoderContext;
+
+void
+DERInitDecoder(
+    DERDecoderContext   *Context,
+    const uint8_t       *EncodedBuffer,
+    uint32_t            Length
+);
+
+int
+DERGetObjectLen(
+    DERDecoderContext   *Context,
+    uint32_t            *Len
+);
+
+int
+DERGetSequenceOrSetLength(
+    DERDecoderContext   *Context,
+    bool                 Sequence,
+    uint32_t            *Len
+);
+
+int
+DERGetIntegerToArray(
+    DERDecoderContext   *Context,
+    uint8_t             *Val,
+    uint32_t            NumBytes,
+    uint32_t            *UsedBytes
+);
+
 #ifdef __cplusplus
 }
 #endif

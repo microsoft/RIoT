@@ -152,19 +152,26 @@ Base64Decode(
     uint32_t decodedIndex = 0;
     
     // Parameter validation
-    if (!(Input) || !(Output) || !(OutLen)) {
+    if (!(Input) || !(OutLen)) {
         return -1;
     }
 
+#ifdef USE_CR_NL
     // Validate length of source string
     if ((strlen(Input) % 4) != 0) {
         return -1;
     }
+#endif
 
     // Validate output buffer length
     reqLen = Base64DecodedLength(Input);
     if (*OutLen < reqLen) {
         *OutLen = reqLen;
+        return -1;
+    }
+
+    // Delay Output paramater check to allow for buffer length query with Null Output
+    if (!(Output)) {
         return -1;
     }
 
@@ -245,11 +252,15 @@ Base64Encode(
     // Calculate required output buffer length in bytes
     reqSize = (Length == 0) ? (0) : ((((Length - 1) / 3) + 1) * 4);
 
+#ifdef USE_CR_NL
     // CRLFs after 64 characters
     reqSize += (reqSize / 64) * 2;
+    // Plus trailing CR
+    reqSize += 1;
+#endif
 
-    // Plus trailing CR&NL
-    reqSize += 2;
+    // Plus trailing LN
+    reqSize += 1;
 
     // Validate length of output buffer
     if (OutLen && (*OutLen < reqSize)) {
@@ -261,7 +272,9 @@ Base64Encode(
     //   b0            b1(+1)          b2(+2)
     // 7 6 5 4 3 2 1 0 7 6 5 4 3 2 1 0 7 6 5 4 3 2 1 0
     // |----c1---| |----c2---| |----c3---| |----c4---|
+#ifdef USE_CR_NL
     uint32_t line = 0;
+#endif
     while (Length - curPos >= 3)
     {
         char c1 = base64char(Input[curPos] >> 2);
@@ -276,6 +289,7 @@ Base64Encode(
         Output[dstPos++] = c2;
         Output[dstPos++] = c3;
         Output[dstPos++] = c4;
+#ifdef USE_CR_NL
         line += 4;
         if((line % 64) == 0)
         {
@@ -283,6 +297,7 @@ Base64Encode(
             Output[dstPos++] = '\n';
             line = 0;
         }
+#endif
     }
 
     if (Length - curPos == 2)
@@ -296,7 +311,9 @@ Base64Encode(
         Output[dstPos++] = c2;
         Output[dstPos++] = c3;
         Output[dstPos++] = '=';
+#ifdef USE_CR_NL
         line += 4;
+#endif
     }
     else if (Length - curPos == 1)
     {
@@ -307,12 +324,18 @@ Base64Encode(
         Output[dstPos++] = c2;
         Output[dstPos++] = '=';
         Output[dstPos++] = '=';
+#ifdef USE_CR_NL
         line += 4;
+#endif
     }
 
     // Add CR&NL termination
+#ifdef USE_CR_NL
     Output[dstPos++] = '\r';
     Output[dstPos++] = '\n';
+#else
+    Output[dstPos] = '\n';
+#endif
 
     // Output buffer length
     if (OutLen) {

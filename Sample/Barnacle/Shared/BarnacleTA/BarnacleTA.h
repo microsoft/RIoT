@@ -90,6 +90,7 @@ extern PBARNACLE_CERTSTORE pCertStore;
 extern const BARNACLE_AGENT_HDR AgentHdr;
 
 void BarnacleTAPrintCertStore(void);
+void BarnacleTAGetCompoundID(RIOT_ECC_PUBLIC* key, char* idStr);
 bool BarnacleTADerivePolicyIdentity(uint8_t* agentPolicy, uint32_t agentPolicySize);
 
 #endif /* BARNACLETA_H_ */

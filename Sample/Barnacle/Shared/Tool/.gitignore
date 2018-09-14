@@ -1,0 +1,6 @@
+![rR]elease
+![dD]ebug
+*.CBOR
+*.exe
+*.ipdb
+*.iobj

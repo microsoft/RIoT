@@ -206,7 +206,7 @@ RiotCrypt_SymEncryptDecrypt(
 RIOT_STATUS
 RiotCrypt_DERDecodeECCSignature(
     const unsigned char    *DerSig,       // IN:  DER encoded ECC Signature buffer
-    uint                   DerSize,       // IN:  Input data size
+    size_t                  DerSize,       // IN:  Input data size
     RIOT_ECC_SIGNATURE     *Sig           // OUT: Decided signature
 );
 

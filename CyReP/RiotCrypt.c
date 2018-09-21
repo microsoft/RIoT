@@ -392,8 +392,8 @@ RiotCrypt_SymEncryptDecrypt(
 RIOT_STATUS
 RiotCrypt_DERDecodeECCSignature( 
     const unsigned char *DerSig,
-    uint DerSize,
-    RIOT_ECC_SIGNATURE *Sig
+    size_t               DerSize,
+    RIOT_ECC_SIGNATURE  *Sig
 )
 {
     DERDecoderContext       ddc = { 0 };

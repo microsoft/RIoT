@@ -589,7 +589,7 @@ DERtoPEM(
     uint32_t    b64Len, reqLen;
 
     // Parameter validation
-    if (!(Context) || !(Type < R_LAST_CERT_TYPE) || !(PEM)) {
+    if (!(Context) || !(Type < R_LAST_CERT_TYPE)) {
         return -1;
     }
 
@@ -600,6 +600,11 @@ DERtoPEM(
     // Validate length of output buffer
     if (Length && (*Length < reqLen)) {
         *Length = reqLen;
+        return -1;
+    }
+
+    // Lazy buffer validation to permit required length return
+    if (!(PEM)) {
         return -1;
     }
 

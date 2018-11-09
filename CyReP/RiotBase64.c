@@ -226,6 +226,13 @@ Base64Decode(
     return 0;
 }
 
+uint32_t Base64Length(uint32_t ByteCount)
+{
+	uint32_t reqLen;
+	Base64Encode(NULL, ByteCount, NULL, &reqLen);
+	return reqLen;
+}
+
 int
 Base64Encode(
     const unsigned char *Input,
@@ -244,11 +251,6 @@ Base64Encode(
     uint32_t curPos = 0;
     uint32_t dstPos = 0;
 
-    // Parameter validation
-    if (!(Input) || !(Output)) {
-        return -1;
-    }
-
     // Calculate required output buffer length in bytes
     reqSize = (Length == 0) ? (0) : ((((Length - 1) / 3) + 1) * 4);
 
@@ -265,6 +267,11 @@ Base64Encode(
     // Validate length of output buffer
     if (OutLen && (*OutLen < reqSize)) {
         *OutLen = reqSize;
+        return -1;
+    }
+
+    // Parameter validation
+    if (!(Input) || !(Output)) {
         return -1;
     }
 

@@ -36,26 +36,14 @@ typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 
 #elif defined(__GNUC__)
 
-#if defined(CONFIG_CYREP_UBOOT_BUILD)
+#if defined(__UBOOT__)
 #include <common.h>
-#define CYREP_PLATFORM_TRACE_ERROR printf
 
-#elif defined(CONFIG_CYREP_OPTEE_BUILD)
+#elif defined(__KERNEL__) /* OP-TEE */
 #include <stdint.h>
 #include <types_ext.h>
 #include <string.h>
 #include <assert.h>
-#define CYREP_PLATFORM_TRACE_ERROR EMSG
-
-#elif defined(CONFIG_CYREP_UEFI_BUILD)
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <assert.h>
-#include <string.h>
-#include <Library/DebugLib.h>
-#define CYREP_PLATFORM_TRACE_ERROR(...) \
-    DEBUG((DEBUG_ERROR, __VA_ARGS__))
 
 #elif defined(STM32L476xx) || defined(STM32L4A6xx)
 #include <string.h>

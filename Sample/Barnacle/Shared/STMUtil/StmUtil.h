@@ -30,4 +30,4 @@ void KillUSBLink(void);
 void SetRealTimeClock(time_t tm);
 void ReadMcuInfo(unsigned char* serial, uint16_t *flashSize, uint16_t *mcuType, uint16_t *mcuRev);
 void PerformSystemReset(void);
-void InitializeITM();
+void InitializeITM(bool off);

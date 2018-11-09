@@ -19,12 +19,12 @@ void* __attribute__((section (".ram2"))) g_itm[ITMCHANNELS] = {0};
 
 #ifndef NDEBUG
 #define ITM_PORT_BITS (0xffffffff)
-void InitializeITM()
+void InitializeITM(bool on)
 {
     FLASH_OBProgramInitTypeDef ob = {0};
 
     HAL_FLASHEx_OBGetConfig(&ob);
-    if(ob.RDPLevel != OB_RDP_LEVEL_0)
+    if((on == false) || (ob.RDPLevel != OB_RDP_LEVEL_0))
     {
         for(uint32_t n = 0; n < ITMCHANNELS; n++)
         {

@@ -2,3 +2,6 @@
 	path = External/tinycbor
 	url = https://github.com/intel/tinycbor.git
 	branch = dev
+[submodule "External/ms-tpm-20-ref"]
+	path = External/ms-tpm-20-ref
+	url = https://tcps-team.visualstudio.com/STM-TPM/_git/ms-tpm-20-ref

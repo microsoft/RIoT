@@ -115,8 +115,6 @@ typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #define HOST_IS_LITTLE_ENDIAN  true
 #define HOST_IS_BIG_ENDIAN     false
 
-#define RIOT_SUCCESS(a) ((a) == (RIOT_OK))
-
 //
 // Key derivation labels used by both RIoT Devices and External Infrastructure
 //

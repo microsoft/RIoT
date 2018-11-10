@@ -228,7 +228,7 @@ Base64Decode(
 
 uint32_t Base64Length(uint32_t ByteCount)
 {
-	uint32_t reqLen;
+	uint32_t reqLen = 0;
 	Base64Encode(NULL, ByteCount, NULL, &reqLen);
 	return reqLen;
 }

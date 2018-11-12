@@ -261,9 +261,4 @@ const char *modes[] = {
     ""
 };
 
-const char **riot_aes_modes(void)
-{
-    return &modes[0];
-}
-
 #endif

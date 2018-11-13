@@ -173,6 +173,13 @@ DERtoPEM(
     uint32_t            *Length
 );
 
+int
+DERtoPEM_Term(
+    DERBuilderContext   *Context,
+    uint32_t            Type,
+    char                *PEM,
+    uint32_t            *Length
+);
 
 typedef struct
 {

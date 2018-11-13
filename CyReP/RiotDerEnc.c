@@ -628,6 +628,42 @@ DERtoPEM(
     return 0;
 }
 
+// TODO: DERtoPEM should just take a termination flag.
+//       Update DERtoPEM and all the callers.
+int
+DERtoPEM_Term(
+    DERBuilderContext   *Context,
+    uint32_t            Type,
+    char                *PEM,
+    uint32_t            *Length
+)
+{
+    uint32_t result;
+    uint32_t space_avaiable;
+
+    space_avaiable = *Length;
+
+    result = DERtoPEM(Context, Type, PEM, Length);
+
+    if (result != 0) {
+        // If failure is returning a size, include space for termination.
+        if (*Length != 0) {
+            (*Length)++;
+        }
+        return result;
+    }
+
+    // Include space for termination.
+    (*Length)++;
+
+    if (space_avaiable < (*Length)) {
+        return -1;
+    }
+
+    PEM[*Length] = '\0';
+    return 0;
+}
+
 // 
 // Basic DER-decoding routines that are sufficient to parse
 // limited number of DER encoded buffers.

@@ -653,10 +653,7 @@ DERtoPEM_Term(
         return result;
     }
 
-    // Include space for termination.
-    (*Length)++;
-
-    if (space_avaiable < (*Length)) {
+    if (space_avaiable < ((*Length) + 1)) {
         return -1;
     }
 

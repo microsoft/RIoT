@@ -51,8 +51,9 @@ typedef struct _TcpsAssertion {
 }TcpsAssertion;
 
 RIOT_STATUS
-BuildTCPSAliasIdentity(
-    RIOT_ECC_PUBLIC *AuthKeyPub,
+BuildAliasClaim(
+    uint8_t *AuthKeyPub,
+    uint32_t AuthKeySize,
     uint8_t *Fwid,
     uint32_t FwidSize,
     uint8_t *Id,
@@ -61,9 +62,10 @@ BuildTCPSAliasIdentity(
 );
 
 RIOT_STATUS
-BuildTCPSDeviceIdentity(
+BuildDeviceClaim(
     RIOT_ECC_PUBLIC *Pub,
-    RIOT_ECC_PUBLIC *AuthKeyPub,
+    uint8_t *AuthKeyPub,
+    uint32_t AuthKeySize,
     uint8_t *Fwid,
     uint32_t FwidSize,
     uint8_t *Id,
@@ -72,11 +74,12 @@ BuildTCPSDeviceIdentity(
 );
 
 RIOT_STATUS
-ModifyTCPSDeviceIdentity(
+ModifyDeviceClaim(
     uint8_t *ExistingId,
     uint32_t ExistingIdSize,
     RIOT_ECC_PUBLIC *Pub,
-    RIOT_ECC_PUBLIC *AuthKeyPub,
+    uint8_t *AuthKeyPub,
+    uint32_t AuthKeySize,
     uint8_t *Fwid,
     uint32_t FwidSize,
     uint8_t *NewId,

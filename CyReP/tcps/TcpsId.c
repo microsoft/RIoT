@@ -247,7 +247,8 @@ pAddAssertionInteger(
 RIOT_STATUS
 pBuildTCPSAssertionTable(
     RIOT_ECC_PUBLIC *Pub,
-    RIOT_ECC_PUBLIC *AuthKeyPub,
+    uint8_t *AuthKeyPub,
+    uint32_t AuthKeySize,
     uint8_t *Fwid,
     uint32_t FwidSize,
     TcpsIdenity *TcpsId,
@@ -259,8 +260,6 @@ pBuildTCPSAssertionTable(
     RIOT_STATUS     status;
     uint8_t         encBuffer[65];
     uint32_t        encBufferLen;
-    uint8_t         authBuffer[65];
-    uint32_t        authBufferLen;
 
     status = pAddAssertionInteger( TcpsId,
                                    TCPS_IDENTITY_MAP_VER,
@@ -284,11 +283,10 @@ pBuildTCPSAssertionTable(
 
     if (AuthKeyPub != NULL)
     {
-        RiotCrypt_ExportEccPub(AuthKeyPub, authBuffer, &authBufferLen);
         status = pAddAssertionBuffer( TcpsId,
                                       TCPS_IDENTITY_MAP_AUTH,
-                                      authBuffer,
-                                      authBufferLen );
+                                      AuthKeyPub,
+                                      AuthKeySize );
         if (status != RIOT_SUCCESS) {
             goto Cleanup;
         }
@@ -324,8 +322,9 @@ Cleanup:
 
 
 RIOT_STATUS
-BuildTCPSAliasIdentity(
-    RIOT_ECC_PUBLIC *AuthKeyPub,
+BuildAliasClaim(
+    uint8_t *AuthKeyPub,
+    uint32_t AuthKeySize,
     uint8_t *Fwid,
     uint32_t FwidSize,
     uint8_t *Id,
@@ -337,6 +336,7 @@ BuildTCPSAliasIdentity(
 
     return pBuildTCPSAssertionTable( NULL, 
                                      AuthKeyPub,
+                                     AuthKeySize,
                                      Fwid,
                                      FwidSize,
                                      &aliasId,
@@ -347,9 +347,10 @@ BuildTCPSAliasIdentity(
 
 
 RIOT_STATUS
-BuildTCPSDeviceIdentity(
+BuildDeviceClaim(
     RIOT_ECC_PUBLIC *Pub,
-    RIOT_ECC_PUBLIC *AuthKeyPub,
+    uint8_t *AuthKeyPub,
+    uint32_t AuthKeySize,
     uint8_t *Fwid,
     uint32_t FwidSize,
     uint8_t *Id,
@@ -361,6 +362,7 @@ BuildTCPSDeviceIdentity(
 
     return pBuildTCPSAssertionTable( Pub, 
                                      AuthKeyPub,
+                                     AuthKeySize,
                                      Fwid,
                                      FwidSize,
                                      &deviceId,
@@ -370,11 +372,12 @@ BuildTCPSDeviceIdentity(
 }
 
 RIOT_STATUS
-ModifyTCPSDeviceIdentity(
+ModifyDeviceIdentity(
     uint8_t *ExistingId,
     uint32_t ExistingIdSize,
     RIOT_ECC_PUBLIC *Pub,
-    RIOT_ECC_PUBLIC *AuthKeyPub,
+    uint8_t *AuthKeyPub,
+    uint32_t AuthKeySize,
     uint8_t *Fwid,
     uint32_t FwidSize,
     uint8_t *NewId,
@@ -425,6 +428,7 @@ Returns:
 
     return pBuildTCPSAssertionTable( Pub, 
                                      AuthKeyPub,
+                                     AuthKeySize,
                                      Fwid,
                                      FwidSize,
                                      &tcpsId,

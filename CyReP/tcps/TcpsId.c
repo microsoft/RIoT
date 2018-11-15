@@ -197,7 +197,7 @@ RIOT_STATUS
 pAddAssertionBuffer(
     TcpsIdenity *TcpsId,
     char* Key,
-    uint8_t *Value,
+    const uint8_t *Value,
     uint32_t ValueSize
 )
 {
@@ -246,10 +246,10 @@ pAddAssertionInteger(
 
 RIOT_STATUS
 pBuildTCPSAssertionTable(
-    RIOT_ECC_PUBLIC *Pub,
-    uint8_t *AuthKeyPub,
+    const RIOT_ECC_PUBLIC *Pub,
+    const uint8_t *AuthKeyPub,
     uint32_t AuthKeySize,
-    uint8_t *Fwid,
+    const uint8_t *Fwid,
     uint32_t FwidSize,
     TcpsIdenity *TcpsId,
     uint8_t *Id,
@@ -323,9 +323,9 @@ Cleanup:
 
 RIOT_STATUS
 BuildAliasClaim(
-    uint8_t *AuthKeyPub,
+    const uint8_t *AuthKeyPub,
     uint32_t AuthKeySize,
-    uint8_t *Fwid,
+    const uint8_t *Fwid,
     uint32_t FwidSize,
     uint8_t *Id,
     uint32_t IdSize,
@@ -348,10 +348,10 @@ BuildAliasClaim(
 
 RIOT_STATUS
 BuildDeviceClaim(
-    RIOT_ECC_PUBLIC *Pub,
-    uint8_t *AuthKeyPub,
+    const RIOT_ECC_PUBLIC *Pub,
+    const uint8_t *AuthKeyPub,
     uint32_t AuthKeySize,
-    uint8_t *Fwid,
+    const uint8_t *Fwid,
     uint32_t FwidSize,
     uint8_t *Id,
     uint32_t IdSize,

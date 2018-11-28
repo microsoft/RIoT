@@ -85,67 +85,67 @@ X509AddExtensions(
     CHK(        DERPopNesting(Tbs));
     if (PathLen >= 0)
     {
-        CHK(        DERStartSequenceOrSet(Tbs, true));
-        CHK(            DERAddOID(Tbs, basicConstraintsOID));
-        CHK(            DERAddBoolean(Tbs, true));
-        CHK(            DERStartEnvelopingOctetString(Tbs));
-        CHK(                DERStartSequenceOrSet(Tbs, true));
+        CHK(    DERStartSequenceOrSet(Tbs, true));
+        CHK(        DERAddOID(Tbs, basicConstraintsOID));
+        CHK(        DERAddBoolean(Tbs, true));
+        CHK(        DERStartEnvelopingOctetString(Tbs));
+        CHK(            DERStartSequenceOrSet(Tbs, true));
         if (PathLen > 0)
         {
-            CHK(                DERAddBoolean(Tbs, true));
-            CHK(                DERAddInteger(Tbs, PathLen));
+            CHK(        DERAddBoolean(Tbs, true));
+            CHK(        DERAddInteger(Tbs, PathLen));
         }
         else
         {
-            CHK(                DERAddBoolean(Tbs, false));
+            CHK(        DERAddBoolean(Tbs, false));
         }
-        CHK(                DERPopNesting(Tbs));
         CHK(            DERPopNesting(Tbs));
         CHK(        DERPopNesting(Tbs));
+        CHK(    DERPopNesting(Tbs));
     }
     if (PathLen > 0)
     {
-        CHK(        DERStartSequenceOrSet(Tbs, true));
-        CHK(            DERAddOID(Tbs, keyUsageOID));
-        CHK(            DERStartEnvelopingOctetString(Tbs));
-        CHK(                DERAddBitString(Tbs, keyUsageCA, sizeof(keyUsageCA)));
-        CHK(            DERPopNesting(Tbs));
+        CHK(    DERStartSequenceOrSet(Tbs, true));
+        CHK(        DERAddOID(Tbs, keyUsageOID));
+        CHK(        DERStartEnvelopingOctetString(Tbs));
+        CHK(            DERAddBitString(Tbs, keyUsageCA, sizeof(keyUsageCA)));
         CHK(        DERPopNesting(Tbs));
+        CHK(    DERPopNesting(Tbs));
     }
     else
     {
-        CHK(        DERStartSequenceOrSet(Tbs, true));
-        CHK(            DERAddOID(Tbs, extKeyUsageOID));
-        CHK(            DERAddBoolean(Tbs, true));
-        CHK(            DERStartEnvelopingOctetString(Tbs));
-        CHK(                DERStartSequenceOrSet(Tbs, true));
-        CHK(                    DERAddOID(Tbs, clientAuthOID));
-        CHK(                    DERAddOID(Tbs, serverAuthOID));
-        CHK(                DERPopNesting(Tbs));
+        CHK(    DERStartSequenceOrSet(Tbs, true));
+        CHK(        DERAddOID(Tbs, extKeyUsageOID));
+        CHK(        DERAddBoolean(Tbs, true));
+        CHK(        DERStartEnvelopingOctetString(Tbs));
+        CHK(            DERStartSequenceOrSet(Tbs, true));
+        CHK(                DERAddOID(Tbs, clientAuthOID));
+        CHK(                DERAddOID(Tbs, serverAuthOID));
         CHK(            DERPopNesting(Tbs));
         CHK(        DERPopNesting(Tbs));
+        CHK(    DERPopNesting(Tbs));
     }
     if (TcpsLen == 0 && ExtensionBufferSize == 0) // riotOID
     {
-        CHK(        DERStartSequenceOrSet(Tbs, true));
-        CHK(            DERAddOID(Tbs, riotOID));
-        CHK(            DERStartEnvelopingOctetString(Tbs));
+        CHK(    DERStartSequenceOrSet(Tbs, true));
+        CHK(        DERAddOID(Tbs, riotOID));
+        CHK(        DERStartEnvelopingOctetString(Tbs));
+        CHK(            DERStartSequenceOrSet(Tbs, true));
+        CHK(                DERAddInteger(Tbs, 1));
         CHK(                DERStartSequenceOrSet(Tbs, true));
-        CHK(                    DERAddInteger(Tbs, 1));
         CHK(                    DERStartSequenceOrSet(Tbs, true));
-        CHK(                        DERStartSequenceOrSet(Tbs, true));
-        CHK(                            DERAddOID(Tbs, ecPublicKeyOID));
-        CHK(                            DERAddOID(Tbs, prime256v1OID));
-        CHK(                        DERPopNesting(Tbs));
-        CHK(                        DERAddBitString(Tbs, DevIdPub, DevIdPubLen));
+        CHK(                        DERAddOID(Tbs, ecPublicKeyOID));
+        CHK(                        DERAddOID(Tbs, prime256v1OID));
         CHK(                    DERPopNesting(Tbs));
-        CHK(                    DERStartSequenceOrSet(Tbs, true));
-        CHK(                        DERAddOID(Tbs, sha256OID));
-        CHK(                        DERAddOctetString(Tbs, Fwid, FwidLen));
-        CHK(                    DERPopNesting(Tbs));
+        CHK(                    DERAddBitString(Tbs, DevIdPub, DevIdPubLen));
+        CHK(                DERPopNesting(Tbs));
+        CHK(                DERStartSequenceOrSet(Tbs, true));
+        CHK(                    DERAddOID(Tbs, sha256OID));
+        CHK(                    DERAddOctetString(Tbs, Fwid, FwidLen));
         CHK(                DERPopNesting(Tbs));
         CHK(            DERPopNesting(Tbs));
         CHK(        DERPopNesting(Tbs));
+        CHK(    DERPopNesting(Tbs));
     }
     else if (ExtensionBufferSize == 0) // tcpsOID
     {
@@ -230,7 +230,7 @@ X509GetDeviceCertTBS(
     uint32_t    encBufferLen;
     uint8_t     keyId[RIOT_DIGEST_LENGTH];
     uint8_t     issuerKeyId[RIOT_DIGEST_LENGTH];
-	uint8_t     keyUsageCA[] = RIOT_X509_CA_KEY_USAGE;
+    uint8_t     keyUsageCA[] = RIOT_X509_CA_KEY_USAGE;
 
     if (IssuerIdKeyPub != NULL)
     {

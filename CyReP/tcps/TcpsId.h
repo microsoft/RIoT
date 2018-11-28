@@ -87,6 +87,15 @@ ModifyDeviceClaim(
     uint32_t *Written
 );
 
+RIOT_STATUS
+GetClaim(
+    const uint8_t* Id,
+    uint32_t IdSize,
+    const char* Name,
+    const uint8_t** Value,
+    size_t* ValueSize
+);
+
 #ifdef __cplusplus
 }
 #endif

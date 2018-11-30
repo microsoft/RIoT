@@ -16,10 +16,10 @@ Confidential Information
 #define MAX_ASSERTION_COUNT        4
 
 
-typedef struct _TcpsIdenity {
+typedef struct _TcpsIdentity {
     TcpsAssertion AssertionArray[MAX_ASSERTION_COUNT];
     uint32_t Used;
-} TcpsIdenity;
+} TcpsIdentity;
 
 
 RIOT_STATUS
@@ -95,7 +95,7 @@ pDecodeAssertionKvP(
     size_t keySize = MAX_ASSERTION_KEY_LEN;
 
     CLEANUP_DECODER_ERR( cbor_value_get_string_length( KvpValue, &keySize ) );
-    if (keySize > MAX_ASSERTION_KEY_LEN) {
+    if (keySize >= MAX_ASSERTION_KEY_LEN) {
         err = CborErrorOutOfMemory;
         goto Cleanup;
     }
@@ -128,12 +128,11 @@ Cleanup:
     return err;
 }
 
-
 CborError
 pDecodeTCPSIdentity(
-    uint8_t *Id,
+    const uint8_t *Id,
     uint32_t IdSize,
-    TcpsIdenity *TcpsId
+    TcpsIdentity *TcpsId
 )
 {
     CborError       err;
@@ -162,6 +161,7 @@ pDecodeTCPSIdentity(
 
     CLEANUP_DECODER_ERR( cbor_value_enter_container( &map, &kvp ) );
 
+    memset(TcpsId, 0, sizeof(*TcpsId));
     for (TcpsId->Used = 0; TcpsId->Used < len; TcpsId->Used++) {
         CLEANUP_DECODER_ERR( pDecodeAssertionKvP( &kvp, &TcpsId->AssertionArray[TcpsId->Used]) );
     }
@@ -176,7 +176,7 @@ Cleanup:
 
 int
 pFindAssertion(
-    char* Key,
+    const char* Key,
     TcpsAssertion *Assertions,
     uint32_t AssertionCount
 )
@@ -195,7 +195,7 @@ pFindAssertion(
 
 RIOT_STATUS
 pAddAssertionBuffer(
-    TcpsIdenity *TcpsId,
+    TcpsIdentity *TcpsId,
     char* Key,
     const uint8_t *Value,
     uint32_t ValueSize
@@ -221,7 +221,7 @@ pAddAssertionBuffer(
 
 RIOT_STATUS
 pAddAssertionInteger(
-    TcpsIdenity *TcpsId,
+    TcpsIdentity *TcpsId,
     char* Key,
     uint32_t Value
 )
@@ -251,7 +251,7 @@ pBuildTCPSAssertionTable(
     uint32_t AuthKeySize,
     const uint8_t *Fwid,
     uint32_t FwidSize,
-    TcpsIdenity *TcpsId,
+    TcpsIdentity *TcpsId,
     uint8_t *Id,
     uint32_t IdSize,
     uint32_t *Written
@@ -332,7 +332,7 @@ BuildAliasClaim(
     uint32_t *Written
 )
 {
-    TcpsIdenity aliasId = { 0 };
+    TcpsIdentity aliasId = { 0 };
 
     return pBuildTCPSAssertionTable( NULL, 
                                      AuthKeyPub,
@@ -358,7 +358,7 @@ BuildDeviceClaim(
     uint32_t *Written
 )
 {
-    TcpsIdenity deviceId = { 0 };
+    TcpsIdentity deviceId = { 0 };
 
     return pBuildTCPSAssertionTable( Pub, 
                                      AuthKeyPub,
@@ -389,7 +389,7 @@ ModifyDeviceIdentity(
 
 Routine Description:
 
-    Modifies an existing TCPS identity blob, by either adding or replaceing idenity
+    Modifies an existing TCPS identity blob, by either adding or replaceing identity
     attributes. Does not allow for removing existing attributes.
 
     Specifying an attribute will replace an existing value, or add the value. A NULL
@@ -407,7 +407,7 @@ Returns:
 
 {
     CborError       err;
-    TcpsIdenity     tcpsId = { 0 };
+    TcpsIdentity     tcpsId = { 0 };
 
     //
     //  We expect an existing Id that we will modify.
@@ -436,3 +436,40 @@ Returns:
                                      NewIdSize,
                                      Written );
 }
+
+RIOT_STATUS
+GetClaim(
+    const uint8_t* Id,
+    uint32_t IdSize,
+    const char* Name,
+    const uint8_t** Value,
+    size_t* ValueSize
+)
+{
+    TcpsIdentity claimSet;
+    int claimIndex;
+
+    if (Id == NULL || Name == NULL || Value == NULL || ValueSize == NULL)
+    {
+        return RIOT_INVALID_PARAMETER;
+    }
+
+    CborError err = pDecodeTCPSIdentity(Id, IdSize, &claimSet);
+    if (err != CborNoError)
+    {
+        goto Cleanup;
+    }
+
+    claimIndex = pFindAssertion(Name, claimSet.AssertionArray, claimSet.Used);
+    if (claimIndex == -1)
+    {
+        goto Cleanup;
+    }
+
+    *Value = claimSet.AssertionArray[claimIndex].Data.Buff.Value;
+    *ValueSize = claimSet.AssertionArray[claimIndex].Data.Buff.Size;
+
+Cleanup:
+    return err == CborNoError && claimIndex != -1 ? RIOT_SUCCESS : RIOT_FAILURE;
+}
+

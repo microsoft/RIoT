@@ -43,6 +43,11 @@ typedef unsigned long long uint64_t;  // 64-bit unsigned integer
 #if defined(__UBOOT__)
 #include <common.h>
 
+#elif defined (__linux__)
+#include <assert.h>
+#include <stdint.h>
+#include <stdlib.h>
+
 #elif defined(__OPTEE__)
 #include <stdint.h>
 #include <types_ext.h>

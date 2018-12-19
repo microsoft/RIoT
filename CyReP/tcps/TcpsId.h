@@ -24,19 +24,22 @@ extern "C" {
 //  share the following defines.
 #define TCPS_ID_MAP_VER_CURENT    1
 
-#define MAX_ASSERTION_KEY_LEN      0xf
-#define TCPS_IDENTITY_MAP_VER      "VER"
-#define TCPS_IDENTITY_MAP_FWID     "FIRMWID"
-#define TCPS_IDENTITY_MAP_AUTH     "CODEAUTH"
-#define TCPS_IDENTITY_MAP_PUBKEY   "PUBKEY"
+#define MAX_ASSERTION_KEY_LEN        0xf
+#define CYRES_IDENTITY_MAP_VER      "VER"
+#define CYRES_IDENTITY_MAP_FWID     "FIRMWID"
+#define CYRES_IDENTITY_MAP_AUTH     "CODEAUTH"
+#define CYRES_IDENTITY_MAP_PUBKEY   "PUBKEY"
 
-//  Rough estimate of encoded sizes for static buffer declaration.
-#define TCPS_ID_EST_ENCODING       MAX_ASSERTION_KEY_LEN + 0x10
-#define TCPS_ID_FWID_LENGTH        RIOT_DIGEST_LENGTH + TCPS_ID_EST_ENCODING
-#define TCPS_ID_PUBKEY_LENGTH      0x41 + TCPS_ID_EST_ENCODING
+// Rough estimate of encoded sizes for static buffer declaration.
+#define CYRES_ID_EST_ENCODING       MAX_ASSERTION_KEY_LEN + 0x10
+#define CYRES_ID_FWID_LENGTH        RIOT_DIGEST_LENGTH + CYRES_ID_EST_ENCODING
+#define CYRES_ID_PUBKEY_LENGTH      0x41 + CYRES_ID_EST_ENCODING
 
 #define ASSERT_TYPE_BUFFER      0
 #define ASSERT_TYPE_INT         1
+
+extern uint8_t cyres_claims_oid[];
+extern const size_t cyres_claims_oid_size;
 
 typedef struct _TcpsAssertion {
     char Name[MAX_ASSERTION_KEY_LEN];

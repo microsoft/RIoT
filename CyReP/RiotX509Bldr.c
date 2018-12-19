@@ -219,8 +219,8 @@ int
 X509GetDeviceCertTBS(
     DERBuilderContext   *Tbs,
     RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *DevIdKeyPub,
-    RIOT_ECC_PUBLIC     *IssuerIdKeyPub,
+    const RIOT_ECC_PUBLIC     *DevIdKeyPub,
+    const RIOT_ECC_PUBLIC     *IssuerIdKeyPub,
     uint8_t             *Tcps,
     uint32_t            TcpsLen,
     int32_t             PathLength
@@ -670,14 +670,14 @@ int
 X509GetRootCertTBS(
     DERBuilderContext   *Tbs,
     RIOT_X509_TBS_DATA  *TbsData,
-    RIOT_ECC_PUBLIC     *RootKeyPub,
+    const RIOT_ECC_PUBLIC     *RootKeyPub,
     int32_t             PathLength
 )
 {
     uint8_t     encBuffer[65];
     uint32_t    encBufferLen;
     uint8_t     keyId[RIOT_DIGEST_LENGTH];
-	uint8_t     keyUsageCA[] = RIOT_X509_CA_KEY_USAGE;
+    uint8_t     keyUsageCA[] = RIOT_X509_CA_KEY_USAGE;
 
     CHK(DERStartSequenceOrSet(Tbs, true));
     CHK(    DERAddShortExplicitInteger(Tbs, 2));

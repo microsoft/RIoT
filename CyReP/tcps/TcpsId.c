@@ -15,6 +15,8 @@ Confidential Information
 //  Stack size of max assertion in a single ID
 #define MAX_ASSERTION_COUNT        4
 
+uint8_t cyres_claims_oid[] = {0x67, 0x81, 0x05, 0x05, 0x04, 0x02};
+const size_t cyres_claims_oid_size = sizeof(cyres_claims_oid);
 
 typedef struct _TcpsIdentity {
     TcpsAssertion AssertionArray[MAX_ASSERTION_COUNT];
@@ -110,7 +112,7 @@ pDecodeAssertionKvP(
     //  N.G: Note that we do not validate the version here as we are just translating structures.
     //
 
-    if (strcmp(TCPS_IDENTITY_MAP_VER, Assertion->Name) == 0) {
+    if (strcmp(CYRES_IDENTITY_MAP_VER, Assertion->Name) == 0) {
         CLEANUP_DECODER_ERR( cbor_value_get_int( KvpValue, &Assertion->Data.Value ) );
         CLEANUP_DECODER_ERR( cbor_value_advance( KvpValue ) );
         Assertion->DataType = ASSERT_TYPE_INT;
@@ -262,7 +264,7 @@ pBuildTCPSAssertionTable(
     uint32_t        encBufferLen;
 
     status = pAddAssertionInteger( TcpsId,
-                                   TCPS_IDENTITY_MAP_VER,
+                                   CYRES_IDENTITY_MAP_VER,
                                    TCPS_ID_MAP_VER_CURENT );
 
     if (status != RIOT_SUCCESS) {
@@ -273,7 +275,7 @@ pBuildTCPSAssertionTable(
     {
         RiotCrypt_ExportEccPub(Pub, encBuffer, &encBufferLen);
         status = pAddAssertionBuffer( TcpsId, 
-                                      TCPS_IDENTITY_MAP_PUBKEY,
+                                      CYRES_IDENTITY_MAP_PUBKEY,
                                       encBuffer,
                                       encBufferLen );
         if (status != RIOT_SUCCESS) {
@@ -284,7 +286,7 @@ pBuildTCPSAssertionTable(
     if (AuthKeyPub != NULL)
     {
         status = pAddAssertionBuffer( TcpsId,
-                                      TCPS_IDENTITY_MAP_AUTH,
+                                      CYRES_IDENTITY_MAP_AUTH,
                                       AuthKeyPub,
                                       AuthKeySize );
         if (status != RIOT_SUCCESS) {
@@ -295,7 +297,7 @@ pBuildTCPSAssertionTable(
     if (FwidSize > 0)
     {
         status = pAddAssertionBuffer( TcpsId,
-                                      TCPS_IDENTITY_MAP_FWID,
+                                      CYRES_IDENTITY_MAP_FWID,
                                       Fwid,
                                       FwidSize );
         if (status != RIOT_SUCCESS) {

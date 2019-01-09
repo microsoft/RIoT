@@ -448,7 +448,7 @@ GetClaim(
     size_t* ValueSize
 )
 {
-    TcpsIdentity claimSet;
+    TcpsIdentity claimSet = { 0 };
     int claimIndex;
 
     if (Id == NULL || Name == NULL || Value == NULL || ValueSize == NULL)

@@ -447,9 +447,23 @@ GetClaim(
     const uint8_t** Value,
     size_t* ValueSize
 )
+
+/*++
+
+Routine Description:
+
+    Searches for a claim Name inside the given TCPS identity blob. 
+
+    When a claim is found, it is returned in Value/ValueSize. If the claim is 
+    not found, NULL/0 is returned in Value/ValueSize; in both cases, RIOT_SUCCESS
+    is returned.
+
+--*/
+
 {
     TcpsIdentity claimSet = { 0 };
     int claimIndex;
+    RIOT_STATUS status = RIOT_SUCCESS;
 
     if (Id == NULL || Name == NULL || Value == NULL || ValueSize == NULL)
     {
@@ -459,12 +473,15 @@ GetClaim(
     CborError err = pDecodeTCPSIdentity(Id, IdSize, &claimSet);
     if (err != CborNoError)
     {
+        status = RIOT_FAILURE;
         goto Cleanup;
     }
 
     claimIndex = pFindAssertion(Name, claimSet.AssertionArray, claimSet.Used);
     if (claimIndex == -1)
     {
+        *Value = NULL;
+        *ValueSize = 0;
         goto Cleanup;
     }
 
@@ -472,6 +489,6 @@ GetClaim(
     *ValueSize = claimSet.AssertionArray[claimIndex].Data.Buff.Size;
 
 Cleanup:
-    return err == CborNoError && claimIndex != -1 ? RIOT_SUCCESS : RIOT_FAILURE;
+    return status;
 }
 

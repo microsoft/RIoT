@@ -401,7 +401,11 @@ RiotCrypt_DERDecodeECCSignature(
     uint32_t                encSize = ((BIGLEN - 1) * 4);
     uint32_t                seqSize;
 
-    DERInitDecoder(&ddc, DerSig, DerSize);
+    if (DerSize > UINT32_MAX) {
+        return RIOT_BAD_FORMAT;
+    }
+
+    DERInitDecoder(&ddc, DerSig, (uint32_t)DerSize);
     if (DERGetSequenceOrSetLength(&ddc, true, &seqSize) < 0) {
         return RIOT_BAD_FORMAT;
     }

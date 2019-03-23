@@ -194,7 +194,7 @@ RIOT_STATUS
 RiotCrypt_ImportEccPub(
     const uint8_t       *b, // IN: TODO
     const uint32_t      s,  // IN: TODO
-    ecc_publickey       *a  // OUT: TODO
+    RIOT_ECC_PUBLIC     *a  // OUT: TODO
 )
 {
     if ((*b++ != 0x04) ||
@@ -224,6 +224,22 @@ RiotCrypt_ExportEccPub(
     if (s) {
         *s = 1 + 2 * RIOT_ECC_COORD_BYTES;
     }
+}
+
+RIOT_STATUS
+RiotCrypt_ImportEccPriv(
+    const uint8_t       *b, // IN: TODO
+    const uint32_t      s,  // IN: TODO
+    RIOT_ECC_PRIVATE    *a  // OUT: TODO
+)
+{
+    if (s < RIOT_ECC_COORD_BYTES)
+    {
+        return RIOT_INVALID_PARAMETER;
+    }
+
+    BigIntToBigVal(a, b, RIOT_ECC_COORD_BYTES);
+    return RIOT_SUCCESS;
 }
 
 RIOT_STATUS

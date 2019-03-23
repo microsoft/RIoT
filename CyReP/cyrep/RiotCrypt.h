@@ -132,7 +132,7 @@ RIOT_STATUS
 RiotCrypt_ImportEccPub(
     const uint8_t       *b, // IN: TODO
     const uint32_t      s,  // IN: TODO
-    ecc_publickey       *a  // OUT: TODO
+    RIOT_ECC_PUBLIC     *a  // OUT: TODO
 );
 
 void
@@ -140,6 +140,13 @@ RiotCrypt_ExportEccPub(
     const RIOT_ECC_PUBLIC   *a,     // IN:  TODO
     uint8_t                 *b,     // OUT: TODO
     uint32_t                *s      // OUT: TODO
+);
+
+RIOT_STATUS
+RiotCrypt_ImportEccPriv(
+    const uint8_t       *b, // IN: TODO
+    const uint32_t      s,  // IN: TODO
+    RIOT_ECC_PRIVATE    *a  // OUT: TODO
 );
 
 RIOT_STATUS

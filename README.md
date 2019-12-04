@@ -1,10 +1,10 @@
 # RIoT Reference Architecture
 ## Introduction
-Robust, Resilient, Recoverable Internet of Things (RIoT), from Microsoft Research, is an architecture for providing foundational trust services to computing devices. Device Identity Composition Engine (DICE) is an industry hardware/firmware standard that is the foundation on which RIoT is built.
+Robust, Resilient, Recoverable Internet of Things (RIoT), from Microsoft Research, is an architecture for providing foundational trust services to computing devices. Device Identity Composition Engine ([DICE](https://trustedcomputinggroup.org/work-groups/dice-architectures/)) is an industry hardware/firmware standard that is the foundation on which RIoT is built.
 
 This repository contains a RIoT reference implementation for a DICE Architecture that provides cryptographically strong device identity and device attestation.  Together, DICE and RIoT also provide a foundation for device recovery and resiliency ([Cyber Resilient Platform Initiative](https://aka.ms/cyres)), secure and verifiable updates, data at rest protection (sealing), and a host of other security-critical use cases.
 
-The Device Provisioning Service (DPS) from Azure IoT uses DICE and RIoT for secure device identity and attestation.  The DPS X.509-based protocols rely on the cryptographic keys and certificates produced by RIoT and the Root of Trust for Measurement provided by DICE in hardware.
+The Device Provisioning Service (DPS) from Azure IoT uses DICE and RIoT for secure device identity and attestation.  The DPS X.509-based protocols rely on the cryptographic keys and certificates produced by RIoT and the Root of Trust for Measurement (RTM) provided by DICE in hardware.
 
 For more info on DPS from Azure IoT [this](https://docs.microsoft.com/en-us/azure/iot-dps/) is a good place to start.
 
@@ -15,11 +15,8 @@ The RIoT repository is organized as follows:
  * _Pkgs_ - The packages directory contains the metadata and source code for supporting DICE/RIoT development in other languages.  In addition to the C-language reference, DICE/RIoT emulators and tests are also provided in Java (Maven), C# (NuGet), and javascript (npm).
  * _Tools_ - Sources, tools and tests enabling RIoT development and validation.
 
-## What's Next
-Soon we will also share demos and sample code for specific DICE-enabled hardware as well.  This will include the STM32L4 family of MCUs from STMicroelectronics, the CEC1702 from Microchip, Authenta-based SPI flash from Micron, and others.
-
 ## Contributing
-For more information on DICE, and to learn how you can contribute, we encourage you to check out the [DICE Architectures workgroup](https://trustedcomputinggroup.org/work-groups/dice-architectures/) (DiceArch) in the [Trusted Computing Group](https://trustedcomputinggroup.org/).  For questions, comments, or contributions to the RIoT project from MSR, feel free to contact us at riotdev@microsoft.com.
+For more information on DICE, and to learn how you can contribute, we encourage you to check out the [DICE Workgroup](https://trustedcomputinggroup.org/work-groups/dice-architectures/) in the [Trusted Computing Group](https://trustedcomputinggroup.org/).  For questions, comments, or contributions to the RIoT project from MSR, feel free to contact us at riotdev@microsoft.com.
 
 ## Privacy & Cookies
 https://go.microsoft.com/fwlink/?LinkId=521839

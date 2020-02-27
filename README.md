@@ -10,8 +10,8 @@ For more info on DPS from Azure IoT [this](https://docs.microsoft.com/en-us/azur
 
 ## The RIoT Repo
 The RIoT repository is organized as follows:
- * _Emulator_ -  A software emulator for DICE/RIoT.  The emulator code can be used by developers to simulate inputs to DICE hardware and create RIoT keys and certificates based on those inputs.  The emulator is useful during dev/test to provide user-controlled inputs in a more developer-friendly environment.  The DICE/RIoT emulator enables a much faster development cycle than working only with real hardware. 
- * _Reference_ - A simulated DICE/RIoT-based MCU software stack.  The RIoT reference presents a simulated DICE device, the RIoT reference code itself, and very simple device firmware layer.  These three self-contained elements represent the basic components of a simple DICE-based MCU.  
+ * _Reference_ -  A software emulator for DICE/RIoT.  The reference code can be used by developers to simulate inputs to DICE hardware and create DICE/RIoT keys and certificates based on those inputs.  The emulator is useful during dev/test to provide user-controlled inputs in a more developer-friendly environment.  The DICE/RIoT reference enables a much faster development cycle than working only with real hardware. 
+ * _Simulation_ - A simulated DICE/RIoT-based MCU software stack.  The RIoT reference presents a simulated DICE device, the RIoT reference code itself, and very simple device firmware layer.  These three self-contained elements represent the basic components of a simple DICE-based MCU.  
  * _Pkgs_ - The packages directory contains the metadata and source code for supporting DICE/RIoT development in other languages.  In addition to the C-language reference, DICE/RIoT emulators and tests are also provided in Java (Maven), C# (NuGet), and javascript (npm).
  * _Tools_ - Sources, tools and tests enabling RIoT development and validation.
 

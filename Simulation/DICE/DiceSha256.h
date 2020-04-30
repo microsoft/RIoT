@@ -44,8 +44,12 @@ typedef uint8_t  sha2_uint8_t;  // Exactly 1 byte
 typedef uint32_t sha2_word32;   // Exactly 4 bytes
 typedef uint64_t sha2_word64;   // Exactly 8 bytes
 
+#ifndef SHA256_BLOCK_LENGTH
 #define SHA256_BLOCK_LENGTH         64
+#endif
+#ifndef SHA256_DIGEST_LENGTH
 #define SHA256_DIGEST_LENGTH        32
+#endif
 
 typedef uint64_t hashMagic_t;
 

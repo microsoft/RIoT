@@ -14,10 +14,10 @@
 #define CHK(_X)     if(((_X)) < 0) {goto Error;}
 
 // OIDs.  Note that the encoder expects a -1 sentinel.
+// TODO (DJM): Add const qualifiers here.
 static int riotOID[] = { 2,23,133,5,4,1,-1 };
 static int ecdsaWithSHA256OID[] = { 1,2,840,10045,4,3,2,-1 };
 static int ecPublicKeyOID[] = { 1,2,840,10045, 2,1,-1 };
-static int prime256v1OID[] = { 1,2,840,10045, 3,1,7,-1 };
 static int keyUsageOID[] = { 2,5,29,15,-1 };
 static int extKeyUsageOID[] = { 2,5,29,37,-1 };
 static int extAuthKeyIdentifierOID[] = { 2,5,29,35,-1 };
@@ -27,6 +27,18 @@ static int commonNameOID[] = { 2,5,4,3,-1 };
 static int countryNameOID[] = { 2,5,4,6,-1 };
 static int orgNameOID[] = { 2,5,4,10,-1 };
 static int basicConstraintsOID[] = { 2,5,29,19,-1 };
+#if defined(RIOTSECP256R1)
+static int prime256v1OID[] = { 1,2,840,10045, 3,1,7,-1 };
+static int *curveOID = prime256v1OID;
+#elif defined(RIOTSECP384R1)
+static int ansip384r1OID[] = { 1,3,132,0,34,-1 };
+static int *curveOID = ansip384r1OID;
+#elif defined(RIOTSECP521R1)
+static int ansip521r1OID[] = { 1,3,132,0,35,-1 };
+static int *curveOID = ansip521r1OID;
+#else
+#error "Must define one of RIOTSECP256R1, RIOTSECP384R1, RIOTSECP521R1"
+#endif
 
 static int
 GenerateGuidFromSeed(
@@ -127,7 +139,7 @@ X509AddExtensions(
     CHK(                    DERStartSequenceOrSet(Tbs, true));
     CHK(                        DERStartSequenceOrSet(Tbs, true));
     CHK(                            DERAddOID(Tbs, ecPublicKeyOID));
-    CHK(                            DERAddOID(Tbs, prime256v1OID));
+    CHK(                            DERAddOID(Tbs, curveOID));
     CHK(                        DERPopNesting(Tbs));
     CHK(                        DERAddBitString(Tbs, DevIdPub, DevIdPubLen));
     CHK(                    DERPopNesting(Tbs));
@@ -218,7 +230,7 @@ X509GetDeviceCertTBS(
     CHK(    DERStartSequenceOrSet(Tbs, true));
     CHK(        DERStartSequenceOrSet(Tbs, true));
     CHK(            DERAddOID(Tbs, ecPublicKeyOID));
-    CHK(            DERAddOID(Tbs, prime256v1OID));
+    CHK(            DERAddOID(Tbs, curveOID));
     CHK(        DERPopNesting(Tbs));
     CHK(        DERAddBitString(Tbs, encBuffer, encBufferLen));
     CHK(    DERPopNesting(Tbs));
@@ -350,7 +362,7 @@ X509GetAliasCertTBS(
     CHK(    DERStartSequenceOrSet(Tbs, true));
     CHK(        DERStartSequenceOrSet(Tbs, true));
     CHK(            DERAddOID(Tbs, ecPublicKeyOID));
-    CHK(            DERAddOID(Tbs, prime256v1OID));
+    CHK(            DERAddOID(Tbs, curveOID));
     CHK(        DERPopNesting(Tbs));
                 encBufferLen = sizeof(encBuffer);
     CHK(        RiotCrypt_ExportEccPub(AliasKeyPub, encBuffer, &encBufferLen));
@@ -412,7 +424,7 @@ X509GetDEREccPub(
     CHK(DERStartSequenceOrSet(Context, true));
     CHK(    DERStartSequenceOrSet(Context, true));
     CHK(        DERAddOID(Context, ecPublicKeyOID));
-    CHK(        DERAddOID(Context, prime256v1OID));
+    CHK(        DERAddOID(Context, curveOID));
     CHK(    DERPopNesting(Context));
     CHK(    RiotCrypt_ExportEccPub(&Pub, encBuffer, &encBufferLen));
     CHK(    DERAddBitString(Context, encBuffer, encBufferLen));
@@ -440,7 +452,7 @@ X509GetDEREcc(
     CHK(    MpiToInt(&Priv, encBuffer, RIOT_COORDMAX));
     CHK(    DERAddOctetString(Context, encBuffer, 32));
     CHK(    DERStartExplicit(Context, 0));
-    CHK(        DERAddOID(Context, prime256v1OID));
+    CHK(        DERAddOID(Context, curveOID));
     CHK(    DERPopNesting(Context));
     CHK(    DERStartExplicit(Context, 1));
     CHK(        RiotCrypt_ExportEccPub(&Pub, encBuffer, &encBufferLen));
@@ -471,7 +483,7 @@ X509GetDERCsrTbs(
     CHK(    DERStartSequenceOrSet(Context, true));
     CHK(        DERStartSequenceOrSet(Context, true));
     CHK(            DERAddOID(Context, ecPublicKeyOID));
-    CHK(            DERAddOID(Context, prime256v1OID));
+    CHK(            DERAddOID(Context, curveOID));
     CHK(        DERPopNesting(Context));
                 encBufferLen = sizeof(encBuffer);
     CHK(        RiotCrypt_ExportEccPub(DeviceIDPub, encBuffer, &encBufferLen));
@@ -546,7 +558,7 @@ X509GetRootCertTBS(
     CHK(    DERStartSequenceOrSet(Tbs, true));
     CHK(        DERStartSequenceOrSet(Tbs, true));
     CHK(            DERAddOID(Tbs, ecPublicKeyOID));
-    CHK(            DERAddOID(Tbs, prime256v1OID));
+    CHK(            DERAddOID(Tbs, curveOID));
     CHK(        DERPopNesting(Tbs));
     CHK(        RiotCrypt_ExportEccPub(RootKeyPub, encBuffer, &encBufferLen));
     CHK(        DERAddBitString(Tbs, encBuffer, encBufferLen));

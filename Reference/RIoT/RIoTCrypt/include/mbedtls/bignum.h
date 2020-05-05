@@ -79,7 +79,7 @@
  * Note: Calculations can temporarily result in larger MPIs. So the number
  * of limbs required (MBEDTLS_MPI_MAX_LIMBS) is higher.
  */
-#define MBEDTLS_MPI_MAX_SIZE                              64     /**< Maximum number of bytes for usable MPIs. */
+#define MBEDTLS_MPI_MAX_SIZE                              96     /**< Maximum number of bytes for usable MPIs. */
 #endif /* !MBEDTLS_MPI_MAX_SIZE */
 
 #define MBEDTLS_MPI_MAX_BITS                              ( 8 * MBEDTLS_MPI_MAX_SIZE )    /**< Maximum number of bits for usable MPIs. */

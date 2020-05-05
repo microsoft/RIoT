@@ -19,6 +19,10 @@ FW_API void FirmwareEntry(
 {
     UINT32 i;
 
+    UNREFERENCED_PARAMETER(DeviceIDPub);
+    UNREFERENCED_PARAMETER(AliasKeyPub);
+    UNREFERENCED_PARAMETER(AliasKeyPriv);
+
     printf("FW: Begin.\n");
 
     printf("FW: r00tCertificate:\n %s", r00tCert);

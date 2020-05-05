@@ -4,6 +4,10 @@
  */
 #include "stdafx.h"
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4127) // conditional expressionn is constant
+#endif
+
 // There are lots of ways to force a new CDI value. However, to
 // maintain a consistent CDI value accross "boots", the default
 // linker option that randomizes base addresses must be disabled.

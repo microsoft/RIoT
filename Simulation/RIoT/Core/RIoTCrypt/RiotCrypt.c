@@ -3,8 +3,12 @@
  *  Licensed under the MIT License. See LICENSE in the project root.
  */
 #include <RiotCrypt.h>
-
 #include <stdio.h>
+
+#ifdef _MSC_VER
+#pragma warning(disable : 4127) // conditional expressionn is constant
+#pragma warning(disable : 4706) // assignment within conditional expression
+#endif
 
 // Obviously not thread safe...
 static mbedtls_hmac_drbg_context hmac_drbg_ctx = { 0 };

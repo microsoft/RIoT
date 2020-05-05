@@ -76,7 +76,7 @@ extern "C" {
 // Maximal number of bytes in a RIOT_AIK certificate
 #define RIOT_MAX_CERT_LENGTH            2048
 
-// ECC
+// ECC typedefs
 typedef mbedtls_ecp_point               RIOT_ECC_PUBLIC;
 typedef mbedtls_mpi                     RIOT_ECC_PRIVATE;
 typedef struct {
@@ -84,11 +84,36 @@ typedef struct {
     mbedtls_mpi s;
 } RIOT_ECC_SIGNATURE;
 
-// ECC defs and Maximum encoding lengths for MPIs
+// Enable ECDH and define maximum encoding lengths for MPIs.
 #define RIOT_ECDH
+#define RIOT_MAX_EBLEN                  MBEDTLS_MPI_MAX_SIZE
+
+// Select a supported curve if one wasn't chosen in the build
+#if !defined(RIOTSECP256R1) && !defined(RIOTSECP384R1) && !defined(RIOTSECP521R1)
+//#define RIOTSECP256R1
+#define RIOTSECP384R1
+//#define RIOTSECP521R1
+#endif
+
+// Any one of the following curves are supported (see config.h):
+//      #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
+//      #define MBEDTLS_ECP_DP_SECP384R1_ENABLED
+//      #define MBEDTLS_ECP_DP_SECP521R1_ENABLED
+// Note that to further reduce code size, consider removing (commenting)
+// all but the MBEDTLS_ECP_DP_xx symbol coresponding to the selected
+// RIOT_SECPxx curve in config.h.
+#if defined(RIOTSECP256R1)
 #define RIOT_ECP_GRPID                  MBEDTLS_ECP_DP_SECP256R1
 #define RIOT_COORDMAX                   0x20 // Max we expect to see
-#define RIOT_MAX_EBLEN                  MBEDTLS_MPI_MAX_SIZE // Max an MPI can hold
+#elif defined(RIOTSECP384R1)
+#define RIOT_ECP_GRPID                  MBEDTLS_ECP_DP_SECP384R1
+#define RIOT_COORDMAX                   0x30 // Max we expect to see
+#elif defined(RIOTSECP521R1)
+#define RIOT_ECP_GRPID                  MBEDTLS_ECP_DP_SECP521R1
+#define RIOT_COORDMAX                   0x42 // Max we expect to see
+#else
+#error "Must define one of RIOTSECP256R1, RIOTSECP384R1, RIOTSECP521R1"
+#endif
 
 // Prototypes
 

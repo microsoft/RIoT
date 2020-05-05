@@ -1,7 +1,6 @@
-CFLAGS	?= -DRIOTBUILD #-Os
+CFLAGS	?= -DRIOTBUILD -DRIOTSECP384R1 -Os
 
-# REMOVE -Wno* BELOW
-WARNING_CFLAGS ?=  -Wall -Wextra -Wno-unused-variable -Wno-unused-parameter
+WARNING_CFLAGS ?=  -Wall -Wextra
 
 INCLUDES ?= -I./RIoT/RIoTCrypt/include -I./RIoT/include
 LOCAL_CFLAGS = $(WARNING_CFLAGS) $(INCLUDES) -D_FILE_OFFSET_BITS=64
@@ -10,7 +9,7 @@ LOCAL_LDFLAGS = -L./RIoT/RIoTCrypt -lmbedcrypto
 EMU_KEYS_CERTS = AliasCert.der AliasCert.pem AliasKey.der AliasKey.pem DeviceIDCrt.der DeviceIDCrt.pem DeviceIDPublic.der DeviceIDPublic.pem R00tCrt.der R00tCrt.pem
 
 # DEBUG
-LOCAL_CFLAGS += -g3 -O0
+#LOCAL_CFLAGS += -g3 -O0
 
 .SILENT:
 

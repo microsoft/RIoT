@@ -391,7 +391,7 @@ RiotCrypt_ExportEccPub(
     }
 
     // Output bytes written
-    *s = 1 + (len * 2);
+    *s = (uint32_t)(1 + (len * 2));
     return 0;
 }
 
@@ -445,7 +445,10 @@ RiotCrypt_SignDigest(
             return RIOT_INVALID_STATE;
         }
     }
-
+    // free if previously allocated dst mpi values
+    mbedtls_mpi_free(&sig->r);
+    mbedtls_mpi_free(&sig->s);
+    
     // need to init dst mpi values
     mbedtls_mpi_init(&sig->r);
     mbedtls_mpi_init(&sig->s);

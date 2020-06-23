@@ -391,7 +391,7 @@ RiotCrypt_ExportEccPub(
     }
 
     // Output bytes written
-    *s = 1 + (len * 2);
+    *s = (uint32_t)(1 + (len * 2));
     return 0;
 }
 

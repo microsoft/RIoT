@@ -73,13 +73,14 @@ MpiToInt(
     // Get actual required size
     len = mbedtls_mpi_size(X);
 
-    if (bufLen < len)
+    // Sanity check input
+    if ((bufLen < len) || (RIOT_COORDMAX < len))
     {
         return -1;
     }
 
-    // Write buffer
-    return(mbedtls_mpi_write_binary(X, buf, len));
+    // Write buffer (always go with COORDMAX here)
+    return(mbedtls_mpi_write_binary(X, buf, RIOT_COORDMAX));
 }
 
 static int
@@ -300,9 +301,9 @@ X509MakeDeviceCert(
     CHK(    DERStartEnvelopingBitString(DeviceIDCert));
     CHK(        DERStartSequenceOrSet(DeviceIDCert, true));
     CHK(            MpiToInt(&TbsSig->r, encBuffer, encBufferLen));
-    CHK(            DERAddIntegerFromArray(DeviceIDCert, encBuffer, encBufferLen));
+    CHK(            DERAddIntegerFromArray(DeviceIDCert, encBuffer, RIOT_COORDMAX));
     CHK(            MpiToInt(&TbsSig->s, encBuffer, encBufferLen));
-    CHK(            DERAddIntegerFromArray(DeviceIDCert, encBuffer, encBufferLen));
+    CHK(            DERAddIntegerFromArray(DeviceIDCert, encBuffer, RIOT_COORDMAX));
     CHK(        DERPopNesting(DeviceIDCert));
     CHK(    DERPopNesting(DeviceIDCert));
     CHK(DERPopNesting(DeviceIDCert));
@@ -368,6 +369,7 @@ X509GetAliasCertTBS(
     CHK(        RiotCrypt_ExportEccPub(AliasKeyPub, encBuffer, &encBufferLen));
     CHK(        DERAddBitString(Tbs, encBuffer, encBufferLen));
     CHK(    DERPopNesting(Tbs));
+            encBufferLen = sizeof(encBuffer);
     CHK(    RiotCrypt_ExportEccPub(DevIdKeyPub, encBuffer, &encBufferLen));
     CHK(    X509AddExtensions(Tbs, encBuffer, encBufferLen, Fwid, FwidLen));
     CHK(DERPopNesting(Tbs));
@@ -398,9 +400,9 @@ X509MakeAliasCert(
     CHK(    DERStartEnvelopingBitString(AliasCert));
     CHK(        DERStartSequenceOrSet(AliasCert, true));
     CHK(            MpiToInt(&TbsSig->r, encBuffer, encBufferLen));
-    CHK(            DERAddIntegerFromArray(AliasCert, encBuffer, encBufferLen));
+    CHK(            DERAddIntegerFromArray(AliasCert, encBuffer, RIOT_COORDMAX));
     CHK(            MpiToInt(&TbsSig->s, encBuffer, encBufferLen));
-    CHK(            DERAddIntegerFromArray(AliasCert, encBuffer, encBufferLen));
+    CHK(            DERAddIntegerFromArray(AliasCert, encBuffer, RIOT_COORDMAX));
     CHK(        DERPopNesting(AliasCert));
     CHK(    DERPopNesting(AliasCert));
     CHK(DERPopNesting(AliasCert));
@@ -418,7 +420,7 @@ X509GetDEREccPub(
     RIOT_ECC_PUBLIC      Pub
 )
 {
-    uint8_t     encBuffer[RIOT_MAX_EBLEN * 2];  // Buffer sized to fit MPI x2
+    uint8_t     encBuffer[RIOT_COORDMAX * 2 + 1];  // Buffer sized to fit MPI x2 + 1 (0x04)
     uint32_t    encBufferLen = sizeof(encBuffer);
 
     CHK(DERStartSequenceOrSet(Context, true));
@@ -449,8 +451,8 @@ X509GetDEREcc(
 
     CHK(DERStartSequenceOrSet(Context, true));
     CHK(    DERAddInteger(Context, 1));
-    CHK(    MpiToInt(&Priv, encBuffer, RIOT_COORDMAX));
-    CHK(    DERAddOctetString(Context, encBuffer, 32));
+    CHK(    MpiToInt(&Priv, encBuffer, encBufferLen));
+    CHK(    DERAddOctetString(Context, encBuffer, RIOT_COORDMAX));
     CHK(    DERStartExplicit(Context, 0));
     CHK(        DERAddOID(Context, curveOID));
     CHK(    DERPopNesting(Context));
@@ -518,9 +520,9 @@ X509GetDERCsr(
     CHK(    DERStartEnvelopingBitString(Context));
     CHK(        DERStartSequenceOrSet(Context, true));
     CHK(            MpiToInt(&Signature->r, encBuffer, encBufferLen));
-    CHK(            DERAddIntegerFromArray(Context, encBuffer, encBufferLen));
+    CHK(            DERAddIntegerFromArray(Context, encBuffer, RIOT_COORDMAX));
     CHK(            MpiToInt(&Signature->s, encBuffer, encBufferLen));
-    CHK(            DERAddIntegerFromArray(Context, encBuffer, encBufferLen));
+    CHK(            DERAddIntegerFromArray(Context, encBuffer, RIOT_COORDMAX));
     CHK(        DERPopNesting(Context));
     CHK(    DERPopNesting(Context));
     CHK(DERPopNesting(Context));
@@ -612,9 +614,9 @@ X509MakeRootCert(
     CHK(    DERStartEnvelopingBitString(RootCert));
     CHK(        DERStartSequenceOrSet(RootCert, true));
     CHK(            MpiToInt(&TbsSig->r, encBuffer, encBufferLen));
-    CHK(            DERAddIntegerFromArray(RootCert, encBuffer, encBufferLen));
+    CHK(            DERAddIntegerFromArray(RootCert, encBuffer, RIOT_COORDMAX));
     CHK(            MpiToInt(&TbsSig->s, encBuffer, encBufferLen));
-    CHK(            DERAddIntegerFromArray(RootCert, encBuffer, encBufferLen));
+    CHK(            DERAddIntegerFromArray(RootCert, encBuffer, RIOT_COORDMAX));
     CHK(        DERPopNesting(RootCert));
     CHK(    DERPopNesting(RootCert));
     CHK(DERPopNesting(RootCert));
